@@ -6,8 +6,8 @@
 #include "bitbanding.h"
 
 #define CLK_ENDIS(enr, name) \
-    static inline void clk_enable_ ## name() { BIT_BAND_PER(RCC->enr ## ENR, RCC_ ## enr ## ENR_ ## name ## EN) = 1; } \
-    static inline void clk_disable_ ## name() { BIT_BAND_PER(RCC->enr ## ENR, RCC_ ## enr ## ENR_ ## name ## EN) = 1; }
+    static inline void enable_clk_ ## name() { BIT_BAND_PER(RCC->enr ## ENR, RCC_ ## enr ## ENR_ ## name ## EN) = 1; } \
+    static inline void disable_clk_ ## name() { BIT_BAND_PER(RCC->enr ## ENR, RCC_ ## enr ## ENR_ ## name ## EN) = 1; }
 
 class STM32_RCC
 {

@@ -16,7 +16,7 @@ const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
 
 void STM32_RCC::init()
 {
-    clk_enable_PWR();
+    enable_clk_PWR();
     STM32_PWR::set_voltage_scaling_config(PWR_REGULATOR_VOLTAGE_SCALE1);
     //on_HSE();
 

@@ -5,7 +5,7 @@
 
 void PLC_IO::init()
 {
-    STM32_RCC::clk_enable_GPIOB();
+    STM32_RCC::enable_clk_GPIOB();
     gpiob.set_config(PIN_PWR | PIN_RUN | PIN_STP | PIN_FLT,
                      GPIO_MODE_OUTPUT_PP, 0, GPIO_SPEED_FREQ_LOW,
                      GPIO_NOPULL);

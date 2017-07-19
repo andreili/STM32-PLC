@@ -96,7 +96,7 @@ void STM32_GPIO::set_config(uint32_t pin_mask, uint32_t pin_mode, uint8_t pin_al
             if ((pin_mode & EXTI_MODE) == EXTI_MODE)
             {
                 /* Enable SYSCFG Clock */
-                STM32_RCC::clk_enable_SYSCFG();
+                STM32_RCC::enable_clk_SYSCFG();
 
                 temp = SYSCFG->EXTICR[position >> 2U];
                 temp &= ~(((uint32_t)0x0FU) << (4U * (position & 0x03U)));

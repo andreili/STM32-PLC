@@ -54,7 +54,7 @@ void STM32_UART::init(USART_TypeDef* usart)
         break;
     case USART3_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_USART3EN) = 1;
-        STM32_RCC::clk_enable_GPIOB();
+        STM32_RCC::enable_clk_GPIOB();
         gpiob.set_config(GPIO_PIN_10|GPIO_PIN_11, GPIO_MODE_AF_PP, GPIO_AF7_USART3, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_PULLUP);
         break;
     case UART4_BASE:
