@@ -1,7 +1,10 @@
 1/*
-build-*
 
-#Gerbers
+#Qt-Creator files
+build-*
+*.user*
+
+#Gerber files
 *.gbr
 *.drl
 
