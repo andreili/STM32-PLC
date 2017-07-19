@@ -1,0 +1,10 @@
+1/*
+build-*
+
+#Gerbers
+*.gbr
+*.drl
+
+*.*bak
+*.zip
+
