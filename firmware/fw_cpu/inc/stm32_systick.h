@@ -1,9 +1,9 @@
-#ifndef PLC_SYSTICK_H
-#define PLC_SYSTICK_H
+#ifndef STM32_SYSTICK_H
+#define STM32_SYSTICK_H
 
-#include <stdio.h>
+#include <stdint.h>
 
-class PLC_SYSTICK
+class STM32_SYSTICK
 {
 public:
     static void init();
@@ -15,4 +15,4 @@ private:
     static uint32_t m_tick;
 };
 
-#endif // PLC_SYSTICK_H
+#endif

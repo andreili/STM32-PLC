@@ -1,7 +1,7 @@
 #include "plc_io.h"
 #include "ISRstm32f429xx.h"
 #include "stm32_rcc.h"
-#include "plc_systick.h"
+#include "stm32_systick.h"
 
 void PLC_IO::init()
 {
@@ -17,7 +17,7 @@ void PLC_IO::init()
 
 void PLC_IO::timer_proc()
 {
-    switch (PLC_SYSTICK::get_tick() % 1000)
+    switch (STM32_SYSTICK::get_tick() % 1000)
     {
     case 0:
         pin_on_STOP();

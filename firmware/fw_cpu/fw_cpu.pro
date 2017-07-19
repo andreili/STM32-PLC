@@ -41,7 +41,8 @@ HEADERS += \
     inc/plc_io.h \
     inc/stm32_pwr.h \
     inc/stm32_flash.h \
-    inc/plc_systick.h
+    inc/stm32_systick.h \
+    inc/stm32_conf.h
 
 SOURCES += \
     CMSIS/ISRstm32f429xx.cpp \
@@ -54,5 +55,5 @@ SOURCES += \
     src/plc_io.cpp \
     src/stm32_pwr.cpp \
     src/stm32_flash.cpp \
-    src/plc_systick.cpp
+    src/stm32_systick.cpp
 

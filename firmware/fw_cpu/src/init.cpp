@@ -7,7 +7,7 @@
 #include "stm32_flash.h"
 #include "my_func.h"
 #include "plc_io.h"
-#include "plc_systick.h"
+#include "stm32_systick.h"
 
 int main();
 
@@ -23,7 +23,7 @@ void SystemInit()
     STM32_FLASH::enable_instruction_cache();
     STM32_FLASH::enable_data_cache();
     STM32_FLASH::enable_prefetch_buffer();
-    PLC_SYSTICK::init();
+    STM32_SYSTICK::init();
 
     // system initialization
     __enable_fault_irq();
@@ -43,8 +43,8 @@ void SystemInit()
     
     STM32_GPIO::init_all();
     PLC_IO::init();
-	
-    SysTick_Config(STM32_RCC::get_HCLK_freq() / 1000 - 1);
+
+    STM32_SYSTICK::init();
     
     
     uart3.init(USART3);
