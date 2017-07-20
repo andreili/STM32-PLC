@@ -10,6 +10,7 @@
 #define STM32_RESULT_FAIL       1
 #define STM32_RESULT_TIMEOUT    2
 
+/* Clock settings */
 #define STM32_USE_HSE
 #define STM32_HSE_STATE RCC_CR_HSEON
 //#define STM32_USE_HSI
@@ -31,6 +32,9 @@
 #define STM32_CLOCK_SYSCLK_SOURCE RCC_CFGR_SW_PLL
 #define STM32_CLOCK_APB1_DIV RCC_CFGR_PPRE1_DIV4
 #define STM32_CLOCK_APB2_DIV RCC_CFGR_PPRE2_DIV2
+
+/* Power settings */
+#define STM32_PVD_MODE (PVD_MODE_IT | PVD_RISING_EDGE | PVD_FALLING_EDGE)
 
 #define ENDIS_REG_FLAG(name, reg, mask) \
     static inline void enable_ ## name() { BIT_BAND_PER(reg, mask) = ENABLE; } \

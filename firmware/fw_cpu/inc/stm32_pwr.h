@@ -40,12 +40,6 @@
 
 #define PWR_EXTI_LINE_PVD  ((uint32_t)EXTI_IMR_MR16)  /*!< External interrupt line 16 Connected to the PVD EXTI Line */
 
-#define PWR_OFFSET               (PWR_BASE - PERIPH_BASE)
-#define PWR_CR_OFFSET            0x00U
-#define PWR_CSR_OFFSET           0x04U
-#define PWR_CR_OFFSET_BB         (PWR_OFFSET + PWR_CR_OFFSET)
-#define PWR_CSR_OFFSET_BB        (PWR_OFFSET + PWR_CSR_OFFSET)
-
 #define PWR_MAINREGULATOR_UNDERDRIVE_ON                       PWR_CR_MRUDS
 #define PWR_LOWPOWERREGULATOR_UNDERDRIVE_ON                   ((uint32_t)(PWR_CR_LPDS | PWR_CR_LPUDS))
 
@@ -61,23 +55,35 @@
 
 #define PWR_WAKEUP_PIN3                 ((uint32_t)0x00000040U)
 
-
+#define PVD_MODE_IT               ((uint32_t)0x00010000U)
+#define PVD_MODE_EVT              ((uint32_t)0x00020000U)
+#define PVD_RISING_EDGE           ((uint32_t)0x00000001U)
+#define PVD_FALLING_EDGE          ((uint32_t)0x00000002U)
 
 class STM32_PWR
 {
 public:
+    static void deinit();
+    ENDIS_REG_FLAG(backup_access, PWR->CR, PWR_CR_DBP)
+
+    static void config_PVD();
+    ENDIS_REG_FLAG(PVD, PWR->CR, PWR_CR_PVDE)
+
+    static inline void enable_wakeup_pin(uint32_t WakeUpPinx) { SET_BIT(PWR->CSR, WakeUpPinx); }
+    static inline void disable_wakeup_pin(uint32_t WakeUpPinx) { CLEAR_BIT(PWR->CSR, WakeUpPinx); }
+
+    static void enter_sleep_mode(uint8_t SLEEPEntry);
+    static void enter_stop_mode(uint32_t Regulator, uint8_t STOPEntry);
+    static void enter_standby_mode();
+
+    ENDIS_REG_FLAG(sleep_on_exit, SCB->SCR, SCB_SCR_SLEEPONEXIT_Msk)
+    ENDIS_REG_FLAG(SEV_on_pend, SCB->SCR, SCB_SCR_SEVONPEND_Msk)
+
     /* PWR PVD EXTI */
-    static inline void enable_EXTI_IT() { BIT_BAND_PER(EXTI->IMR, PWR_EXTI_LINE_PVD) = ENABLE; }
-    static inline void disable_EXTI_IT() { BIT_BAND_PER(EXTI->IMR, PWR_EXTI_LINE_PVD) = DISABLE; }
-
-    static inline void enable_EXTI_event() { BIT_BAND_PER(EXTI->EMR, PWR_EXTI_LINE_PVD) = ENABLE; }
-    static inline void disable_EXTI_event() { BIT_BAND_PER(EXTI->EMR, PWR_EXTI_LINE_PVD) = DISABLE; }
-
-    static inline void enable_EXTI_rising_edge() { BIT_BAND_PER(EXTI->RTSR, PWR_EXTI_LINE_PVD) = ENABLE; }
-    static inline void disable_EXTI_rising_edge() { BIT_BAND_PER(EXTI->RTSR, PWR_EXTI_LINE_PVD) = DISABLE; }
-
-    static inline void enable_EXTI_falling_edge() { BIT_BAND_PER(EXTI->FTSR, PWR_EXTI_LINE_PVD) = ENABLE; }
-    static inline void disable_EXTI_falling_edge() { BIT_BAND_PER(EXTI->FTSR, PWR_EXTI_LINE_PVD) = DISABLE; }
+    ENDIS_REG_FLAG(EXTI_IT, EXTI->IMR, PWR_EXTI_LINE_PVD)
+    ENDIS_REG_FLAG(EXTI_event, EXTI->EMR, PWR_EXTI_LINE_PVD)
+    ENDIS_REG_FLAG(EXTI_rising_edge, EXTI->RTSR, PWR_EXTI_LINE_PVD)
+    ENDIS_REG_FLAG(EXTI_falling_edge, EXTI->FTSR, PWR_EXTI_LINE_PVD)
 
     static inline uint32_t get_EXTI_flag() { return EXTI->PR & (PWR_EXTI_LINE_PVD); }
     static inline void clear_EXTI_flag() { BIT_BAND_PER(EXTI->PR, PWR_EXTI_LINE_PVD) = DISABLE; }
@@ -90,11 +96,8 @@ public:
     static uint32_t enable_overdrive();
     static uint32_t disable_overdrive();
 
-    static inline void enable_overdrive_switching() { BIT_BAND_PER(PWR->CR, PWR_CR_ODSWEN) = ENABLE; }
-    static inline void disable_overdrive_switching() { BIT_BAND_PER(PWR->CR, PWR_CR_ODSWEN) = DISABLE; }
-
-    static inline void enable_underdrive() { BIT_BAND_PER(PWR->CR, PWR_CR_UDEN) = ENABLE; }
-    static inline void disable_underdrive() { BIT_BAND_PER(PWR->CR, PWR_CR_UDEN) = DISABLE; }
+    ENDIS_REG_FLAG(overdrive_switching, PWR->CR, PWR_CR_ODSWEN)
+    ENDIS_REG_FLAG(underdrive, PWR->CR, PWR_CR_UDEN)
 
     static uint32_t enter_underdrive_stop_mode(uint32_t Regulator, uint8_t STOPEntry);
 
@@ -108,8 +111,7 @@ public:
     static uint32_t disable_backup_regulator();
 
     /* flash control */
-    static inline void enable_flash_power_down() { BIT_BAND_PER(PWR->CR, PWR_CR_FPDS) = ENABLE; }
-    static inline void disable_flash_power_down() { BIT_BAND_PER(PWR->CR, PWR_CR_FPDS) = DISABLE; }
+    ENDIS_REG_FLAG(flash_power_down, PWR->CR, PWR_CR_FPDS)
 };
 
 #endif // STM32_PWR_H
