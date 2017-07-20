@@ -36,6 +36,9 @@
 /* Power settings */
 #define STM32_PVD_MODE (PVD_MODE_IT | PVD_RISING_EDGE | PVD_FALLING_EDGE)
 
+/* Priority groups */
+#define STM32_PRIORITY_SYSCLK NVIC_PRIORITYGROUP_4
+
 #define ENDIS_REG_FLAG(name, reg, mask) \
     static inline void enable_ ## name() { BIT_BAND_PER(reg, mask) = ENABLE; } \
     static inline void disable_ ## name() { BIT_BAND_PER(reg, mask) = DISABLE; }
@@ -58,6 +61,17 @@
                 return STM32_RESULT_TIMEOUT; \
         } \
     }
+
+#define NVIC_PRIORITYGROUP_0         ((uint32_t)0x00000007U) /*!< 0 bits for pre-emption priority
+                                                                 4 bits for subpriority */
+#define NVIC_PRIORITYGROUP_1         ((uint32_t)0x00000006U) /*!< 1 bits for pre-emption priority
+                                                                 3 bits for subpriority */
+#define NVIC_PRIORITYGROUP_2         ((uint32_t)0x00000005U) /*!< 2 bits for pre-emption priority
+                                                                 2 bits for subpriority */
+#define NVIC_PRIORITYGROUP_3         ((uint32_t)0x00000004U) /*!< 3 bits for pre-emption priority
+                                                                 1 bits for subpriority */
+#define NVIC_PRIORITYGROUP_4         ((uint32_t)0x00000003U) /*!< 4 bits for pre-emption priority
+                                                                 0 bits for subpriority */
 
 void Error_Handler();
 

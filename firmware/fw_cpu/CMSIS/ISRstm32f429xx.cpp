@@ -8,8 +8,7 @@
 #include "ISRstm32f429xx.h"
 __attribute__((naked, noreturn)) void ISR::DefaultHandler()
 {
-   for(;;)
-	   *((uint32_t*)0x02000000) = 01;
+    while (1);
 }
 
 

@@ -1,7 +1,7 @@
 #ifndef STM32_SYSTICK_H
 #define STM32_SYSTICK_H
 
-#include <stdint.h>
+#include "stm32_conf.h"
 
 class STM32_SYSTICK
 {
@@ -11,6 +11,16 @@ public:
     static inline uint32_t get_tick() { return m_tick; }
 
     static void on_tick();
+    static void delay(__IO uint32_t delay);
+
+    static inline void suspend() { BIT_BAND_PER(SysTick->CTRL, SysTick_CTRL_TICKINT_Msk) = DISABLE; }
+    static inline void resume() { BIT_BAND_PER(SysTick->CTRL, SysTick_CTRL_TICKINT_Msk) = ENABLE; }
+
+    ENDIS_REG_FLAG(DBG_sleep_mode, DBGMCU->CR, DBGMCU_CR_DBG_SLEEP)
+    ENDIS_REG_FLAG(DBG_stop_mode, DBGMCU->CR, DBGMCU_CR_DBG_SLEEP)
+    ENDIS_REG_FLAG(DBG_standby_mode, DBGMCU->CR, DBGMCU_CR_DBG_SLEEP)
+    ENDIS_REG_FLAG(compensation_cell, SYSCFG->CMPCR, SYSCFG_CMPCR_CMP_PD)
+    ENDIS_REG_FLAG(memory_swapping_bank, SYSCFG->MEMRMP, SYSCFG_MEMRMP_UFB_MODE)
 private:
     static uint32_t m_tick;
 };
