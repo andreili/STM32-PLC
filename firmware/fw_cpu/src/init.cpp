@@ -15,16 +15,19 @@ int main();
 #define VECT_TAB_OFFSET  0x00 /*!< Vector Table base offset field. 
                                    This value must be a multiple of 0x200. */
 
-void SystemInit()
+// base initialization
+void base_init()
 {
-    // base initialization
     STM32_RCC::deinit();
     memset((char*)0x20000000, 0, 0x20000);
     STM32_FLASH::enable_instruction_cache();
     STM32_FLASH::enable_data_cache();
     STM32_FLASH::enable_prefetch_buffer();
-    STM32_SYSTICK::init();
+}
 
+void SystemInit()
+{
+    base_init();
     // system initialization
     __enable_fault_irq();
     __enable_irq();
@@ -43,8 +46,6 @@ void SystemInit()
     
     STM32_GPIO::init_all();
     PLC_IO::init();
-
-    STM32_SYSTICK::init();
     
     
     uart3.init(USART3);

@@ -1,13 +1,42 @@
 #ifndef __STM32_RCC__
 #define __STM32_RCC__
 
-#include <stdint.h>
-#include "stm32f4xx.h"
-#include "bitbanding.h"
+#include <stm32_conf.h>
 
-#define CLK_ENDIS(enr, name) \
-    static inline void enable_clk_ ## name() { BIT_BAND_PER(RCC->enr ## ENR, RCC_ ## enr ## ENR_ ## name ## EN) = 1; } \
-    static inline void disable_clk_ ## name() { BIT_BAND_PER(RCC->enr ## ENR, RCC_ ## enr ## ENR_ ## name ## EN) = 1; }
+#define RCC_APB2LPENR_ADCLPEN RCC_APB2LPENR_ADC1LPEN
+#define RCC_FLAG_MASK  ((uint8_t)0x1FU)
+
+/* Flags in the CR register */
+#define RCC_FLAG_HSIRDY                  ((uint8_t)0x21U)
+#define RCC_FLAG_HSERDY                  ((uint8_t)0x31U)
+#define RCC_FLAG_PLLRDY                  ((uint8_t)0x39U)
+#define RCC_FLAG_PLLI2SRDY               ((uint8_t)0x3BU)
+
+/* Flags in the BDCR register */
+#define RCC_FLAG_LSERDY                  ((uint8_t)0x41U)
+
+/* Flags in the CSR register */
+#define RCC_FLAG_LSIRDY                  ((uint8_t)0x61U)
+#define RCC_FLAG_BORRST                  ((uint8_t)0x79U)
+#define RCC_FLAG_PINRST                  ((uint8_t)0x7AU)
+#define RCC_FLAG_PORRST                  ((uint8_t)0x7BU)
+#define RCC_FLAG_SFTRST                  ((uint8_t)0x7CU)
+#define RCC_FLAG_IWDGRST                 ((uint8_t)0x7DU)
+#define RCC_FLAG_WWDGRST                 ((uint8_t)0x7EU)
+#define RCC_FLAG_LPWRRST                 ((uint8_t)0x7FU)
+
+#define RCC_IT_LSIRDY                    ((uint8_t)0x01U)
+#define RCC_IT_LSERDY                    ((uint8_t)0x02U)
+#define RCC_IT_HSIRDY                    ((uint8_t)0x04U)
+#define RCC_IT_HSERDY                    ((uint8_t)0x08U)
+#define RCC_IT_PLLRDY                    ((uint8_t)0x10U)
+#define RCC_IT_PLLI2SRDY                 ((uint8_t)0x20U)
+#define RCC_IT_CSS                       ((uint8_t)0x80U)
+
+#define RCC_CIR_OFFSET                   0x0c
+
+#define RCC_MCO1                         ((uint32_t)0x00000000U)
+#define RCC_MCO2                         ((uint32_t)0x00000001U)
 
 class STM32_RCC
 {
@@ -15,13 +44,58 @@ public:
     static void init();
     static void deinit();
 
-    static inline void on_HSE() { BIT_BAND_PER(RCC->CR, RCC_CR_HSEON) = 1; }
+    ENDIS_REG_FLAG(HSI, RCC->CR, RCC_CR_HSION)
+    static inline void set_calibration_value_HSI(uint32_t value) { MODIFY_REG(RCC->CR, RCC_CR_HSITRIM,
+                                                                              value << POSITION_VAL(RCC_CR_HSITRIM)); }
+    ENDIS_REG_FLAG(LSI, RCC->CSR, RCC_CSR_LSION)
+
+    static inline void on_HSE() { BIT_BAND_PER(RCC->CR, RCC_CR_HSEON) = ENABLE; }
     static inline void on_HSE_BYPASS() { RCC->CR |= (RCC_CR_HSEBYP | RCC_CR_HSEON); }
     static inline void off_HSE() { RCC->CR &= ~(RCC_CR_HSEBYP | RCC_CR_HSEON); }
+    static void config_HSE(uint32_t state);
+
+    static void config_LSE(uint32_t state);
+
+    ENDIS_REG_FLAG(RTC, RCC->BDCR, RCC_BDCR_RTCEN)
+    static void set_prescaler_RTC(uint32_t value);
+    static void set_config_RTC(uint32_t value);
+
+    static inline void force_reset_backup() { BIT_BAND_PER(RCC->BDCR, RCC_BDCR_BDRST) = ENABLE; }
+    static inline void release_reset_backup() { BIT_BAND_PER(RCC->BDCR, RCC_BDCR_BDRST) = DISABLE; }
+
+    ENDIS_REG_FLAG(PLL, RCC->CR, RCC_CR_PLLON)
+    static inline void set_config_PLL_source(uint32_t value) { MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC, value); }
+    static inline uint32_t get_source_PLL_OSC() { return RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC; }
+    static inline void set_config_PLL_PLLM(uint32_t value) { MODIFY_REG(RCC->PLLCFGR, RCC_PLLCFGR_PLLM, value); }
+
+    static inline void set_config_SYSCLK(uint32_t value) { MODIFY_REG(RCC->CFGR, RCC_CFGR_SW, value); }
+    static inline uint32_t get_source_SYSCLK() { return RCC->CFGR & RCC_CFGR_SWS; }
+
+    static inline void set_config_MCO1(uint32_t source, uint32_t div)
+        { MODIFY_REG(RCC->CFGR, (RCC_CFGR_MCO1 | RCC_CFGR_MCO1PRE), (source | div)); }
+
+    static inline void set_config_MCO2(uint32_t source, uint32_t div)
+        { MODIFY_REG(RCC->CFGR, (RCC_CFGR_MCO2 | RCC_CFGR_MCO2PRE), (source | (div << 3))); }
+
+    static inline void enable_IT(uint32_t value) { *((__IO uint8_t*)(RCC_BASE + RCC_CIR_OFFSET + 1)) |= value; }
+    static inline void disable_IT(uint32_t value) { *((__IO uint8_t*)(RCC_BASE + RCC_CIR_OFFSET + 1)) &= ~value; }
+    static inline void clear_IT(uint32_t value) { *((__IO uint8_t*)(RCC_BASE + RCC_CIR_OFFSET + 2)) = value; }
+    static inline bool get_IT(uint32_t value) { return (RCC->CIR & value) == value; }
+
+    static inline void clear_reset_flags() { RCC->CSR |= RCC_CSR_RMVF; }
+
+    static bool get_flag(uint32_t value);
+
+    static uint32_t config_osc();
+    static uint32_t config_clock(uint32_t flash_latency);
     
     static inline uint32_t get_HCLK_freq() { return m_system_core_clock; }
     static uint32_t get_PCLK1_freq();
     static uint32_t get_PCLK2_freq();
+
+    static void config_MCO(uint32_t RCC_MCOx, uint32_t RCC_MCOSource, uint32_t RCC_MCODiv);
+
+    ENDIS_REG_FLAG(CSS, RCC->CR, RCC_CR_CSSON)
 
     CLK_ENDIS(AHB1, GPIOA)
     CLK_ENDIS(AHB1, GPIOB)
@@ -93,10 +167,42 @@ public:
     CLK_ENDIS(APB2, SPI6)
     CLK_ENDIS(APB2, SAI1)
     CLK_ENDIS(APB2, LTDC)
+
+    static inline void force_reset_AHB1() { RCC->AHB1RSTR = 0xFFFFFFFFU; }
+    static inline void release_reset_AHB1() { RCC->AHB1RSTR = 0x00U; }
+    PER_RESET_SLEEP(AHB1, GPIOA)
+    PER_RESET_SLEEP(AHB1, GPIOB)
+    PER_RESET_SLEEP(AHB1, GPIOC)
+    PER_RESET_SLEEP(AHB1, GPIOH)
+    PER_RESET_SLEEP(AHB1, DMA1)
+    PER_RESET_SLEEP(AHB1, DMA2)
+
+    static inline void force_reset_APB1() { RCC->APB1RSTR = 0xFFFFFFFFU; }
+    static inline void release_reset_APB1() { RCC->APB1RSTR = 0x00U; }
+    PER_RESET_SLEEP(APB1, TIM5)
+    PER_RESET_SLEEP(APB1, WWDG)
+    PER_RESET_SLEEP(APB1, SPI2)
+    PER_RESET_SLEEP(APB1, USART2)
+    PER_RESET_SLEEP(APB1, I2C1)
+    PER_RESET_SLEEP(APB1, I2C2)
+    PER_RESET_SLEEP(APB1, PWR)
+
+    static inline void force_reset_APB2() { RCC->APB2RSTR = 0xFFFFFFFFU; }
+    static inline void release_reset_APB2() { RCC->APB2RSTR = 0x00U; }
+    PER_RESET_SLEEP(APB2, TIM1)
+    PER_RESET_SLEEP(APB2, USART1)
+    PER_RESET_SLEEP(APB2, USART6)
+    PER_RESET_SLEEP(APB2, ADC)
+    PER_RESET_SLEEP(APB2, SPI1)
+    PER_RESET_SLEEP(APB2, SYSCFG)
+    PER_RESET_SLEEP(APB2, TIM9)
+    PER_RESET_SLEEP(APB2, TIM11)
+
+    static void NMI_IRQ_Handler();
 private:
     static uint32_t m_system_core_clock;
 
-    static void update_system_core_clock();
+    static uint32_t update_system_core_clock();
 };
 
 #endif
