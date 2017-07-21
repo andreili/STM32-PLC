@@ -7,7 +7,7 @@ CONFIG += c++11
 
 QMAKE_LFLAGS += -T$$PWD/../cortex-m4/stm32f429xx.ld
 
-DEFINES += STM32F429xx #DATA_IN_ExtSDRAM
+DEFINES += STM32F429xx DATA_IN_ExtSDRAM
 
 DESTDIR = ./
 #win32:EXT = .exe
@@ -44,6 +44,7 @@ HEADERS += \
     inc/stm32_systick.h \
     inc/stm32_conf.h \
     inc/xprintf.h \
+    inc/stm32_sdram.h
 
 SOURCES += \
     CMSIS/ISRstm32f429xx.cpp \
@@ -58,4 +59,5 @@ SOURCES += \
     src/stm32_flash.cpp \
     src/stm32_systick.cpp \
     src/xprintf.cpp \
+    src/stm32_sdram.cpp
 
