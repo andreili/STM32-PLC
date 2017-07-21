@@ -10,6 +10,7 @@
 #include "stm32_systick.h"
 #include "xprintf.h"
 #include "stm32_sdram.h"
+#include "plc_control.h"
 
 int main();
 
@@ -51,6 +52,7 @@ void SystemInit()
     __enable_fault_irq();
     __enable_irq();
     STM32_RCC::init();
+    PLC_CONTROL::init();
     
     STM32_GPIO::init_all();
     PLC_IO::init();
