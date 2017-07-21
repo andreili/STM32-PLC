@@ -11,7 +11,7 @@ public:
     static inline uint32_t get_tick() { return m_tick; }
 
     static void on_tick();
-    static void delay(__IO uint32_t delay);
+    static void delay(__IO uint32_t delay_ms);
 
     static inline void suspend() { BIT_BAND_PER(SysTick->CTRL, SysTick_CTRL_TICKINT_Msk) = DISABLE; }
     static inline void resume() { BIT_BAND_PER(SysTick->CTRL, SysTick_CTRL_TICKINT_Msk) = ENABLE; }
@@ -22,7 +22,7 @@ public:
     ENDIS_REG_FLAG(compensation_cell, SYSCFG->CMPCR, SYSCFG_CMPCR_CMP_PD)
     ENDIS_REG_FLAG(memory_swapping_bank, SYSCFG->MEMRMP, SYSCFG_MEMRMP_UFB_MODE)
 private:
-    static uint32_t m_tick;
+    static volatile uint32_t m_tick;
 };
 
 #endif
