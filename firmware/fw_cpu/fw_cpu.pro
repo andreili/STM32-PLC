@@ -42,7 +42,8 @@ HEADERS += \
     inc/stm32_pwr.h \
     inc/stm32_flash.h \
     inc/stm32_systick.h \
-    inc/stm32_conf.h
+    inc/stm32_conf.h \
+    inc/xprintf.h \
 
 SOURCES += \
     CMSIS/ISRstm32f429xx.cpp \
@@ -55,5 +56,6 @@ SOURCES += \
     src/plc_io.cpp \
     src/stm32_pwr.cpp \
     src/stm32_flash.cpp \
-    src/stm32_systick.cpp
+    src/stm32_systick.cpp \
+    src/xprintf.cpp \
 

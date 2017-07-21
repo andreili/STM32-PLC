@@ -8,6 +8,7 @@
 #include "my_func.h"
 #include "plc_io.h"
 #include "stm32_systick.h"
+#include "xprintf.h"
 
 int main();
 
@@ -23,6 +24,9 @@ void base_init()
     STM32_FLASH::enable_instruction_cache();
     STM32_FLASH::enable_data_cache();
     STM32_FLASH::enable_prefetch_buffer();
+void uart3_putc(unsigned char ch)
+{
+    uart3.send_char(ch);
 }
 
 void SystemInit()
@@ -50,7 +54,8 @@ void SystemInit()
     
     uart3.init(USART3);
     uart3.set_baud_rate(115200);
-    uart3.send_str("Hello world!\n\r");
+    xfunc_out = uart3_putc;
+    xprintf("Hello world!\n\r");
 }
 
 #define SDRAM_CMD_CLK_ENABLE		(FMC_SDCMR_MODE_0 | FMC_SDCMR_CTB1)

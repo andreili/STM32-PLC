@@ -95,6 +95,15 @@ void STM32_UART::set_baud_rate(uint32_t brate)
     }
 }
 
+void STM32_UART::send_char(char ch)
+{
+    while (m_busy) {}
+    m_busy = true;
+    while ((m_usart->SR & USART_SR_TXE) != USART_SR_TXE);
+    m_usart->DR = ch;
+    m_busy = false;
+}
+
 void STM32_UART::send_str(const char *str)
 {
     while (m_busy) {}
@@ -111,6 +120,7 @@ void STM32_UART::send_buf(const char *buf, int size)
         while ((m_usart->SR & USART_SR_TXE) != USART_SR_TXE);
         m_usart->DR = buf[m_tx_pos++];
     }
+    m_busy = false;
     //memcpy(m_tx_buf, buf, size);
     //m_usart->CR1 |= USART_CR1_TXEIE;
     //BIT_BAND_PER(m_usart->CR1, USART_CR1_TXEIE) = 1;

@@ -11,6 +11,7 @@ public:
 	void init(USART_TypeDef* usart);
     void set_baud_rate(uint32_t brate);
     
+    void send_char(char ch);
 	void send_str(const char *str);
 	void send_buf(const char *buf, int size);
 
