@@ -20,8 +20,8 @@ int main();
 // base initialization
 void base_init()
 {
+    memset((uint8_t*)0x20000000, 0, 0x20000);
     STM32_RCC::deinit();
-    memset((char*)0x20000000, 0, 0x20000);
     STM32_FLASH::enable_instruction_cache();
     STM32_FLASH::enable_data_cache();
     STM32_FLASH::enable_prefetch_buffer();
@@ -55,11 +55,13 @@ void SystemInit()
     STM32_GPIO::init_all();
     PLC_IO::init();
     
-    
     uart3.init(USART3);
     uart3.set_baud_rate(115200);
     xfunc_out = uart3_putc;
-    xprintf("Hello world!\n\r");
+    xprintf("STM32 PLC\n\r");
+
+    if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1, 16 * 1024 * 1024) != STM32_RESULT_OK)
+        Error_Handler();
 }
 
 void ISR::Reset()

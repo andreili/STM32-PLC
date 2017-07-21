@@ -3,6 +3,9 @@
 
 #include "stm32_conf.h"
 
+#define SDRAM_BASE_BANK1 0xC0000000
+#define SDRAM_BASE_BANK2 0xD0000000
+
 #define FMC_SDRAM_COLUMN_BITS_NUM_8           ((uint32_t)0x00000000U)
 #define FMC_SDRAM_COLUMN_BITS_NUM_9           ((uint32_t)0x00000001U)
 #define FMC_SDRAM_COLUMN_BITS_NUM_10          ((uint32_t)0x00000002U)
@@ -57,6 +60,7 @@ class STM32_SDRAM
 {
 public:
     static uint32_t init();
+    static uint32_t run_tests(uint32_t start_addr, uint32_t size);
 private:
     static void init_gpio();
     static void init_bank1();

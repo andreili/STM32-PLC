@@ -72,6 +72,7 @@ void STM32_RCC::init()
 
 void STM32_RCC::deinit()
 {
+    m_system_core_clock = HSI_VALUE;
     RCC->CR |= RCC_CR_HSION | RCC_CR_HSITRIM_4;
     RCC->CFGR = 0;
     RCC->CR &= ~(RCC_CR_HSEON | RCC_CR_CSSON | RCC_CR_PLLON | RCC_CR_PLLI2SON);

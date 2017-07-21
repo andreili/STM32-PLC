@@ -8,19 +8,19 @@ int strlen(const char* str)
 	return len;
 }
 
-void memcpy(char* dst, const char* src, int len)
+void memcpy(uint8_t* dst, const uint8_t* src, int len)
 {
 	while (len--)
 		*dst++ = *src++;
 }
 
-void memset(char* dst,char val, int len)
+void memset(uint8_t* dst,char val, int len)
 {
 	while (len--)
 		*dst++ = val;
 }
 
-int memcmp(const char *s1, const char *s2, int len)
+int memcmp(const uint8_t *s1, const uint8_t *s2, int len)
 {
 	int d = 0;
 

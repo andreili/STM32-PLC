@@ -2,8 +2,17 @@
 #include "stm32_rcc.h"
 #include "stm32_gpio.h"
 #include "stm32_systick.h"
+#include "my_func.h"
 
 STM32_SDRAM sdram;
+
+#define MEMTEST_PRINT
+#ifdef MEMTEST_PRINT
+#include "xprintf.h"
+#define MEMTEST_PRINT_VERBOSE
+#endif
+
+#define MEMTEST_BUF_SIZE 1024
 
 uint32_t STM32_SDRAM::init()
 {
@@ -23,6 +32,58 @@ uint32_t STM32_SDRAM::init()
 
     if (run_init_sequence() != STM32_RESULT_OK)
         return STM32_RESULT_FAIL;
+
+    return STM32_RESULT_OK;
+}
+
+#define MEM_TEST_BODY(data_type) \
+    { \
+    }
+
+uint32_t inline get_val(uint32_t offset)
+{
+    return 0x12345678 + (offset << 8);
+}
+
+uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size)
+{
+    uint32_t start_ticks = STM32_SYSTICK::get_tick();
+    #ifdef MEMTEST_PRINT
+    xprintf("Start memory test (block size = %U bytes, bank 0x%X)\n", MEMTEST_BUF_SIZE, start_addr);
+    #endif
+
+    int cycles_count = size / MEMTEST_BUF_SIZE;
+    for (int i=0 ; i<cycles_count ; ++i)
+    {
+        uint32_t* mem = (uint32_t*)(start_addr + (i * MEMTEST_BUF_SIZE));
+
+        uint32_t cur_start = start_addr + (i * MEMTEST_BUF_SIZE);
+        //plc_state.data.mem_test.cur_start = start_addr + (i * MEMTEST_BUF_SIZE);
+        #ifdef MEMTEST_PRINT_VERBOSE
+        xprintf("\r\t\033[0KBlock #%05U/%05U (%08X-%08X): ", i+1, cycles_count,cur_start, start_addr + ((i + 1) * MEMTEST_BUF_SIZE));
+        #endif
+
+        memset((uint8_t*)mem, 0, MEMTEST_BUF_SIZE);
+        for (uint32_t uwIndex = 0; uwIndex < (MEMTEST_BUF_SIZE / sizeof(uint32_t)); uwIndex++)
+            mem[uwIndex] = get_val(uwIndex);
+        for (uint32_t uwIndex = 0; uwIndex < (MEMTEST_BUF_SIZE / sizeof(uint32_t)); uwIndex++)
+            if (mem[uwIndex] != get_val(uwIndex))
+            {
+                xprintf("ERROR at %08X (got %08X, exp %08X)\n",
+                    start_addr + (i * MEMTEST_BUF_SIZE) + uwIndex * sizeof(uint32_t),
+                    mem[uwIndex], get_val(uwIndex));
+                return STM32_RESULT_FAIL;
+            }
+        #ifdef MEMTEST_PRINT_VERBOSE
+        xprintf("OK");
+        #endif
+        //HAL_IWDG_Refresh(&hiwdg);
+    }
+
+    #ifdef MEMTEST_PRINT
+    xprintf("\r\033[0KTest Finished. Available memory: %.2fMb\nTest time (HAL ticks): %i\n",
+        (size * 1.f) / 1024.f / 1024.f, STM32_SYSTICK::get_tick() - start_ticks);
+    #endif
 
     return STM32_RESULT_OK;
 }

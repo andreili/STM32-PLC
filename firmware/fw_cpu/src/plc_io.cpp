@@ -30,5 +30,14 @@ void PLC_IO::timer_proc()
 
 void ISR::HardFault()
 {
+    PLC_IO::pin_on_STOP();
     PLC_IO::pin_on_FAULT();
+    while (1) {}
+}
+
+void Error_Handler()
+{
+    PLC_IO::pin_on_STOP();
+    PLC_IO::pin_on_FAULT();
+    while (1) {}
 }
