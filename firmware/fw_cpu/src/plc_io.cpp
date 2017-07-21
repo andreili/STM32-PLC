@@ -19,16 +19,26 @@ void PLC_IO::init()
 void PLC_IO::timer_proc()
 {
     pin_on_POWER();
-    PLC_CONTROL::in_run() ? pin_on_RUN() : pin_off_RUN();
+
+    if (!PLC_CONTROL::is_initialized())
+    {
+        pin_on_STOP();
+        pin_on_FAULT();
+        return;
+    }
+
     switch (STM32_SYSTICK::get_tick() % 1000)
     {
     case 0:
+        if (PLC_CONTROL::in_run())
+            pin_on_RUN();
         if (PLC_CONTROL::in_stop())
             pin_on_STOP();
         if (PLC_CONTROL::in_fault())
             pin_on_FAULT();
         break;
     case 500:
+        pin_off_RUN();
         pin_off_STOP();
         pin_off_FAULT();
         break;
@@ -37,11 +47,7 @@ void PLC_IO::timer_proc()
 
 void ISR::HardFault()
 {
-    PLC_IO::pin_on_FAULT();
-    PLC_IO::pin_on_STOP();
-    PLC_CONTROL::set_fault(1);
-    PLC_CONTROL::set_stop(1);
-    while (1) {}
+    Error_Handler();
 }
 
 void Error_Handler()

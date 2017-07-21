@@ -23,6 +23,7 @@ void base_init()
 {
     memset((uint8_t*)0x20000000, 0, 0x20000);
     STM32_RCC::deinit();
+    PLC_CONTROL::init();
     STM32_FLASH::enable_instruction_cache();
     STM32_FLASH::enable_data_cache();
     STM32_FLASH::enable_prefetch_buffer();
@@ -52,7 +53,6 @@ void SystemInit()
     __enable_fault_irq();
     __enable_irq();
     STM32_RCC::init();
-    PLC_CONTROL::init();
     
     STM32_GPIO::init_all();
     PLC_IO::init();
@@ -61,6 +61,8 @@ void SystemInit()
     uart3.set_baud_rate(115200);
     xfunc_out = uart3_putc;
     xprintf("STM32 PLC\n\r");
+
+    STM32_SYSTICK::delay(1000);
 
     if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1, 16 * 1024 * 1024) != STM32_RESULT_OK)
         Error_Handler();
