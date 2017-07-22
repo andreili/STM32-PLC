@@ -68,8 +68,15 @@ void SystemInit()
         Error_Handler();
 }
 
+#define INIT_SP() \
+    { \
+        __ASM volatile("mov r3, 0x08000000\n\r" \
+                       "ldr sp, [r3, #0]\n\r" : : ); \
+    } \
+
 void ISR::Reset()
 {
+    INIT_SP();
     SystemInit();
     main();
 }
