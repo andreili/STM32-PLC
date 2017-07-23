@@ -13,7 +13,7 @@ int main();
 // base initialization
 void base_init()
 {
-    memset((uint8_t*)0x20000000, 0, 0x20000);
+    //memset((uint8_t*)0x20000000, 0, 0x20000);
     STM32_RCC::deinit();
 
     /* Configure the Vector Table location add offset address ------------------*/
