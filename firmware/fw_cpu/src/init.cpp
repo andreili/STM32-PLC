@@ -23,21 +23,29 @@ void base_init()
 {
     memset((uint8_t*)0x20000000, 0, 0x20000);
     STM32_RCC::deinit();
-    PLC_CONTROL::init();
-    STM32_FLASH::enable_instruction_cache();
-    STM32_FLASH::enable_data_cache();
-    STM32_FLASH::enable_prefetch_buffer();
-
-    #if defined (DATA_IN_ExtSDRAM)
-    if (STM32_SDRAM::init() != STM32_RESULT_OK)
-        Error_Handler();
-    #endif
 
     /* Configure the Vector Table location add offset address ------------------*/
     #ifdef VECT_TAB_SRAM
     SCB->VTOR = SRAM_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
     #else
     SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
+    #endif
+
+    PLC_CONTROL::init();
+
+    #if defined (DATA_IN_ExtSDRAM)
+    //if (STM32_SDRAM::init() != STM32_RESULT_OK)
+    //    Error_Handler();
+    #endif
+
+    #ifdef INSTRUCTION_CACHE_ENABLE
+    STM32_FLASH::enable_instruction_cache();
+    #endif
+    #ifdef DATA_CACHE_ENABLE
+    STM32_FLASH::enable_data_cache();
+    #endif
+    #ifdef PREFETCH_ENABLE
+    STM32_FLASH::enable_prefetch_buffer();
     #endif
 }
 

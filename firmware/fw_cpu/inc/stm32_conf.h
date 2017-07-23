@@ -10,6 +10,10 @@
 #define STM32_RESULT_FAIL       1
 #define STM32_RESULT_TIMEOUT    2
 
+#define INSTRUCTION_CACHE_ENABLE
+#define DATA_CACHE_ENABLE
+#define PREFETCH_ENABLE
+
 /* Clock settings */
 #define STM32_USE_HSE
 #define STM32_HSE_STATE RCC_CR_HSEON
