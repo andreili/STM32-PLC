@@ -26,8 +26,8 @@ void base_init()
     PLC_CONTROL::init();
 
     #if defined (DATA_IN_ExtSDRAM)
-    //if (STM32_SDRAM::init() != STM32_RESULT_OK)
-    //    Error_Handler();
+    if (STM32_SDRAM::init() != STM32_RESULT_OK)
+        Error_Handler();
     #endif
 
     #ifdef INSTRUCTION_CACHE_ENABLE
@@ -39,11 +39,9 @@ void base_init()
     #ifdef PREFETCH_ENABLE
     STM32_FLASH::enable_prefetch_buffer();
     #endif
-}
 
-void uart3_putc(unsigned char ch)
-{
-    uart3.send_char(ch);
+    STM32_NVIC::set_priority_grouping(NVIC_PRIORITYGROUP_4);
+    STM32_SYSTICK::init();
 }
 
 void SystemInit()
@@ -63,13 +61,12 @@ void SystemInit()
     /* Other IO and peripheral initializations */
     uart3.init();
     uart3.set_baud_rate(115200);
-    xfunc_out = uart3_putc;
-    xprintf("STM32 PLC\n\r");
 
-    STM32_SYSTICK::delay(1000);
 
+    #if defined (DATA_IN_ExtSDRAM)
     if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1, 16 * 1024 * 1024) != STM32_RESULT_OK)
         Error_Handler();
+    #endif
 }
 
 #define INIT_SP() \
