@@ -107,14 +107,12 @@ void STM32_UART::init()
 void STM32_UART::set_baud_rate(uint32_t brate)
 {
     m_brate = brate;
+    uint32_t freq;
     if((m_usart == USART1) || (m_usart == USART6))
-    {
-        m_usart->BRR = UART_BRR_SAMPLING16(STM32_RCC::get_PCLK2_freq(), brate);
-    }
+        freq = STM32_RCC::get_PCLK2_freq();
     else
-    {
-        m_usart->BRR = UART_BRR_SAMPLING16(STM32_RCC::get_PCLK1_freq(), brate);
-    }
+        freq = STM32_RCC::get_PCLK1_freq();
+    m_usart->BRR = UART_BRR_SAMPLING16(freq, brate);
 }
 
 void STM32_UART::send_char(char ch)
@@ -126,26 +124,42 @@ void STM32_UART::send_char(char ch)
     m_busy = false;
 }
 
-void STM32_UART::send_str(const char *str)
+void STM32_UART::send_str(const char *str, UART_MODE mode)
 {
     while (m_busy) {}
     m_busy = true;
-	send_buf(str, strlen(str) + 1);
+    send_buf(str, strlen(str) + 1, mode);
 }
 
-void STM32_UART::send_buf(const char *buf, int size)
+void STM32_UART::send_buf(const char *buf, int size, UART_MODE mode)
 {
 	m_tx_size = size;
-	m_tx_pos = 0;
-    while (m_tx_pos < m_tx_size)
+    m_tx_pos = 0;
+
+    switch (mode)
     {
-        while ((m_usart->SR & USART_SR_TXE) != USART_SR_TXE);
-        m_usart->DR = buf[m_tx_pos++];
+    case UART_MODE::DIRECT:
+        while (m_tx_pos < m_tx_size)
+        {
+            while ((m_usart->SR & USART_SR_TXE) != USART_SR_TXE);
+            m_usart->DR = buf[m_tx_pos++];
+        }
+        m_busy = false;
+        break;
+    case UART_MODE::INTERRUPT:
+        #ifdef STM32_UART_MODE_IT_ENABLE
+        memcpy((uint8_t*)m_tx_buf, (uint8_t*)buf, size);
+        m_usart->CR1 |= USART_CR1_TXEIE;
+        BIT_BAND_PER(m_usart->CR1, USART_CR1_TXEIE) = 1;
+        #endif
+        break;
+    case UART_MODE::DMA:
+        ///TODO
+        #ifdef STM32_UART_MODE_DMA_ENABLE
+        #endif
+        break;
     }
-    m_busy = false;
-    //memcpy(m_tx_buf, buf, size);
-    //m_usart->CR1 |= USART_CR1_TXEIE;
-    //BIT_BAND_PER(m_usart->CR1, USART_CR1_TXEIE) = 1;
+
 }
 
 void inline STM32_UART::irq_proc()
@@ -167,7 +181,7 @@ void STM32_UART::set_config()
     tmpreg &= (uint32_t)~((uint32_t)USART_CR2_STOP);
 
     /* Configure the UART Stop Bits: Set STOP[13:12] bits according to huart->Init.StopBits value */
-    tmpreg |= UART_STOPBITS_1;
+    tmpreg |= STM32_UART_STOPBITS;
 
     /* Write to USART CR2 */
     m_usart->CR2 = tmpreg;
@@ -184,9 +198,11 @@ void STM32_UART::set_config()
     Set PCE and PS bits according to huart->Init.Parity value
     Set TE and RE bits according to huart->Init.Mode value
     Set OVER8 bit according to huart->Init.OverSampling value */
-    tmpreg |= UART_WORDLENGTH_8B | UART_PARITY_NONE | UART_MODE_TX_RX | UART_OVERSAMPLING_16;
+    tmpreg |= STM32_UART_WORDLENGTH | STM32_UART_PARITY | UART_MODE_TX_RX | UART_OVERSAMPLING_16;
 
+    #ifdef STM32_UART_MODE_IT_ENABLE
     tmpreg |= USART_CR1_RXNEIE;
+    #endif
 
     /* Write to USART CR1 */
     m_usart->CR1 = tmpreg;
@@ -222,7 +238,7 @@ void STM32_UART::send_data()
 }
 
 
-
+#ifdef STM32_UART_MODE_IT_ENABLE
 #ifdef USE_USART1
 STM32_UART uart1;
 
@@ -293,4 +309,5 @@ void ISR::UART8_IRQ()
 {
 	uart8.irq_proc();
 }
+#endif
 #endif

@@ -5,6 +5,13 @@
 
 #define UART_BUF_SIZE 1024
 
+enum class UART_MODE
+{
+    DIRECT,
+    INTERRUPT,
+    DMA,
+};
+
 class STM32_UART
 {
 public:
@@ -13,8 +20,8 @@ public:
     void set_baud_rate(uint32_t brate);
     
     void send_char(char ch);
-	void send_str(const char *str);
-	void send_buf(const char *buf, int size);
+    void send_str(const char *str, UART_MODE mode);
+    void send_buf(const char *buf, int size, UART_MODE mode);
 
 	void irq_proc();
 private:
