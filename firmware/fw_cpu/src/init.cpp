@@ -1,16 +1,8 @@
-#include "ISRstm32f429xx.h"
-#include "stm32f4xx.h"
+#include "stm32_inc.h"
 #include "init.h"
-#include "stm32_uart.h"
-#include "stm32_rcc.h"
-#include "stm32_gpio.h"
-#include "stm32_flash.h"
 #include "my_func.h"
-#include "plc_io.h"
-#include "stm32_systick.h"
-#include "xprintf.h"
-#include "stm32_sdram.h"
 #include "plc_control.h"
+#include "plc_io.h"
 
 int main();
 

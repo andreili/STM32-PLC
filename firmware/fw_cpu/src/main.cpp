@@ -1,4 +1,5 @@
 #include "plc_control.h"
+#include "stm32_inc.h"
 
 int main()
 {
