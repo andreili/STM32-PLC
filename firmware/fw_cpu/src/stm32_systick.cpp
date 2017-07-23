@@ -1,13 +1,16 @@
 #include "stm32_systick.h"
 #include "plc_io.h"
 #include "stm32_rcc.h"
+#include "stm32_nvic.h"
 
 volatile uint32_t STM32_SYSTICK::m_tick;
 
 void STM32_SYSTICK::init()
 {
     SysTick_Config(STM32_RCC::get_HCLK_freq() / 1000 - 1);
-    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), STM32_PRIORITY_SYSCLK, 0));
+    STM32_NVIC::set_priority(SysTick_IRQn,
+                     STM32_NVIC::encode_priority(STM32_NVIC::get_priority_grouping(),
+                                                 STM32_PRIORITY_SYSCLK, 0));
     m_tick = 0;
 }
 
