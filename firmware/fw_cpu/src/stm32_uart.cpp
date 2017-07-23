@@ -34,19 +34,43 @@
 #define UART_OVERSAMPLING_16                    ((uint32_t)0x00000000U)
 #define UART_OVERSAMPLING_8                     ((uint32_t)USART_CR1_OVER8)
 
-void STM32_UART::init(USART_TypeDef* usart)
+void STM32_UART::init_base(USART_TypeDef* usart)
 {
     m_usart = usart;
     m_busy = false;
-    USART_DISABLE();
-    set_config();
-    m_usart->CR2 &= ~(USART_CR2_LINEN | USART_CR2_CLKEN);
-    m_usart->CR3 &= ~(USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN);
-    
     switch ((uint32_t)m_usart)
     {
     case USART1_BASE:
         //RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+        break;
+    case USART2_BASE:
+        break;
+    case USART3_BASE:
+        STM32_RCC::enable_clk_GPIOB();
+        gpiob.set_config(GPIO_PIN_10|GPIO_PIN_11, GPIO_MODE_AF_PP, GPIO_AF7_USART3, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_PULLUP);
+        break;
+    case UART4_BASE:
+        break;
+    case UART5_BASE:
+        break;
+    case USART6_BASE:
+        break;
+    case UART7_BASE:
+        break;
+    case UART8_BASE:
+        break;
+    }
+}
+
+void STM32_UART::init()
+{
+    USART_DISABLE();
+    set_config();
+    m_usart->CR2 &= ~(USART_CR2_LINEN | USART_CR2_CLKEN);
+    m_usart->CR3 &= ~(USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN);
+    switch ((uint32_t)m_usart)
+    {
+    case USART1_BASE:
         RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
         break;
     case USART2_BASE:
@@ -54,8 +78,6 @@ void STM32_UART::init(USART_TypeDef* usart)
         break;
     case USART3_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_USART3EN) = 1;
-        STM32_RCC::enable_clk_GPIOB();
-        gpiob.set_config(GPIO_PIN_10|GPIO_PIN_11, GPIO_MODE_AF_PP, GPIO_AF7_USART3, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_PULLUP);
         break;
     case UART4_BASE:
         RCC->APB1ENR |= RCC_APB1ENR_UART4EN;

@@ -64,8 +64,9 @@ void SystemInit()
     
     STM32_GPIO::init_all();
     PLC_IO::init();
-    
-    uart3.init(USART3);
+    uart3.init_base(USART3);
+    /* Other IO and peripheral initializations */
+    uart3.init();
     uart3.set_baud_rate(115200);
     xfunc_out = uart3_putc;
     xprintf("STM32 PLC\n\r");
