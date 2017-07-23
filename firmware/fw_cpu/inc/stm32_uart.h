@@ -8,7 +8,8 @@
 class STM32_UART
 {
 public:
-	void init(USART_TypeDef* usart);
+    void init_base(USART_TypeDef* usart);
+    void init();
     void set_baud_rate(uint32_t brate);
     
     void send_char(char ch);

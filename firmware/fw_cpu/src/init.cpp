@@ -57,14 +57,17 @@ void uart3_putc(unsigned char ch)
 void SystemInit()
 {
     base_init();
-    // system initialization
-    __enable_fault_irq();
-    __enable_irq();
-    STM32_RCC::init();
-    
+
+    /* GPIO initializations */
     STM32_GPIO::init_all();
     PLC_IO::init();
     uart3.init_base(USART3);
+
+    // system initialization
+    //__enable_fault_irq();
+    //__enable_irq();
+    STM32_RCC::init();
+
     /* Other IO and peripheral initializations */
     uart3.init();
     uart3.set_baud_rate(115200);

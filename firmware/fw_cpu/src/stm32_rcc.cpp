@@ -85,7 +85,6 @@ void STM32_RCC::deinit()
     RCC->CIR = 0;
     
     m_system_core_clock = update_system_core_clock();
-    STM32_SYSTICK::init();
 }
 
 void STM32_RCC::config_HSE(uint32_t state)
