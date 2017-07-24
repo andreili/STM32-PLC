@@ -32,28 +32,28 @@ void STM32_GPIO::init_all()
 	gpiog.init(GPIOG);
 	gpioh.init(GPIOH);
 
-    #ifdef STM32_USE_USART1
+    #ifdef STM32_USE_UART1
     uart1.init_base(USART1);
     #endif
-    #ifdef STM32_USE_USART2
+    #ifdef STM32_USE_UART2
     uart2.init_base(USART2);
     #endif
-    #ifdef STM32_USE_USART3
+    #ifdef STM32_USE_UART3
     uart3.init_base(USART3);
     #endif
-    #ifdef STM32_USE_USART4
+    #ifdef STM32_USE_UART4
     uart4.init_base(UART4);
     #endif
-    #ifdef STM32_USE_USART5
+    #ifdef STM32_USE_UART5
     uart5.init_base(UART5);
     #endif
-    #ifdef STM32_USE_USART6
+    #ifdef STM32_USE_UART6
     uart6.init_base(USART6);
     #endif
-    #ifdef STM32_USE_USART7
+    #ifdef STM32_USE_UART7
     uart7.init_base(UART7);
     #endif
-    #ifdef STM32_USE_USART8
+    #ifdef STM32_USE_UART8
     uart8.init_base(UART8);
     #endif
 }
