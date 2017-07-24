@@ -59,8 +59,9 @@ void SystemInit()
     STM32_RCC::init();
 
     /* Other IO and peripheral initializations */
-    uart3.init();
-    uart3.set_baud_rate(115200);
+    STM32_UART::init_all();
+
+    uart3.init(STM32_BRATE_UART3);
 
     #if defined (DATA_IN_ExtSDRAM)
     if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1, 16 * 1024 * 1024) != STM32_RESULT_OK)

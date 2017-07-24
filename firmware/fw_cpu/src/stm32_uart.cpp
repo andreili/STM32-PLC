@@ -32,6 +32,34 @@
 #define UART_OVERSAMPLING_16                    ((uint32_t)0x00000000U)
 #define UART_OVERSAMPLING_8                     ((uint32_t)USART_CR1_OVER8)
 
+void STM32_UART::init_all()
+{
+    #ifdef STM32_USE_UART1
+    uart1.init_base(USART1);
+    #endif
+    #ifdef STM32_USE_UART2
+    uart2.init_base(USART2);
+    #endif
+    #ifdef STM32_USE_UART3
+    uart3.init_base(USART3);
+    #endif
+    #ifdef STM32_USE_UART4
+    uart4.init_base(UART4);
+    #endif
+    #ifdef STM32_USE_UART5
+    uart5.init_base(UART5);
+    #endif
+    #ifdef STM32_USE_UART6
+    uart6.init_base(USART6);
+    #endif
+    #ifdef STM32_USE_UART7
+    uart7.init_base(UART7);
+    #endif
+    #ifdef STM32_USE_UART8
+    uart8.init_base(UART8);
+    #endif
+}
+
 void STM32_UART::init_base(USART_TypeDef* uart)
 {
     m_uart = uart;
@@ -76,55 +104,47 @@ void STM32_UART::init_base(USART_TypeDef* uart)
     }
 }
 
-void STM32_UART::init()
+void STM32_UART::init(uint32_t brate)
 {
-    UART_DISABLE();
-    set_config();
-    m_uart->CR2 &= ~(USART_CR2_LINEN | USART_CR2_CLKEN);
-    m_uart->CR3 &= ~(USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN);
+    // Clock enable
     switch ((uint32_t)m_uart)
     {
-    #ifdef STM32_USE_UART1
     case USART1_BASE:
         BIT_BAND_PER(RCC->APB2ENR, RCC_APB2ENR_USART1EN) = ENABLE;
         break;
-    #endif
-    #ifdef STM32_USE_UART2
     case USART2_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_USART2EN) = ENABLE;
         break;
-    #endif
-    #ifdef STM32_USE_UART3
     case USART3_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_USART3EN) = ENABLE;
         break;
-    #endif
-    #ifdef STM32_USE_UART4
     case UART4_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_UART4EN) = ENABLE;
         break;
-    #endif
-    #ifdef STM32_USE_UART5
     case UART5_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_UART5EN) = ENABLE;
         break;
-    #endif
-    #ifdef STM32_USE_UART6
     case USART6_BASE:
         BIT_BAND_PER(RCC->APB2ENR, RCC_APB2ENR_USART6EN) = ENABLE;
         break;
-    #endif
-    #ifdef STM32_USE_UART7
     case UART7_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_UART7EN) = ENABLE;
         break;
-    #endif
-    #ifdef STM32_USE_UART8
     case UART8_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_UART8EN) = ENABLE;
         break;
-    #endif
     }
+
+    UART_DISABLE();
+
+    set_config();
+    set_baud_rate(brate);
+
+    // UART
+    m_uart->CR2 &= ~(USART_CR2_LINEN | USART_CR2_CLKEN);
+    // USART
+    //m_uart->CR2 &= ~(USART_CR2_LINEN);
+    m_uart->CR3 &= ~(USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN);
     UART_ENABLE();
 }
 
@@ -158,7 +178,6 @@ void STM32_UART::send_char(char ch)
 void STM32_UART::send_str(const char *str, UART_MODE mode)
 {
     while (m_busy) {}
-    m_busy = true;
     send_buf(str, strlen(str) + 1, mode);
 }
 
@@ -170,6 +189,7 @@ void STM32_UART::send_buf(const char *buf, int size, UART_MODE mode)
     switch (mode)
     {
     case UART_MODE::DIRECT:
+        m_busy = true;
         while (m_tx_pos < m_tx_size)
         {
             while ((m_uart->SR & USART_SR_TXE) != USART_SR_TXE);
@@ -179,10 +199,12 @@ void STM32_UART::send_buf(const char *buf, int size, UART_MODE mode)
         break;
     case UART_MODE::INTERRUPT:
         #ifdef STM32_UART_MODE_IT_ENABLE
+        m_busy = true;
         memcpy((uint8_t*)m_tx_buf, (uint8_t*)buf, size);
         m_uart->CR1 |= USART_CR1_TXEIE;
         BIT_BAND_PER(m_uart->CR1, USART_CR1_TXEIE) = 1;
         #endif
+        m_busy = false;
         break;
     case UART_MODE::DMA:
         ///TODO

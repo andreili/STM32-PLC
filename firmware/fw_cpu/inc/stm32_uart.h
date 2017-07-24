@@ -15,9 +15,9 @@ enum class UART_MODE
 class STM32_UART
 {
 public:
+    static void init_all();
     void init_base(USART_TypeDef* uart);
-    void init();
-    void set_baud_rate(uint32_t brate);
+    void init(uint32_t brate);
     
     void send_char(char ch);
     void send_str(const char *str, UART_MODE mode);
@@ -28,7 +28,8 @@ private:
     USART_TypeDef*  m_uart;
     uint32_t        m_brate;
     bool            m_busy;
-    
+
+    void set_baud_rate(uint32_t brate);
     void set_config();
     
 	void recv_data();

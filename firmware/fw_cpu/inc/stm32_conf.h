@@ -19,6 +19,7 @@
 //#define STM32_USE_UART1
 //#define STM32_USE_UART2
 #define STM32_USE_UART3
+#define STM32_BRATE_UART3 115200
 //#define STM32_USE_UART4
 //#define STM32_USE_UART5
 //#define STM32_USE_UART6
