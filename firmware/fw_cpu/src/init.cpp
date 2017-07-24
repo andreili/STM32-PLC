@@ -42,6 +42,7 @@ void base_init()
 
     STM32_NVIC::set_priority_grouping(NVIC_PRIORITYGROUP_4);
     STM32_SYSTICK::init();
+    STM32_NVIC::init();
 }
 
 void SystemInit()

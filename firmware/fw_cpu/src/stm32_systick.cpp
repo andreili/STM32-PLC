@@ -8,9 +8,7 @@ volatile uint32_t STM32_SYSTICK::m_tick;
 void STM32_SYSTICK::init()
 {
     SysTick_Config(STM32_RCC::get_HCLK_freq() / 1000 - 1);
-    STM32_NVIC::set_priority(SysTick_IRQn,
-                     STM32_NVIC::encode_priority(STM32_NVIC::get_priority_grouping(),
-                                                 STM32_PRIORITY_SYSCLK, 0));
+    STM32_NVIC::set_priority(SysTick_IRQn, STM32_PRIORITY_SYSCLK, 0);
     m_tick = 0;
 }
 

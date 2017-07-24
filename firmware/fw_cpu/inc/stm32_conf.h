@@ -14,6 +14,8 @@
 #define DATA_CACHE_ENABLE
 #define PREFETCH_ENABLE
 
+#define FORCE_INLINE __attribute__((always_inline))
+
 //#define STM32_USE_UART1
 //#define STM32_USE_UART2
 #define STM32_USE_UART3

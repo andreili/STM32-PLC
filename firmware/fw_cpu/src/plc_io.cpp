@@ -45,11 +45,6 @@ void PLC_IO::timer_proc()
     }
 }
 
-void ISR::HardFault()
-{
-    Error_Handler();
-}
-
 void Error_Handler()
 {
     PLC_IO::pin_on_FAULT();
