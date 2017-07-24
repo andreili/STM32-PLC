@@ -61,6 +61,9 @@ void SystemInit()
     /* Other IO and peripheral initializations */
     STM32_UART::init_all();
 
+    /* Initialize interrupt vectors for a peripheral */
+    STM32_NVIC::init_vectors();
+
     uart3.init(STM32_BRATE_UART3);
 
     #if defined (DATA_IN_ExtSDRAM)

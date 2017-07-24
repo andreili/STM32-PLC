@@ -21,6 +21,7 @@ class STM32_NVIC
 {
 public:
     static void init();
+    static void init_vectors();
 
     static FORCE_INLINE void set_priority_grouping(uint32_t val) { NVIC_SetPriorityGrouping(val); }
     static FORCE_INLINE uint32_t get_priority_grouping() { return _NVIC_GetPriorityGrouping(); }
@@ -34,6 +35,9 @@ public:
                                _NVIC_EncodePriority(get_priority_grouping(),
                                                    prior, subprior)); }
     static inline void enable_IRQ(IRQn_Type irqn) { NVIC_EnableIRQ(irqn); }
+    static inline void enable_and_set_prior_IRQ(IRQn_Type irqn, uint32_t prior, uint32_t subprior)
+            { set_priority(irqn, prior, subprior);
+              enable_IRQ(irqn); }
 };
 
 #endif // STM32_NVIC_H
