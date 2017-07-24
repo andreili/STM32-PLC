@@ -1,7 +1,15 @@
 #include "plc_control.h"
-#include "my_func.h"
+#include "stm32_uart.h"
+#include "xprintf.h"
+#include <stdarg.h>
 
 plc_state_t PLC_CONTROL::m_state;
+char PLC_CONTROL::m_text_buf[PLC_TEXT_BUF_SIZE];
+
+void xfunc_out(unsigned char ch)
+{
+    uart3.send_char(ch);
+}
 
 void PLC_CONTROL::init()
 {
@@ -9,6 +17,22 @@ void PLC_CONTROL::init()
     m_state.stop = 1;
     m_state.fault = 0;
     m_state.initialized = 0;
-    //memset((uint8_t*)&m_state, 0, sizeof(plc_state_t));
-    //m_state.stop = 1;
+}
+
+void xvprintf(const char* fmt, va_list arp);
+extern char* outptr;
+
+void PLC_CONTROL::print_message(const char* fmt, ...)
+{
+    va_list arp;
+
+    outptr = m_text_buf;
+
+    va_start(arp, fmt);
+    xvprintf(fmt, arp);
+    va_end(arp);
+
+    *outptr = 0;
+    outptr = 0;
+    uart3.send_str(m_text_buf, UART_MODE::INTERRUPT);
 }

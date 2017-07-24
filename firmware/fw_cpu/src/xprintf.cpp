@@ -16,8 +16,9 @@
 
 #if _USE_XFUNC_OUT
 #include <stdarg.h>
-void (*xfunc_out)(unsigned char);	/* Pointer to the output stream */
-static char *outptr;
+void xfunc_out(unsigned char);
+char* outptr;
+
 
 /*----------------------------------------------*/
 /* Put a character                              */
@@ -25,14 +26,14 @@ static char *outptr;
 
 void xputc (char c)
 {
-	if (_CR_CRLF && c == '\n') xputc('\r');		/* CR -> CRLF */
+    if (_CR_CRLF && c == '\n') xputc('\r');		/* CR -> CRLF */
 
-	if (outptr) {
-		*outptr++ = (unsigned char)c;
-		return;
-	}
+    if (outptr) {
+        *outptr++ = (unsigned char)c;
+        return;
+    }
 
-	if (xfunc_out) xfunc_out((unsigned char)c);
+    xfunc_out((unsigned char)c);
 }
 
 
@@ -47,22 +48,6 @@ void xputs (					/* Put a string to the default device */
 {
 	while (*str)
 		xputc(*str++);
-}
-
-
-void xfputs (					/* Put a string to the specified device */
-	void(*func)(unsigned char),	/* Pointer to the output function */
-	const char*	str				/* Pointer to the string */
-)
-{
-	void (*pf)(unsigned char);
-
-
-	pf = xfunc_out;		/* Save current output device */
-	xfunc_out = func;	/* Switch output to specified device */
-	while (*str)		/* Put the string */
-		xputc(*str++);
-	xfunc_out = pf;		/* Restore output device */
 }
 
 
@@ -84,7 +69,6 @@ void xfputs (					/* Put a string to the specified device */
     xprintf("%f", 10.0);            <xprintf lacks floating point support>
 */
 
-static
 void xvprintf (
 	const char*	fmt,	/* Pointer to the format string */
 	va_list arp			/* Pointer to arguments */
@@ -193,27 +177,6 @@ void xsprintf (			/* Put a formatted string to the memory */
 
 	*outptr = 0;		/* Terminate output string with a \0 */
 	outptr = 0;			/* Switch destination for device */
-}
-
-
-void xfprintf (					/* Put a formatted string to the specified device */
-	void(*func)(unsigned char),	/* Pointer to the output function */
-	const char*	fmt,			/* Pointer to the format string */
-	...							/* Optional arguments */
-)
-{
-	va_list arp;
-	void (*pf)(unsigned char);
-
-
-	pf = xfunc_out;		/* Save current output device */
-	xfunc_out = func;	/* Switch output to specified device */
-
-	va_start(arp, fmt);
-	xvprintf(fmt, arp);
-	va_end(arp);
-
-	xfunc_out = pf;		/* Restore output device */
 }
 
 

@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define PLC_TEXT_BUF_SIZE 1024
+
 typedef struct
 {
     uint8_t run;
@@ -25,6 +27,7 @@ class PLC_CONTROL
 {
 public:
     static void init();
+    static void print_message(const char* fmt, ...);
 
     static inline uint8_t in_run() { return m_state.run; }
     static inline uint8_t in_stop() { return m_state.stop; }
@@ -36,7 +39,8 @@ public:
     static inline void set_fault(uint8_t val) { m_state.fault = val; }
     static inline void set_initialized(uint8_t val) { m_state.initialized = val; }
 private:
-    static plc_state_t m_state;
+    static plc_state_t  m_state;
+    static char         m_text_buf[PLC_TEXT_BUF_SIZE];
 };
 
 #endif // PLC_CONTROL_H
