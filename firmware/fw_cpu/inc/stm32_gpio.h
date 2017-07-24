@@ -196,6 +196,9 @@ class STM32_GPIO
 public:
     static void init_all();
     inline void init(GPIO_TypeDef* gpio) { m_gpio = gpio; }
+
+    inline void pin_ON(uint32_t pin_mask) { m_gpio->BSRR = pin_mask; }
+    inline void pin_OFF(uint32_t pin_mask) { m_gpio->BSRR = (pin_mask << GPIO_BSRR_BR0_Pos); }
     
     void set_config(uint32_t pin_mask, uint32_t pin_mode, uint8_t pin_alt, uint32_t pin_speed, uint32_t pin_pull);
 private:

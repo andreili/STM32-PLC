@@ -5,7 +5,7 @@
 
 typedef struct
 {
-    uint16_t run;
+    uint8_t run;
     uint8_t stop;
     uint8_t fault;
     uint8_t initialized;
