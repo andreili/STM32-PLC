@@ -1,16 +1,14 @@
 #include "stm32_uart.h"
-#include "init.h"
 #include "ISRstm32f429xx.h"
 #include "bitbanding.h"
-#include "peripheral_def.h"
 #include "stm32_rcc.h"
 #include "stm32_gpio.h"
 #include "my_func.h"
 
 #define UART_BRR (F_CPU / BRATE)
 
-#define USART_DISABLE() BIT_BAND_PER(m_usart->CR1, USART_CR1_UE) = 0
-#define USART_ENABLE()  BIT_BAND_PER(m_usart->CR1, USART_CR1_UE) = 1
+#define UART_DISABLE() BIT_BAND_PER(m_uart->CR1, USART_CR1_UE) = 0
+#define UART_ENABLE()  BIT_BAND_PER(m_uart->CR1, USART_CR1_UE) = 1
 
 #define UART_STOPBITS_1                     ((uint32_t)0x00000000U)
 #define UART_STOPBITS_2                     ((uint32_t)USART_CR2_STOP_1)
@@ -34,67 +32,100 @@
 #define UART_OVERSAMPLING_16                    ((uint32_t)0x00000000U)
 #define UART_OVERSAMPLING_8                     ((uint32_t)USART_CR1_OVER8)
 
-void STM32_UART::init_base(USART_TypeDef* usart)
+void STM32_UART::init_base(USART_TypeDef* uart)
 {
-    m_usart = usart;
+    m_uart = uart;
     m_busy = false;
-    switch ((uint32_t)m_usart)
+    switch ((uint32_t)m_uart)
     {
+    #ifdef STM32_USE_UART1
     case USART1_BASE:
         //RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
         break;
+    #endif
+    #ifdef STM32_USE_UART2
     case USART2_BASE:
         break;
+    #endif
+    #ifdef STM32_USE_UART3
     case USART3_BASE:
         STM32_RCC::enable_clk_GPIOB();
         gpiob.set_config(GPIO_PIN_10|GPIO_PIN_11, GPIO_MODE_AF_PP, GPIO_AF7_USART3, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_PULLUP);
         break;
+    #endif
+    #ifdef STM32_USE_UART4
     case UART4_BASE:
         break;
+    #endif
+    #ifdef STM32_USE_UART5
     case UART5_BASE:
         break;
+    #endif
+    #ifdef STM32_USE_UART6
     case USART6_BASE:
         break;
+    #endif
+    #ifdef STM32_USE_UART7
     case UART7_BASE:
         break;
+    #endif
+    #ifdef STM32_USE_UART8
     case UART8_BASE:
         break;
+    #endif
     }
 }
 
 void STM32_UART::init()
 {
-    USART_DISABLE();
+    UART_DISABLE();
     set_config();
-    m_usart->CR2 &= ~(USART_CR2_LINEN | USART_CR2_CLKEN);
-    m_usart->CR3 &= ~(USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN);
-    switch ((uint32_t)m_usart)
+    m_uart->CR2 &= ~(USART_CR2_LINEN | USART_CR2_CLKEN);
+    m_uart->CR3 &= ~(USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN);
+    switch ((uint32_t)m_uart)
     {
+    #ifdef STM32_USE_UART1
     case USART1_BASE:
-        RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+        BIT_BAND_PER(RCC->APB2ENR, RCC_APB2ENR_USART1EN) = ENABLE;
         break;
+    #endif
+    #ifdef STM32_USE_UART2
     case USART2_BASE:
-        RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+        BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_USART2EN) = ENABLE;
         break;
+    #endif
+    #ifdef STM32_USE_UART3
     case USART3_BASE:
-        BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_USART3EN) = 1;
+        BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_USART3EN) = ENABLE;
         break;
+    #endif
+    #ifdef STM32_USE_UART4
     case UART4_BASE:
-        RCC->APB1ENR |= RCC_APB1ENR_UART4EN;
+        BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_UART4EN) = ENABLE;
         break;
+    #endif
+    #ifdef STM32_USE_UART5
     case UART5_BASE:
-        RCC->APB1ENR |= RCC_APB1ENR_UART5EN;
+        BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_UART5EN) = ENABLE;
         break;
+    #endif
+    #ifdef STM32_USE_UART6
     case USART6_BASE:
+        BIT_BAND_PER(RCC->APB2ENR, RCC_APB2ENR_USART6EN) = ENABLE;
         break;
+    #endif
+    #ifdef STM32_USE_UART7
     case UART7_BASE:
-        RCC->APB1ENR |= RCC_APB1ENR_UART7EN;
+        BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_UART7EN) = ENABLE;
         break;
+    #endif
+    #ifdef STM32_USE_UART8
     case UART8_BASE:
-        RCC->APB1ENR |= RCC_APB1ENR_UART8EN;
+        BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_UART8EN) = ENABLE;
         break;
+    #endif
     }
-    USART_ENABLE();
+    UART_ENABLE();
 }
 
 #define UART_DIV_SAMPLING16(_PCLK_, _BAUD_)            (((_PCLK_)*25U)/(4U*(_BAUD_)))
@@ -108,19 +139,19 @@ void STM32_UART::set_baud_rate(uint32_t brate)
 {
     m_brate = brate;
     uint32_t freq;
-    if((m_usart == USART1) || (m_usart == USART6))
+    if((m_uart == USART1) || (m_uart == USART6))
         freq = STM32_RCC::get_PCLK2_freq();
     else
         freq = STM32_RCC::get_PCLK1_freq();
-    m_usart->BRR = UART_BRR_SAMPLING16(freq, brate);
+    m_uart->BRR = UART_BRR_SAMPLING16(freq, brate);
 }
 
 void STM32_UART::send_char(char ch)
 {
     while (m_busy) {}
     m_busy = true;
-    while ((m_usart->SR & USART_SR_TXE) != USART_SR_TXE);
-    m_usart->DR = ch;
+    while ((m_uart->SR & USART_SR_TXE) != USART_SR_TXE);
+    m_uart->DR = ch;
     m_busy = false;
 }
 
@@ -141,16 +172,16 @@ void STM32_UART::send_buf(const char *buf, int size, UART_MODE mode)
     case UART_MODE::DIRECT:
         while (m_tx_pos < m_tx_size)
         {
-            while ((m_usart->SR & USART_SR_TXE) != USART_SR_TXE);
-            m_usart->DR = buf[m_tx_pos++];
+            while ((m_uart->SR & USART_SR_TXE) != USART_SR_TXE);
+            m_uart->DR = buf[m_tx_pos++];
         }
         m_busy = false;
         break;
     case UART_MODE::INTERRUPT:
         #ifdef STM32_UART_MODE_IT_ENABLE
         memcpy((uint8_t*)m_tx_buf, (uint8_t*)buf, size);
-        m_usart->CR1 |= USART_CR1_TXEIE;
-        BIT_BAND_PER(m_usart->CR1, USART_CR1_TXEIE) = 1;
+        m_uart->CR1 |= USART_CR1_TXEIE;
+        BIT_BAND_PER(m_uart->CR1, USART_CR1_TXEIE) = 1;
         #endif
         break;
     case UART_MODE::DMA:
@@ -164,10 +195,10 @@ void STM32_UART::send_buf(const char *buf, int size, UART_MODE mode)
 
 void inline STM32_UART::irq_proc()
 {
-	if (m_usart->SR & USART_SR_RXNE)
-		recv_data();
-	else if (m_usart->SR & USART_SR_TXE)
-		send_data();
+    if (m_uart->SR & USART_SR_RXNE)
+        recv_data();
+    else if (m_uart->SR & USART_SR_TXE)
+        send_data();
 }
 
 void STM32_UART::set_config()
@@ -175,7 +206,7 @@ void STM32_UART::set_config()
     uint32_t tmpreg;
     
     /*-------------------------- USART CR2 Configuration -----------------------*/
-    tmpreg = m_usart->CR2;
+    tmpreg = m_uart->CR2;
 
     /* Clear STOP[13:12] bits */
     tmpreg &= (uint32_t)~((uint32_t)USART_CR2_STOP);
@@ -184,10 +215,10 @@ void STM32_UART::set_config()
     tmpreg |= STM32_UART_STOPBITS;
 
     /* Write to USART CR2 */
-    m_usart->CR2 = tmpreg;
+    m_uart->CR2 = tmpreg;
 
     /*-------------------------- USART CR1 Configuration -----------------------*/
-    tmpreg = m_usart->CR1;
+    tmpreg = m_uart->CR1;
 
     /* Clear M, PCE, PS, TE and RE bits */
     tmpreg &= (uint32_t)~((uint32_t)(USART_CR1_M | USART_CR1_PCE | USART_CR1_PS | USART_CR1_TE | \
@@ -205,10 +236,10 @@ void STM32_UART::set_config()
     #endif
 
     /* Write to USART CR1 */
-    m_usart->CR1 = tmpreg;
+    m_uart->CR1 = tmpreg;
 
     /*-------------------------- USART CR3 Configuration -----------------------*/  
-    tmpreg = m_usart->CR3;
+    tmpreg = m_uart->CR3;
 
     /* Clear CTSE and RTSE bits */
     tmpreg &= (uint32_t)~((uint32_t)(USART_CR3_RTSE | USART_CR3_CTSE));
@@ -217,29 +248,28 @@ void STM32_UART::set_config()
     tmpreg |= UART_HWCONTROL_NONE;
 
     /* Write to USART CR3 */
-    m_usart->CR3 = tmpreg;
+    m_uart->CR3 = tmpreg;
 }
 
 void STM32_UART::recv_data()
 {
-	m_rx_buf[m_rx_pos++] = m_usart->DR;
+    m_rx_buf[m_rx_pos++] = m_uart->DR;
 	m_rx_size = m_rx_pos;
 }
 
 void STM32_UART::send_data()
 {
-	m_usart->DR = m_tx_buf[m_tx_pos++];
+    m_uart->DR = m_tx_buf[m_tx_pos++];
 	if (m_tx_pos >= m_tx_size)
     {
-    	BIT_BAND_PER(m_usart->CR1, USART_CR1_TXEIE) = 0;
+        BIT_BAND_PER(m_uart->CR1, USART_CR1_TXEIE) = 0;
         m_busy = false;
     }
-		//m_usart->CR1 &= ~(USART_CR1_TXEIE);
 }
 
 
 #ifdef STM32_UART_MODE_IT_ENABLE
-#ifdef USE_USART1
+#ifdef STM32_USE_UART1
 STM32_UART uart1;
 
 void ISR::USART1_IRQ()
@@ -248,7 +278,7 @@ void ISR::USART1_IRQ()
 }
 #endif
 
-#ifdef USE_USART2
+#ifdef STM32_USE_UART2
 STM32_UART uart2;
 
 void ISR::USART2_IRQ()
@@ -257,7 +287,7 @@ void ISR::USART2_IRQ()
 }
 #endif
 
-#ifdef USE_USART3
+#ifdef STM32_USE_UART3
 STM32_UART uart3;
 
 void ISR::USART3_IRQ()
@@ -266,7 +296,7 @@ void ISR::USART3_IRQ()
 }
 #endif
 
-#ifdef USE_USART4
+#ifdef STM32_USE_UART4
 STM32_UART uart4;
 
 void ISR::UART4_IRQ()
@@ -275,7 +305,7 @@ void ISR::UART4_IRQ()
 }
 #endif
 
-#ifdef USE_USART5
+#ifdef STM32_USE_UART5
 STM32_UART uart5;
 
 void ISR::UART5_IRQ()
@@ -284,7 +314,7 @@ void ISR::UART5_IRQ()
 }
 #endif
 
-#ifdef USE_USART6
+#ifdef STM32_USE_UART6
 STM32_UART uart6;
 
 void ISR::USART6_IRQ()
@@ -293,7 +323,7 @@ void ISR::USART6_IRQ()
 }
 #endif
 
-#ifdef USE_USART7
+#ifdef STM32_USE_UART7
 STM32_UART uart7;
 
 void ISR::UART7_IRQ()
@@ -302,7 +332,7 @@ void ISR::UART7_IRQ()
 }
 #endif
 
-#ifdef USE_USART8
+#ifdef STM32_USE_UART8
 STM32_UART uart8;
 
 void ISR::UART8_IRQ()

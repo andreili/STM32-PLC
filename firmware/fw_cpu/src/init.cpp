@@ -51,7 +51,6 @@ void SystemInit()
     /* GPIO initializations */
     STM32_GPIO::init_all();
     PLC_IO::init();
-    uart3.init_base(USART3);
 
     // system initialization
     //__enable_fault_irq();
@@ -62,11 +61,12 @@ void SystemInit()
     uart3.init();
     uart3.set_baud_rate(115200);
 
-
     #if defined (DATA_IN_ExtSDRAM)
     if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1, 16 * 1024 * 1024) != STM32_RESULT_OK)
         Error_Handler();
     #endif
+
+    /* Initialize interrupts */
 }
 
 #define INIT_SP() \
