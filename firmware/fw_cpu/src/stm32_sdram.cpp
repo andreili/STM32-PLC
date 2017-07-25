@@ -6,7 +6,7 @@
 
 STM32_SDRAM sdram;
 
-#define MEMTEST_PRINT
+//#define MEMTEST_PRINT
 #ifdef MEMTEST_PRINT
 #include "xprintf.h"
 #define MEMTEST_PRINT_VERBOSE
@@ -16,10 +16,47 @@ STM32_SDRAM sdram;
 
 uint32_t STM32_SDRAM::init()
 {
+    init_gpio();
+
     //Initialize FMC
     STM32_RCC::enable_clk_FMC();
 
-    init_gpio();
+    STM32_RCC::enable_clk_GPIOF();
+    gpiof.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 |
+                     GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_11 | GPIO_PIN_12 |
+                     GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_MODE_AF_PP,
+                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+
+    STM32_RCC::enable_clk_GPIOC();
+    gpioc.set_config(GPIO_PIN_0 |
+                 #ifdef STM32_SDRAM_BANK1
+                     GPIO_PIN_2 |
+                 #endif
+                     GPIO_PIN_3, GPIO_MODE_AF_PP,
+                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+
+    STM32_RCC::enable_clk_GPIOG();
+    gpiog.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 |
+                     GPIO_PIN_8 | GPIO_PIN_15, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
+                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+
+    STM32_RCC::enable_clk_GPIOE();
+    gpioe.set_config(GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
+                     GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |
+                     GPIO_PIN_15, GPIO_MODE_AF_PP,
+                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+
+    STM32_RCC::enable_clk_GPIOD();
+    gpiod.set_config(GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 |
+                     GPIO_PIN_12 | GPIO_PIN_14 | GPIO_PIN_15| GPIO_PIN_0 |
+                     GPIO_PIN_1| GPIO_PIN_4| GPIO_PIN_5| GPIO_PIN_6 |
+                     GPIO_PIN_7, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
+                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+
+    STM32_RCC::enable_clk_GPIOB();
+    gpiob.set_config(GPIO_PIN_5 | GPIO_PIN_6,
+                     GPIO_MODE_AF_PP, GPIO_AF12_FMC,
+                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
 
     #ifdef STM32_SDRAM_BANK1
     init_bank1();
@@ -47,8 +84,8 @@ uint32_t inline get_val(uint32_t offset)
 
 uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size)
 {
-    uint32_t start_ticks = STM32_SYSTICK::get_tick();
     #ifdef MEMTEST_PRINT
+    uint32_t start_ticks = STM32_SYSTICK::get_tick();
     xprintf("Start memory test (block size = %U bytes, bank 0x%X)\n", MEMTEST_BUF_SIZE, start_addr);
     #endif
 
@@ -57,9 +94,9 @@ uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size)
     {
         uint32_t* mem = (uint32_t*)(start_addr + (i * MEMTEST_BUF_SIZE));
 
+        #ifdef MEMTEST_PRINT
         uint32_t cur_start = start_addr + (i * MEMTEST_BUF_SIZE);
         //plc_state.data.mem_test.cur_start = start_addr + (i * MEMTEST_BUF_SIZE);
-        #ifdef MEMTEST_PRINT_VERBOSE
         xprintf("\r\t\033[0KBlock #%05U/%05U (%08X-%08X): ", i+1, cycles_count,cur_start, start_addr + ((i + 1) * MEMTEST_BUF_SIZE));
         #endif
 
@@ -69,9 +106,11 @@ uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size)
         for (uint32_t uwIndex = 0; uwIndex < (MEMTEST_BUF_SIZE / sizeof(uint32_t)); uwIndex++)
             if (mem[uwIndex] != get_val(uwIndex))
             {
+                #ifdef MEMTEST_PRINT
                 xprintf("ERROR at %08X (got %08X, exp %08X)\n",
                     start_addr + (i * MEMTEST_BUF_SIZE) + uwIndex * sizeof(uint32_t),
                     mem[uwIndex], get_val(uwIndex));
+                #endif
                 return STM32_RESULT_FAIL;
             }
         #ifdef MEMTEST_PRINT_VERBOSE
@@ -95,82 +134,143 @@ void STM32_SDRAM::init_gpio()
     gpiob.set_config(GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_3, GPIO_MODE_AF_PP,
                      GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
     #endif
+
+    RCC->AHB1ENR |= 0x000001F8;
+
+    GPIOD->AFR[0]  = 0x00CCC0CC;
+    GPIOD->AFR[1]  = 0xCCCCCCCC;
+    GPIOD->MODER   = 0xAAAA0A8A;
+    GPIOD->OSPEEDR = 0xFFFF0FCF;
+    GPIOD->OTYPER  = 0x00000000;
+    GPIOD->PUPDR   = 0x00000000;
+
+    GPIOE->AFR[0]  = 0xC00CC0CC;
+    GPIOE->AFR[1]  = 0xCCCCCCCC;
+    GPIOE->MODER   = 0xAAAA828A;
+    GPIOE->OSPEEDR = 0xFFFFC3CF;
+    GPIOE->OTYPER  = 0x00000000;
+    GPIOE->PUPDR   = 0x00000000;
+
+    GPIOF->AFR[0]  = 0xCCCCCCCC;
+    GPIOF->AFR[1]  = 0xCCCCCCCC;
+    GPIOF->MODER   = 0xAA800AAA;
+    GPIOF->OSPEEDR = 0xAA800AAA;
+    GPIOF->OTYPER  = 0x00000000;
+    GPIOF->PUPDR   = 0x00000000;
+
+    GPIOG->AFR[0]  = 0xCCCCCCCC;
+    GPIOG->AFR[1]  = 0xCCCCCCCC;
+    GPIOG->MODER   = 0xAAAAAAAA;
+    GPIOG->OSPEEDR = 0xAAAAAAAA;
+    GPIOG->OTYPER  = 0x00000000;
+    GPIOG->PUPDR   = 0x00000000;
+
+    GPIOH->AFR[0]  = 0x00C0CC00;
+    GPIOH->AFR[1]  = 0xCCCCCCCC;
+    GPIOH->MODER   = 0xAAAA08A0;
+    GPIOH->OSPEEDR = 0xAAAA08A0;
+    GPIOH->OTYPER  = 0x00000000;
+    GPIOH->PUPDR   = 0x00000000;
+
+    GPIOI->AFR[0]  = 0xCCCCCCCC;
+    GPIOI->AFR[1]  = 0x00000CC0;
+    GPIOI->MODER   = 0x0028AAAA;
+    GPIOI->OSPEEDR = 0x0028AAAA;
+    GPIOI->OTYPER  = 0x00000000;
+    GPIOI->PUPDR   = 0x00000000;
+
+    /*STM32_RCC::enable_clk_GPIOD();
+    gpiod.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8 | GPIO_PIN_9 |
+                     GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_14 |
+                     GPIO_PIN_15, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
+                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+
+    STM32_RCC::enable_clk_GPIOE();
+    gpioe.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7 | GPIO_PIN_8 |
+                     GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 |
+                     GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_MODE_AF_PP,
+                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+
+    STM32_RCC::enable_clk_GPIOF();
+    gpiof.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 |
+                     GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_11 | GPIO_PIN_12 |
+                     GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_MODE_AF_PP,
+                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_HIGH, GPIO_NOPULL);
+
+    STM32_RCC::enable_clk_GPIOG();
+    gpiog.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 |
+                     GPIO_PIN_8 | GPIO_PIN_15, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
+                     GPIO_SPEED_FREQ_HIGH, GPIO_NOPULL);
+
     STM32_RCC::enable_clk_GPIOC();
     gpioc.set_config(GPIO_PIN_0 |
                  #ifdef STM32_SDRAM_BANK1
                      GPIO_PIN_2 |
                  #endif
                      GPIO_PIN_3, GPIO_MODE_AF_PP,
-                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-    STM32_RCC::enable_clk_GPIOD();
-    gpiod.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8 | GPIO_PIN_9 |
-                     GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_14 |
-                     GPIO_PIN_15, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
-                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-    STM32_RCC::enable_clk_GPIOE();
-    gpioe.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7 | GPIO_PIN_8 |
-                     GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 |
-                     GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_MODE_AF_PP,
-                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-    STM32_RCC::enable_clk_GPIOF();
-    gpiof.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 |
-                     GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_11 | GPIO_PIN_12 |
-                     GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_MODE_AF_PP,
-                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-    STM32_RCC::enable_clk_GPIOG();
-    gpiog.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 |
-                     GPIO_PIN_8 | GPIO_PIN_15, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
-                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_HIGH, GPIO_NOPULL);*/
 }
 
 void STM32_SDRAM::init_bank1()
 {
-    FMC_Bank5_6->SDCR[0] &= ~(FMC_SDCR1_NC  | FMC_SDCR1_NR | FMC_SDCR1_MWID |
-                              FMC_SDCR1_NB  | FMC_SDCR1_CAS | FMC_SDCR1_WP |
-                              FMC_SDCR1_SDCLK | FMC_SDCR1_RBURST | FMC_SDCR1_RPIPE);
-    FMC_Bank5_6->SDCR[0] |= (STM32_SDRAM_COLUMNS | STM32_SDRAM_ROWS | STM32_SDRAM_BUS_WIDTH |
-                             STM32_SDRAM_BANKS | STM32_SDRAM_CAS_LAT | STM32_SDRAM_WP |
-                             STM32_SDRAM_CLOCK | STM32_SDRAM_BURST | STM32_SDRAM_PIPE_DELAY);
+    uint32_t tmpreg = FMC_Bank5_6->SDCR[0];
+    tmpreg &= ~(FMC_SDCR1_NC  | FMC_SDCR1_NR | FMC_SDCR1_MWID |
+                FMC_SDCR1_NB  | FMC_SDCR1_CAS | FMC_SDCR1_WP |
+                FMC_SDCR1_SDCLK | FMC_SDCR1_RBURST | FMC_SDCR1_RPIPE);
+   tmpreg |= (STM32_SDRAM_COLUMNS | STM32_SDRAM_ROWS | STM32_SDRAM_BUS_WIDTH |
+              STM32_SDRAM_BANKS | STM32_SDRAM_CAS_LAT | STM32_SDRAM_WP |
+              STM32_SDRAM_CLOCK | STM32_SDRAM_BURST | STM32_SDRAM_PIPE_DELAY);
+   FMC_Bank5_6->SDCR[0] = tmpreg;
 }
 
 void STM32_SDRAM::init_bank2()
 {
 
-    FMC_Bank5_6->SDCR[0] &= ~(FMC_SDCR1_SDCLK | FMC_SDCR1_RBURST | FMC_SDCR1_RPIPE);
-    FMC_Bank5_6->SDCR[0] |= (STM32_SDRAM_CLOCK | STM32_SDRAM_BURST | STM32_SDRAM_PIPE_DELAY);
-    FMC_Bank5_6->SDCR[1] &= ~(FMC_SDCR1_NC  | FMC_SDCR1_NR | FMC_SDCR1_MWID |
-                              FMC_SDCR1_NB  | FMC_SDCR1_CAS | FMC_SDCR1_WP);
-    FMC_Bank5_6->SDCR[1] |= (STM32_SDRAM_COLUMNS | STM32_SDRAM_ROWS | STM32_SDRAM_BUS_WIDTH |
-                             STM32_SDRAM_BANKS | STM32_SDRAM_CAS_LAT | STM32_SDRAM_WP);
+    uint32_t tmpreg1 = FMC_Bank5_6->SDCR[0];
+    tmpreg1 &= ~(FMC_SDCR1_SDCLK | FMC_SDCR1_RBURST | FMC_SDCR1_RPIPE);
+    tmpreg1 |= (STM32_SDRAM_CLOCK | STM32_SDRAM_BURST | STM32_SDRAM_PIPE_DELAY);
+    uint32_t tmpreg2 = FMC_Bank5_6->SDCR[1];
+    tmpreg2 &= ~(FMC_SDCR1_NC  | FMC_SDCR1_NR | FMC_SDCR1_MWID |
+                 FMC_SDCR1_NB  | FMC_SDCR1_CAS | FMC_SDCR1_WP);
+    tmpreg2 |= (STM32_SDRAM_COLUMNS | STM32_SDRAM_ROWS | STM32_SDRAM_BUS_WIDTH |
+                STM32_SDRAM_BANKS | STM32_SDRAM_CAS_LAT | STM32_SDRAM_WP);
+    FMC_Bank5_6->SDCR[0] = tmpreg1;
+    FMC_Bank5_6->SDCR[1] = tmpreg2;
 }
 
 void STM32_SDRAM::set_timing_bank1()
 {
-    FMC_Bank5_6->SDTR[0] &= ~(FMC_SDTR1_TMRD | FMC_SDTR1_TXSR | FMC_SDTR1_TRAS |
-                              FMC_SDTR1_TRC  | FMC_SDTR1_TWR  | FMC_SDTR1_TRP |
-                              FMC_SDTR1_TRCD);
-    FMC_Bank5_6->SDTR[0] |= ((STM32_SDRAM_LOAD_TO_ACTIVE_DELAY - 1) |
-                             ((STM32_SDRAM_EXIT_SELF_REFRESH_DELAY - 1) << 4) |
-                             ((STM32_SDRAM_SELF_REFRESH_TIME - 1) << 8) |
-                             ((STM32_SDRAM_ROW_CYCLE_DELAY - 1) << 12) |
-                             ((STM32_SDRAM_WRITE_RECOVERY_TIME -1) << 16) |
-                             ((STM32_SDRAM_RP_DELAY - 1) << 20) |
-                             ((STM32_SDRAM_RCD_DELAY - 1) << 24));
+    uint32_t tmpreg = FMC_Bank5_6->SDTR[0];
+    tmpreg &= ~(FMC_SDTR1_TMRD | FMC_SDTR1_TXSR | FMC_SDTR1_TRAS |
+                FMC_SDTR1_TRC  | FMC_SDTR1_TWR  | FMC_SDTR1_TRP |
+                FMC_SDTR1_TRCD);
+    tmpreg |= ((STM32_SDRAM_LOAD_TO_ACTIVE_DELAY - 1) |
+               ((STM32_SDRAM_EXIT_SELF_REFRESH_DELAY - 1) << 4) |
+               ((STM32_SDRAM_SELF_REFRESH_TIME - 1) << 8) |
+               ((STM32_SDRAM_ROW_CYCLE_DELAY - 1) << 12) |
+               ((STM32_SDRAM_WRITE_RECOVERY_TIME -1) << 16) |
+               ((STM32_SDRAM_RP_DELAY - 1) << 20) |
+               ((STM32_SDRAM_RCD_DELAY - 1) << 24));
+    FMC_Bank5_6->SDTR[0] = tmpreg;
 }
 
 void STM32_SDRAM::set_timing_bank2()
 {
-    FMC_Bank5_6->SDTR[0] &= ~(FMC_SDTR1_TRC | FMC_SDTR1_TRP);
-    FMC_Bank5_6->SDTR[0] |= (((STM32_SDRAM_ROW_CYCLE_DELAY - 1) << 12) |
-                             ((STM32_SDRAM_RP_DELAY - 1) << 20));
-    FMC_Bank5_6->SDTR[1] &= ~(FMC_SDTR1_TMRD | FMC_SDTR1_TXSR | FMC_SDTR1_TRAS |
-                              FMC_SDTR1_TRC  | FMC_SDTR1_TWR  | FMC_SDTR1_TRP |
-                              FMC_SDTR1_TRCD);
-    FMC_Bank5_6->SDTR[1] |= ((STM32_SDRAM_LOAD_TO_ACTIVE_DELAY - 1) |
-                             ((STM32_SDRAM_EXIT_SELF_REFRESH_DELAY - 1) << 4) |
-                             ((STM32_SDRAM_SELF_REFRESH_TIME - 1) << 8) |
-                             ((STM32_SDRAM_WRITE_RECOVERY_TIME -1) << 16) |
-                             ((STM32_SDRAM_RCD_DELAY - 1) << 24));
+    uint32_t tmpreg1 = FMC_Bank5_6->SDTR[0];
+    tmpreg1 &= ~(FMC_SDTR1_TRC | FMC_SDTR1_TRP);
+    tmpreg1 |= (((STM32_SDRAM_ROW_CYCLE_DELAY - 1) << 12) |
+                ((STM32_SDRAM_RP_DELAY - 1) << 20));
+    uint32_t tmpreg2 = FMC_Bank5_6->SDTR[1];
+    tmpreg2 &= ~(FMC_SDTR1_TMRD | FMC_SDTR1_TXSR | FMC_SDTR1_TRAS |
+                 FMC_SDTR1_TRC  | FMC_SDTR1_TWR  | FMC_SDTR1_TRP |
+                 FMC_SDTR1_TRCD);
+    tmpreg2 |= ((STM32_SDRAM_LOAD_TO_ACTIVE_DELAY - 1) |
+                ((STM32_SDRAM_EXIT_SELF_REFRESH_DELAY - 1) << 4) |
+                ((STM32_SDRAM_SELF_REFRESH_TIME - 1) << 8) |
+                ((STM32_SDRAM_WRITE_RECOVERY_TIME -1) << 16) |
+                ((STM32_SDRAM_RCD_DELAY - 1) << 24));
+    FMC_Bank5_6->SDTR[0] = tmpreg1;
+    FMC_Bank5_6->SDTR[1] = tmpreg2;
 }
 
 #define SEND_COMAND(m, t, r, mrd, to) \

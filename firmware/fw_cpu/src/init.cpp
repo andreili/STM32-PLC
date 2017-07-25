@@ -13,8 +13,12 @@ int main();
 // base initialization
 void base_init()
 {
-    //memset((uint8_t*)0x20000000, 0, 0x20000);
     STM32_RCC::deinit();
+
+    #if defined (DATA_IN_ExtSDRAM)
+    if (STM32_SDRAM::init() != STM32_RESULT_OK)
+        Error_Handler();
+    #endif
 
     /* Configure the Vector Table location add offset address ------------------*/
     #ifdef VECT_TAB_SRAM
@@ -24,11 +28,6 @@ void base_init()
     #endif
 
     PLC_CONTROL::init();
-
-    #if defined (DATA_IN_ExtSDRAM)
-    if (STM32_SDRAM::init() != STM32_RESULT_OK)
-        Error_Handler();
-    #endif
 
     #ifdef INSTRUCTION_CACHE_ENABLE
     STM32_FLASH::enable_instruction_cache();
@@ -67,11 +66,9 @@ void SystemInit()
     uart3.init(STM32_BRATE_UART3);
 
     #if defined (DATA_IN_ExtSDRAM)
-    if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1, 16 * 1024 * 1024) != STM32_RESULT_OK)
-        Error_Handler();
+    //if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1, 16 * 1024 * 1024) != STM32_RESULT_OK)
+    //    Error_Handler();
     #endif
-
-    /* Initialize interrupts */
 }
 
 #define INIT_SP() \
