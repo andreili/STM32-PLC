@@ -14,7 +14,7 @@ void test_mem_speed(uint8_t *mem, const char *title)
     for (int i=0 ; i<TEST_CYCLES ; ++i)
         memset(mem, i%100, TEST_SIZE);
     uint32_t time = STM32_SYSTICK::get_tick() - ticks;
-    uint32_t speed_mb = ((TEST_SIZE * TEST_CYCLES) / time) / (1024);
+    uint32_t speed_mb = ((TEST_SIZE * TEST_CYCLES) / time) / (TEST_SIZE);
     PLC_CONTROL::print_message("\t%S: %U ticks, ~%UMb/s\n",
                                title, time, speed_mb);
 }
@@ -37,7 +37,7 @@ int main()
     #ifdef MEM_SPEED_TEST
     PLC_CONTROL::print_message("+-----------------------------+\n"
                                "Test RAM speeds\n");
-    uint8_t buf_int[1024];
+    uint8_t buf_int[TEST_SIZE];
     test_mem_speed(buf_int, "Internal RAM");
     test_mem_speed((uint8_t*)SDRAM_BASE_BANK1, "External RAM");
     #endif

@@ -169,19 +169,22 @@ void STM32_SDRAM::init_bank2()
     FMC_Bank5_6->SDCR[1] = tmpreg2;
 }
 
+#define VAL_SDTR(CNAME, MSK_NAME) \
+    (((CNAME - 1) << MSK_NAME ## _Pos) & MSK_NAME ## _Msk)
+
 void STM32_SDRAM::set_timing_bank1()
 {
     uint32_t tmpreg = FMC_Bank5_6->SDTR[0];
     tmpreg &= ~(FMC_SDTR1_TMRD | FMC_SDTR1_TXSR | FMC_SDTR1_TRAS |
                 FMC_SDTR1_TRC  | FMC_SDTR1_TWR  | FMC_SDTR1_TRP |
                 FMC_SDTR1_TRCD);
-    tmpreg |= ((STM32_SDRAM_LOAD_TO_ACTIVE_DELAY - 1) |
-               ((STM32_SDRAM_EXIT_SELF_REFRESH_DELAY - 1) << 4) |
-               ((STM32_SDRAM_SELF_REFRESH_TIME - 1) << 8) |
-               ((STM32_SDRAM_ROW_CYCLE_DELAY - 1) << 12) |
-               ((STM32_SDRAM_WRITE_RECOVERY_TIME -1) << 16) |
-               ((STM32_SDRAM_RP_DELAY - 1) << 20) |
-               ((STM32_SDRAM_RCD_DELAY - 1) << 24));
+    tmpreg |= VAL_SDTR(STM32_SDRAM_LOAD_TO_ACTIVE_DELAY, FMC_SDTR1_TMRD) |
+            VAL_SDTR(STM32_SDRAM_EXIT_SELF_REFRESH_DELAY, FMC_SDTR1_TXSR) |
+            VAL_SDTR(STM32_SDRAM_SELF_REFRESH_TIME, FMC_SDTR1_TRAS) |
+            VAL_SDTR(STM32_SDRAM_ROW_CYCLE_DELAY, FMC_SDTR1_TRC) |
+            VAL_SDTR(STM32_SDRAM_WRITE_RECOVERY_TIME, FMC_SDTR1_TWR) |
+            VAL_SDTR(STM32_SDRAM_RP_DELAY, FMC_SDTR1_TRP) |
+            VAL_SDTR(STM32_SDRAM_RCD_DELAY, FMC_SDTR1_TRCD);
     FMC_Bank5_6->SDTR[0] = tmpreg;
 }
 
@@ -189,17 +192,17 @@ void STM32_SDRAM::set_timing_bank2()
 {
     uint32_t tmpreg1 = FMC_Bank5_6->SDTR[0];
     tmpreg1 &= ~(FMC_SDTR1_TRC | FMC_SDTR1_TRP);
-    tmpreg1 |= (((STM32_SDRAM_ROW_CYCLE_DELAY - 1) << 12) |
-                ((STM32_SDRAM_RP_DELAY - 1) << 20));
+    tmpreg1 |= VAL_SDTR(STM32_SDRAM_ROW_CYCLE_DELAY, FMC_SDTR1_TRC) |
+            VAL_SDTR(STM32_SDRAM_RP_DELAY, FMC_SDTR1_TRP);
     uint32_t tmpreg2 = FMC_Bank5_6->SDTR[1];
     tmpreg2 &= ~(FMC_SDTR1_TMRD | FMC_SDTR1_TXSR | FMC_SDTR1_TRAS |
                  FMC_SDTR1_TRC  | FMC_SDTR1_TWR  | FMC_SDTR1_TRP |
                  FMC_SDTR1_TRCD);
-    tmpreg2 |= ((STM32_SDRAM_LOAD_TO_ACTIVE_DELAY - 1) |
-                ((STM32_SDRAM_EXIT_SELF_REFRESH_DELAY - 1) << 4) |
-                ((STM32_SDRAM_SELF_REFRESH_TIME - 1) << 8) |
-                ((STM32_SDRAM_WRITE_RECOVERY_TIME -1) << 16) |
-                ((STM32_SDRAM_RCD_DELAY - 1) << 24));
+    tmpreg2 |= VAL_SDTR(STM32_SDRAM_LOAD_TO_ACTIVE_DELAY, FMC_SDTR2_TMRD) |
+            VAL_SDTR(STM32_SDRAM_EXIT_SELF_REFRESH_DELAY, FMC_SDTR2_TXSR) |
+            VAL_SDTR(STM32_SDRAM_SELF_REFRESH_TIME, FMC_SDTR2_TRAS) |
+            VAL_SDTR(STM32_SDRAM_WRITE_RECOVERY_TIME, FMC_SDTR2_TWR) |
+            VAL_SDTR(STM32_SDRAM_RCD_DELAY, FMC_SDTR2_TRCD);
     FMC_Bank5_6->SDTR[0] = tmpreg1;
     FMC_Bank5_6->SDTR[1] = tmpreg2;
 }
@@ -277,7 +280,9 @@ uint32_t STM32_SDRAM::run_init_sequence()
 
 uint32_t STM32_SDRAM::send_comand(uint32_t mode, uint32_t target, uint32_t refresh, uint32_t mode_reg_def, uint32_t timeout)
 {
-    FMC_Bank5_6->SDCMR = mode | target | ((refresh -1) << 5) | (mode_reg_def << 9);
+    FMC_Bank5_6->SDCMR = mode | target |
+            ((refresh -1 ) << FMC_SDCMR_NRFS_Pos) |
+            (mode_reg_def << FMC_SDCMR_MRD_Pos);
     WAIT_TIMEOUT((FMC_Bank5_6->SDSR & FMC_SDSR_BUSY), timeout);
     return STM32_RESULT_OK;
 }

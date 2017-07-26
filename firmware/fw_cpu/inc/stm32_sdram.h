@@ -71,7 +71,7 @@ private:
     static uint32_t run_init_sequence();
     static uint32_t send_comand(uint32_t mode, uint32_t target, uint32_t refresh, uint32_t mode_reg_def, uint32_t timeout);
 
-    static inline void program_refresh_rate(uint32_t rate) { FMC_Bank5_6->SDRTR |= (rate << 1); }
+    static inline void program_refresh_rate(uint32_t rate) { FMC_Bank5_6->SDRTR |= (rate << FMC_SDRTR_COUNT_Pos); }
     static inline void disable_write_protection(int bank) { MODIFY_REG(FMC_Bank5_6->SDCR[bank], FMC_SDCR1_WP, 0); }
 };
 
