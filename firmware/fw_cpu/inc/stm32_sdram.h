@@ -61,7 +61,7 @@ class STM32_SDRAM
 public:
     static void init_base();
     static uint32_t init();
-    static uint32_t run_tests(uint32_t start_addr, uint32_t size);
+    static uint32_t run_tests(uint32_t start_addr, uint32_t size, bool print_debug = true);
 private:
     static void init_gpio();
     static void init_bank1();

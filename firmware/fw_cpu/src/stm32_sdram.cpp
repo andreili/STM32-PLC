@@ -44,12 +44,14 @@ uint32_t inline get_val(uint32_t offset)
     return 0x12345678 + (offset << 8);
 }
 
-uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size)
+uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size, bool print_debug)
 {
     #ifdef MEMTEST_PRINT
     uint32_t start_ticks = STM32_SYSTICK::get_tick();
-    PLC_CONTROL::print_message("Start memory test (block size = %U bytes, bank 0x%X)\n",
-                               MEMTEST_BUF_SIZE, start_addr);
+    if (print_debug)
+        PLC_CONTROL::print_message("+-----------------------------+\n"
+                                   "Start memory test (block size = %U bytes, bank 0x%X)\n",
+                                   MEMTEST_BUF_SIZE, start_addr);
     #endif
 
     int cycles_count = size / MEMTEST_BUF_SIZE;
@@ -58,10 +60,13 @@ uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size)
         uint32_t* mem = (uint32_t*)(start_addr + (i * MEMTEST_BUF_SIZE));
 
         #ifdef MEMTEST_PRINT_VERBOSE
-        uint32_t cur_start = start_addr + (i * MEMTEST_BUF_SIZE);
-        //plc_state.data.mem_test.cur_start = start_addr + (i * MEMTEST_BUF_SIZE);
-        PLC_CONTROL::print_message("\r\t\033[0KBlock #%05U/%05U (%08X-%08X): ", i+1,
-                                    cycles_count,cur_start, start_addr + ((i + 1) * MEMTEST_BUF_SIZE));
+        if (print_debug)
+        {
+            uint32_t cur_start = start_addr + (i * MEMTEST_BUF_SIZE);
+            //plc_state.data.mem_test.cur_start = start_addr + (i * MEMTEST_BUF_SIZE);
+            PLC_CONTROL::print_message("\r\t\033[0KBlock #%05U/%05U (%08X-%08X): ", i+1,
+                                        cycles_count,cur_start, start_addr + ((i + 1) * MEMTEST_BUF_SIZE));
+        }
         #endif
 
         memset((uint8_t*)mem, 0, MEMTEST_BUF_SIZE);
@@ -78,16 +83,19 @@ uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size)
                 return STM32_RESULT_FAIL;
             }
         #ifdef MEMTEST_PRINT_VERBOSE
-        if ((i+1) >= cycles_count)
+        if (print_debug)
             PLC_CONTROL::print_message("OK\n");
         #endif
         //HAL_IWDG_Refresh(&hiwdg);
     }
 
     #ifdef MEMTEST_PRINT
-    int mem_size = (size ) / 1024 / 1024;
-    PLC_CONTROL::print_message("\r\033[0KTest Finished. Available memory: %UMb\nTest time (HAL ticks): %U\n",
-        mem_size, STM32_SYSTICK::get_tick() - start_ticks);
+    if (print_debug)
+    {
+        int mem_size = (size) / 1024 / 1024;
+        PLC_CONTROL::print_message("\r\033[0K\tTest Finished. Available memory: %UMb\n\tTest time: %Ums\n",
+            mem_size, STM32_SYSTICK::get_tick() - start_ticks);
+    }
     #endif
 
     return STM32_RESULT_OK;
