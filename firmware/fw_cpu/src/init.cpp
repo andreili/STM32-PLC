@@ -14,6 +14,8 @@ int main();
 void base_init()
 {
     STM32_RCC::deinit();
+    STM32_GPIO::init_all();
+    STM32_SYSTICK::init();
 
     #if defined (DATA_IN_ExtSDRAM)
     if (STM32_SDRAM::init() != STM32_RESULT_OK)
@@ -39,8 +41,6 @@ void base_init()
     STM32_FLASH::enable_prefetch_buffer();
     #endif
 
-    STM32_NVIC::set_priority_grouping(NVIC_PRIORITYGROUP_4);
-    STM32_SYSTICK::init();
     STM32_NVIC::init();
 }
 
@@ -49,13 +49,13 @@ void SystemInit()
     base_init();
 
     /* GPIO initializations */
-    STM32_GPIO::init_all();
     PLC_IO::init();
 
     // system initialization
     //__enable_fault_irq();
     //__enable_irq();
     STM32_RCC::init();
+    STM32_SYSTICK::init();
 
     /* Other IO and peripheral initializations */
     STM32_UART::init_all();
@@ -64,11 +64,6 @@ void SystemInit()
     STM32_NVIC::init_vectors();
 
     uart3.init(STM32_BRATE_UART3);
-
-    #if defined (DATA_IN_ExtSDRAM)
-    //if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1, 16 * 1024 * 1024) != STM32_RESULT_OK)
-    //    Error_Handler();
-    #endif
 }
 
 #define INIT_SP() \

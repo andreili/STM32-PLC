@@ -7,7 +7,7 @@ CONFIG += c++11
 
 QMAKE_LFLAGS += -T$$PWD/../cortex-m4/stm32f429xx.ld
 
-DEFINES += STM32F429xx #DATA_IN_ExtSDRAM
+DEFINES += STM32F429xx DATA_IN_ExtSDRAM
 
 DESTDIR = ./
 #win32:EXT = .exe

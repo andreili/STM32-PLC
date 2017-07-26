@@ -6,57 +6,19 @@
 
 STM32_SDRAM sdram;
 
-//#define MEMTEST_PRINT
+#define MEMTEST_PRINT
 #ifdef MEMTEST_PRINT
-#include "xprintf.h"
-#define MEMTEST_PRINT_VERBOSE
+#include "plc_control.h"
+//#define MEMTEST_PRINT_VERBOSE
 #endif
 
-#define MEMTEST_BUF_SIZE 1024
+#define MEMTEST_BUF_SIZE (1024 * 4)
 
 uint32_t STM32_SDRAM::init()
 {
     init_gpio();
 
-    //Initialize FMC
     STM32_RCC::enable_clk_FMC();
-
-    STM32_RCC::enable_clk_GPIOF();
-    gpiof.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 |
-                     GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_11 | GPIO_PIN_12 |
-                     GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_MODE_AF_PP,
-                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-
-    STM32_RCC::enable_clk_GPIOC();
-    gpioc.set_config(GPIO_PIN_0 |
-                 #ifdef STM32_SDRAM_BANK1
-                     GPIO_PIN_2 |
-                 #endif
-                     GPIO_PIN_3, GPIO_MODE_AF_PP,
-                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-
-    STM32_RCC::enable_clk_GPIOG();
-    gpiog.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 |
-                     GPIO_PIN_8 | GPIO_PIN_15, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
-                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-
-    STM32_RCC::enable_clk_GPIOE();
-    gpioe.set_config(GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
-                     GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |
-                     GPIO_PIN_15, GPIO_MODE_AF_PP,
-                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-
-    STM32_RCC::enable_clk_GPIOD();
-    gpiod.set_config(GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 |
-                     GPIO_PIN_12 | GPIO_PIN_14 | GPIO_PIN_15| GPIO_PIN_0 |
-                     GPIO_PIN_1| GPIO_PIN_4| GPIO_PIN_5| GPIO_PIN_6 |
-                     GPIO_PIN_7, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
-                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-
-    STM32_RCC::enable_clk_GPIOB();
-    gpiob.set_config(GPIO_PIN_5 | GPIO_PIN_6,
-                     GPIO_MODE_AF_PP, GPIO_AF12_FMC,
-                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
 
     #ifdef STM32_SDRAM_BANK1
     init_bank1();
@@ -86,7 +48,8 @@ uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size)
 {
     #ifdef MEMTEST_PRINT
     uint32_t start_ticks = STM32_SYSTICK::get_tick();
-    xprintf("Start memory test (block size = %U bytes, bank 0x%X)\n", MEMTEST_BUF_SIZE, start_addr);
+    PLC_CONTROL::print_message("Start memory test (block size = %U bytes, bank 0x%X)\n",
+                               MEMTEST_BUF_SIZE, start_addr);
     #endif
 
     int cycles_count = size / MEMTEST_BUF_SIZE;
@@ -94,10 +57,11 @@ uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size)
     {
         uint32_t* mem = (uint32_t*)(start_addr + (i * MEMTEST_BUF_SIZE));
 
-        #ifdef MEMTEST_PRINT
+        #ifdef MEMTEST_PRINT_VERBOSE
         uint32_t cur_start = start_addr + (i * MEMTEST_BUF_SIZE);
         //plc_state.data.mem_test.cur_start = start_addr + (i * MEMTEST_BUF_SIZE);
-        xprintf("\r\t\033[0KBlock #%05U/%05U (%08X-%08X): ", i+1, cycles_count,cur_start, start_addr + ((i + 1) * MEMTEST_BUF_SIZE));
+        PLC_CONTROL::print_message("\r\t\033[0KBlock #%05U/%05U (%08X-%08X): ", i+1,
+                                    cycles_count,cur_start, start_addr + ((i + 1) * MEMTEST_BUF_SIZE));
         #endif
 
         memset((uint8_t*)mem, 0, MEMTEST_BUF_SIZE);
@@ -107,21 +71,23 @@ uint32_t STM32_SDRAM::run_tests(uint32_t start_addr, uint32_t size)
             if (mem[uwIndex] != get_val(uwIndex))
             {
                 #ifdef MEMTEST_PRINT
-                xprintf("ERROR at %08X (got %08X, exp %08X)\n",
+                PLC_CONTROL::print_message("ERROR at %08X (got %08X, exp %08X)\n",
                     start_addr + (i * MEMTEST_BUF_SIZE) + uwIndex * sizeof(uint32_t),
                     mem[uwIndex], get_val(uwIndex));
                 #endif
                 return STM32_RESULT_FAIL;
             }
         #ifdef MEMTEST_PRINT_VERBOSE
-        xprintf("OK");
+        if ((i+1) >= cycles_count)
+            PLC_CONTROL::print_message("OK\n");
         #endif
         //HAL_IWDG_Refresh(&hiwdg);
     }
 
     #ifdef MEMTEST_PRINT
-    xprintf("\r\033[0KTest Finished. Available memory: %.2fMb\nTest time (HAL ticks): %i\n",
-        (size * 1.f) / 1024.f / 1024.f, STM32_SYSTICK::get_tick() - start_ticks);
+    int mem_size = (size ) / 1024 / 1024;
+    PLC_CONTROL::print_message("\r\033[0KTest Finished. Available memory: %UMb\nTest time (HAL ticks): %U\n",
+        mem_size, STM32_SYSTICK::get_tick() - start_ticks);
     #endif
 
     return STM32_RESULT_OK;
@@ -135,80 +101,37 @@ void STM32_SDRAM::init_gpio()
                      GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
     #endif
 
-    RCC->AHB1ENR |= 0x000001F8;
-
-    GPIOD->AFR[0]  = 0x00CCC0CC;
-    GPIOD->AFR[1]  = 0xCCCCCCCC;
-    GPIOD->MODER   = 0xAAAA0A8A;
-    GPIOD->OSPEEDR = 0xFFFF0FCF;
-    GPIOD->OTYPER  = 0x00000000;
-    GPIOD->PUPDR   = 0x00000000;
-
-    GPIOE->AFR[0]  = 0xC00CC0CC;
-    GPIOE->AFR[1]  = 0xCCCCCCCC;
-    GPIOE->MODER   = 0xAAAA828A;
-    GPIOE->OSPEEDR = 0xFFFFC3CF;
-    GPIOE->OTYPER  = 0x00000000;
-    GPIOE->PUPDR   = 0x00000000;
-
-    GPIOF->AFR[0]  = 0xCCCCCCCC;
-    GPIOF->AFR[1]  = 0xCCCCCCCC;
-    GPIOF->MODER   = 0xAA800AAA;
-    GPIOF->OSPEEDR = 0xAA800AAA;
-    GPIOF->OTYPER  = 0x00000000;
-    GPIOF->PUPDR   = 0x00000000;
-
-    GPIOG->AFR[0]  = 0xCCCCCCCC;
-    GPIOG->AFR[1]  = 0xCCCCCCCC;
-    GPIOG->MODER   = 0xAAAAAAAA;
-    GPIOG->OSPEEDR = 0xAAAAAAAA;
-    GPIOG->OTYPER  = 0x00000000;
-    GPIOG->PUPDR   = 0x00000000;
-
-    GPIOH->AFR[0]  = 0x00C0CC00;
-    GPIOH->AFR[1]  = 0xCCCCCCCC;
-    GPIOH->MODER   = 0xAAAA08A0;
-    GPIOH->OSPEEDR = 0xAAAA08A0;
-    GPIOH->OTYPER  = 0x00000000;
-    GPIOH->PUPDR   = 0x00000000;
-
-    GPIOI->AFR[0]  = 0xCCCCCCCC;
-    GPIOI->AFR[1]  = 0x00000CC0;
-    GPIOI->MODER   = 0x0028AAAA;
-    GPIOI->OSPEEDR = 0x0028AAAA;
-    GPIOI->OTYPER  = 0x00000000;
-    GPIOI->PUPDR   = 0x00000000;
-
-    /*STM32_RCC::enable_clk_GPIOD();
-    gpiod.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8 | GPIO_PIN_9 |
-                     GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_14 |
-                     GPIO_PIN_15, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
-                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-
-    STM32_RCC::enable_clk_GPIOE();
-    gpioe.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7 | GPIO_PIN_8 |
-                     GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 |
-                     GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_MODE_AF_PP,
-                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
-
     STM32_RCC::enable_clk_GPIOF();
+    STM32_RCC::enable_clk_GPIOD();
+    STM32_RCC::enable_clk_GPIOE();
+    STM32_RCC::enable_clk_GPIOG();
+    STM32_RCC::enable_clk_GPIOC();
+
     gpiof.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 |
                      GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_11 | GPIO_PIN_12 |
                      GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_MODE_AF_PP,
                      GPIO_AF12_FMC, GPIO_SPEED_FREQ_HIGH, GPIO_NOPULL);
 
-    STM32_RCC::enable_clk_GPIOG();
+    gpiod.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8 | GPIO_PIN_9 |
+                     GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_14 |
+                     GPIO_PIN_15, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
+                     GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+
+    gpioe.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7 | GPIO_PIN_8 |
+                     GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 |
+                     GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15, GPIO_MODE_AF_PP,
+                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+
     gpiog.set_config(GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 |
                      GPIO_PIN_8 | GPIO_PIN_15, GPIO_MODE_AF_PP, GPIO_AF12_FMC,
                      GPIO_SPEED_FREQ_HIGH, GPIO_NOPULL);
 
-    STM32_RCC::enable_clk_GPIOC();
     gpioc.set_config(GPIO_PIN_0 |
                  #ifdef STM32_SDRAM_BANK1
                      GPIO_PIN_2 |
                  #endif
                      GPIO_PIN_3, GPIO_MODE_AF_PP,
-                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_HIGH, GPIO_NOPULL);*/
+                     GPIO_AF12_FMC, GPIO_SPEED_FREQ_HIGH, GPIO_NOPULL);
 }
 
 void STM32_SDRAM::init_bank1()

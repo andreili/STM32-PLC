@@ -59,6 +59,7 @@
 class STM32_SDRAM
 {
 public:
+    static void init_base();
     static uint32_t init();
     static uint32_t run_tests(uint32_t start_addr, uint32_t size);
 private:

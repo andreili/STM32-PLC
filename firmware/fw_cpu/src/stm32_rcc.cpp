@@ -68,6 +68,8 @@ void STM32_RCC::init()
         Error_Handler();
     if (config_clock(FLASH_ACR_LATENCY_5WS) != STM32_RESULT_OK)
         Error_Handler();
+
+    STM32_SYSTICK::update_freq();
 }
 
 void STM32_RCC::deinit()

@@ -34,6 +34,8 @@ void STM32_SYSTICK::on_tick()
 
 void STM32_SYSTICK::delay(__IO uint32_t delay_ms)
 {
+    if (m_tick == 0)
+        return;
     uint32_t tick_end = m_tick + delay_ms;
     while(m_tick < tick_end) {}
 }
