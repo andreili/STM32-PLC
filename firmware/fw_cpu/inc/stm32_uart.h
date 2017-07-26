@@ -27,7 +27,7 @@ public:
 private:
     USART_TypeDef*  m_uart;
     uint32_t        m_brate;
-    bool            m_busy;
+    volatile bool   m_busy;
 
     void set_baud_rate(uint32_t brate);
     void set_config();

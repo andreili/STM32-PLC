@@ -204,7 +204,6 @@ void STM32_UART::send_buf(const char *buf, int size, UART_MODE mode)
         m_uart->CR1 |= USART_CR1_TXEIE;
         BIT_BAND_PER(m_uart->CR1, USART_CR1_TXEIE) = 1;
         #endif
-        m_busy = false;
         break;
     case UART_MODE::DMA:
         ///TODO
