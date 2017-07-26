@@ -37,7 +37,6 @@ void memcpy(uint8_t* dst, const uint8_t* src, uint32_t len)
         while (len >= LITTLE_BLOCK_SIZE)
         {
             *al_dst++ = *al_src++;
-            *al_dst++ = *al_src++;
             len -= LITTLE_BLOCK_SIZE;
         }
         dst = (uint8_t*)al_dst;
