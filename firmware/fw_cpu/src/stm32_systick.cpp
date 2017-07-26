@@ -7,9 +7,23 @@ volatile uint32_t STM32_SYSTICK::m_tick;
 
 void STM32_SYSTICK::init()
 {
-    SysTick_Config(STM32_RCC::get_HCLK_freq() / 1000 - 1);
+    update_freq();
+    set_clock_source(SYSTICK_CLKSOURCE_HCLK);
     STM32_NVIC::set_priority(SysTick_IRQn, STM32_PRIORITY_SYSCLK, 0);
     m_tick = 0;
+}
+
+void STM32_SYSTICK::update_freq()
+{
+    SysTick_Config(STM32_RCC::get_HCLK_freq() / 1000 - 1);
+}
+
+void STM32_SYSTICK::set_clock_source(uint32_t src)
+{
+    if (src == SYSTICK_CLKSOURCE_HCLK)
+        SysTick->CTRL |= SYSTICK_CLKSOURCE_HCLK;
+    else
+        SysTick->CTRL &= ~SYSTICK_CLKSOURCE_HCLK;
 }
 
 void STM32_SYSTICK::on_tick()

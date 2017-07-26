@@ -3,10 +3,15 @@
 
 #include "stm32_conf.h"
 
+#define SYSTICK_CLKSOURCE_HCLK_DIV8    ((uint32_t)0x00000000U)
+#define SYSTICK_CLKSOURCE_HCLK         ((uint32_t)0x00000004U)
+
 class STM32_SYSTICK
 {
 public:
     static void init();
+    static void update_freq();
+    static void set_clock_source(uint32_t src);
 
     static inline uint32_t get_tick() { return m_tick; }
 
