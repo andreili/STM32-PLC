@@ -197,6 +197,8 @@ public:
     static void init_all();
     inline void init(GPIO_TypeDef* gpio) { m_gpio = gpio; }
 
+    inline uint32_t pin_read(uint32_t pin_mask) { return (m_gpio->IDR & pin_mask); }
+
     inline void pin_ON(uint32_t pin_mask) { m_gpio->BSRR = pin_mask; }
     inline void pin_OFF(uint32_t pin_mask) { m_gpio->BSRR = (pin_mask << GPIO_BSRR_BR0_Pos); }
     

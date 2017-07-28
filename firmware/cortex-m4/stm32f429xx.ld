@@ -16,7 +16,7 @@ MEMORY
 }
 
 __stack = ORIGIN(RAM) + LENGTH(RAM);
-__Main_Stack_Size = 2048 ;
+__Main_Stack_Size = 4096 ;
 _estack = __stack - __Main_Stack_Size; 	/* STM specific definition */
 PROVIDE ( _Main_Stack_Size = __Main_Stack_Size ) ;
 __Main_Stack_Limit = __stack  - __Main_Stack_Size ;
@@ -24,6 +24,8 @@ PROVIDE ( _Main_Stack_Limit = __Main_Stack_Limit ) ;
 _Minimum_Stack_Size = 512 ;
 PROVIDE ( _Heap_Begin = _end_noinit ) ;
 PROVIDE ( _Heap_Limit = __stack - _Main_Stack_Size ) ;
+_RAM_Start = ORIGIN(RAM);
+_RAM_Len = _estack - _RAM_Start;
 
 /* Linker script to place sections and symbol values. Should be used together
  * with other linker script that defines memory regions FLASH and RAM.
@@ -63,7 +65,11 @@ SECTIONS
         KEEP(*(.isr_vector))
         *(.text*)
 
+        PROVIDE (_init = .);
+        *crti.o(.init)
         KEEP(*(.init))
+        *crtn.o(.init)
+        PROVIDE (_fini = .);
         KEEP(*(.fini))
 
         /* .ctors */
@@ -84,6 +90,12 @@ SECTIONS
         
         /* GLOBAL OFFSET TABLE*/
         *(.got*)
+        
+        *(.eh_frame)    
+        *(.rodata)                 /* read-only data (constants) */
+        *(.rodata*)
+        *(.glue_7)
+        *(.glue_7t)
 
         KEEP(*(.eh_frame*))
     } > FLASH
@@ -131,6 +143,7 @@ SECTIONS
 
     .data (NOLOAD) : AT (__etext)
     {
+        . = ALIGN(4);
         __data_start__ = .;
         *(vtable)
         *(.data*)

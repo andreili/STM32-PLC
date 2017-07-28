@@ -49,6 +49,7 @@ void Error_Handler()
 {
     PLC_IO::pin_on_FAULT();
     PLC_IO::pin_on_STOP();
+    PLC_CONTROL::set_run(0);
     PLC_CONTROL::set_fault(1);
     PLC_CONTROL::set_stop(1);
     while (1) {}

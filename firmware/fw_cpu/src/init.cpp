@@ -17,6 +17,10 @@ void base_init()
     #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
     SCB->CPACR |= ((3UL << 10*2)|(3UL << 11*2));  /* set CP10 and CP11 Full Access */
     #endif
+
+    extern uint32_t _RAM_Start;
+    memset((uint8_t*)&_RAM_Start, 0, 1024*50);
+
     STM32_RCC::deinit();
     STM32_GPIO::init_all();
     STM32_SYSTICK::init();
@@ -63,6 +67,9 @@ void SystemInit()
 
     /* Other IO and peripheral initializations */
     STM32_UART::init_all();
+    #ifdef STM32_FATFS_USE
+    sd_driver.init_gpio();
+    #endif
 
     /* Initialize interrupt vectors for a peripheral */
     STM32_NVIC::init_vectors();

@@ -40,7 +40,7 @@
 #define STM32_PLL_STATE RCC_PLL_ON
 #define STM32_PLL_SOURCE RCC_PLLSOURCE_HSE
 #define STM32_PLLM 4
-#define STM32_PLLN 220
+#define STM32_PLLN 215
 #define STM32_PLLP RCC_PLLP_DIV2
 #define STM32_PLLQ 7
 #define STM32_CLOCK_TYPE (RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2)
@@ -87,6 +87,14 @@
 #define STM32_SDRAM_REFRESH_RATE 0x077d   /* SDRAM refresh counter (90MHz SD clock) */
 #define STM32_SDRAM_BURST_LENGTH SDRAM_MODEREG_BURST_LENGTH_2
 
+/* FATFS configurstion */
+#define STM32_FATFS_USE
+#define STM32_FATFS_CARD_DETECT_PORT gpiog
+#define STM32_FATFS_CARD_DETECT_PIN GPIO_PIN_10
+#define STM32_FATFS_BUS_4BITS 1
+#define STM32_FATFS_DRIVER SDDriver
+#define STM32_FATFS_DRIVER_INC "sddriver.h"
+
 #define ENDIS_REG_FLAG(name, reg, mask) \
     static inline void enable_ ## name() { BIT_BAND_PER(reg, mask) = ENABLE; } \
     static inline void disable_ ## name() { BIT_BAND_PER(reg, mask) = DISABLE; }
@@ -102,11 +110,21 @@
 
 #define WAIT_TIMEOUT(condition, timeout) \
     { \
-        uint32_t tickstart = STM32_SYSTICK::get_tick(); \
+        uint32_t tout_ex = STM32_SYSTICK::get_tick() + timeout; \
         while (condition) \
         { \
-            if ((STM32_SYSTICK::get_tick() - tickstart) > timeout) \
+            if ((STM32_SYSTICK::get_tick()) > tout_ex) \
                 return STM32_RESULT_TIMEOUT; \
+        } \
+    }
+
+#define WAIT_TIMEOUT_EX(condition, timeout, ret) \
+    { \
+        uint32_t tout_ex = STM32_SYSTICK::get_tick() + timeout; \
+        while (condition) \
+        { \
+            if ((STM32_SYSTICK::get_tick()) > tout_ex) \
+                return ret; \
         } \
     }
 

@@ -10,5 +10,6 @@
 #include "stm32_sdram.h"
 #include "stm32_systick.h"
 #include "stm32_uart.h"
+#include "stm32_sd.h"
 
 #endif // STM32_INC_H

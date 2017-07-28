@@ -1,8 +1,14 @@
 #include "plc_control.h"
 #include "stm32_inc.h"
 #include "my_func.h"
+#ifdef STM32_FATFS_USE
+#include "fatfs.h"
+#include "ff.h"
+#include "sddriver.h"
+#endif
+#include "memmanager.h"
 
-#define MEM_SPEED_TEST
+//#define MEM_SPEED_TEST
 
 #ifdef MEM_SPEED_TEST
 #define TEST_CYCLES (1000 * 100)
@@ -18,6 +24,11 @@ void test_mem_speed(uint8_t *mem, const char *title)
     PLC_CONTROL::print_message("\t%S: %U ticks, ~%UMb/s\n",
                                title, time, speed_mb);
 }
+#endif
+
+#ifdef STM32_FATFS_USE
+FATFS SDFatFs;
+extern char SD_path[4];
 #endif
 
 int main()
@@ -41,6 +52,13 @@ int main()
     test_mem_speed(buf_int, "Internal RAM");
     test_mem_speed((uint8_t*)SDRAM_BASE_BANK1, "External RAM");
     #endif
+    #endif
+
+    MemManager::init();
+
+    #ifdef STM32_FATFS_USE
+    FAT_FS::init();
+    while (f_mount(&SDFatFs, (TCHAR const*)SD_path, 1) != FR_OK);
     #endif
 
     PLC_CONTROL::set_initialized(1);

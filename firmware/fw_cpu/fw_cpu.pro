@@ -15,7 +15,6 @@ DESTDIR = ./
 #QMAKE_CXXFLAGS += -O0
 win32:QMAKE_LFLAGS += -L/mingw32/lib/gcc/arm-none-eabi/5.4.1/
 linux:QMAKE_LFLAGS += -L/usr/lib/gcc/arm-none-eabi/7.1.0/
-QMAKE_LFLAGS += /usr/arm-none-eabi/lib/fpu/libc.a
 
 createlist.target = all
 createlist.commands += arm-none-eabi-objdump -S $${OUT_PWD}/$${APP}$${EXT} > $$join(APP,,,".lst")
@@ -25,6 +24,7 @@ createlist.commands += && arm-none-eabi-nm -nalS --size-sort $${OUT_PWD}/$${APP}
 QMAKE_EXTRA_TARGETS += createlist
 
 INCLUDEPATH += ./CMSIS/ ./inc/
+INCLUDEPATH += ./Third_Party/FatFs/src/ ./Third_Party/FatFs/src/option/ ./Third_Party/FatFs/src/drivers
 
 HEADERS += \
     CMSIS/core_cm4.h \
@@ -48,7 +48,16 @@ HEADERS += \
     inc/stm32_sdram.h \
     inc/plc_control.h \
     inc/stm32_nvic.h \
-    inc/stm32_inc.h
+    inc/stm32_inc.h \
+    Third_Party/FatFs/src/ff.h \
+    Third_Party/FatFs/src/integer.h \
+    inc/ffconf.h \
+    inc/stm32_sd.h \
+    inc/fatfs.h \
+    inc/diskiodriver.h \
+    inc/sddriver.h \
+    inc/diskio.h \
+    inc/memmanager.h
 
 SOURCES += \
     CMSIS/ISRstm32f429xx.cpp \
@@ -65,5 +74,12 @@ SOURCES += \
     src/xprintf.cpp \
     src/stm32_sdram.cpp \
     src/plc_control.cpp \
-    src/stm32_nvic.cpp
+    src/stm32_nvic.cpp \
+    Third_Party/FatFs/src/ff.c \
+    Third_Party/FatFs/src/option/syscall.c \
+    Third_Party/FatFs/src/option/ccsbcs.c \
+    src/fatfs.cpp \
+    src/sddriver.cpp \
+    src/stm32_sd.cpp \
+    src/memmanager.cpp
 
