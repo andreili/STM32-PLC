@@ -3,6 +3,9 @@
 #include "my_func.h"
 #include "plc_control.h"
 #include "plc_io.h"
+#ifdef STM32_FATFS_USE
+#include "sddriver.h"
+#endif
 
 int main();
 
@@ -67,6 +70,7 @@ void SystemInit()
 
     /* Other IO and peripheral initializations */
     STM32_UART::init_all();
+    STM32_SPI::init_all();
     #ifdef STM32_FATFS_USE
     sd_driver.init_gpio();
     #endif
@@ -75,6 +79,8 @@ void SystemInit()
     STM32_NVIC::init_vectors();
 
     uart3.init(STM32_BRATE_UART3);
+    spi5.init();
+    spi6.init();
 }
 
 #define INIT_SP() \

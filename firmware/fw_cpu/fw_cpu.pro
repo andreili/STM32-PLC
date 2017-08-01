@@ -57,7 +57,8 @@ HEADERS += \
     inc/diskiodriver.h \
     inc/sddriver.h \
     inc/diskio.h \
-    inc/memmanager.h
+    inc/memmanager.h \
+    inc/stm32_spi.h
 
 SOURCES += \
     CMSIS/ISRstm32f429xx.cpp \
@@ -81,5 +82,6 @@ SOURCES += \
     src/fatfs.cpp \
     src/sddriver.cpp \
     src/stm32_sd.cpp \
-    src/memmanager.cpp
+    src/memmanager.cpp \
+    src/stm32_spi.cpp
 

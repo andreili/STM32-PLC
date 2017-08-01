@@ -1,7 +1,7 @@
 #ifndef __STM32_UART__
 #define __STM32_UART__
 
-#include "stm32f4xx.h"
+#include "stm32_inc.h"
 
 #define UART_BUF_SIZE 1024
 
@@ -20,8 +20,8 @@ public:
     void init(uint32_t brate);
     
     void send_char(char ch);
-    void send_str(const char *str, UART_MODE mode);
-    void send_buf(const char *buf, int size, UART_MODE mode);
+    void send_str(const char *str, TXRX_MODE mode);
+    void send_buf(const char *buf, int size, TXRX_MODE mode);
 
 	void irq_proc();
 private:

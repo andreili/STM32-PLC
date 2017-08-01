@@ -34,5 +34,5 @@ void PLC_CONTROL::print_message(const char* fmt, ...)
 
     *outptr = 0;
     outptr = 0;
-    uart3.send_str(m_text_buf, UART_MODE::INTERRUPT);
+    uart3.send_str(m_text_buf, TXRX_MODE::INTERRUPT);
 }

@@ -1,8 +1,4 @@
 #include "stm32_uart.h"
-#include "ISRstm32f429xx.h"
-#include "bitbanding.h"
-#include "stm32_rcc.h"
-#include "stm32_gpio.h"
 #include "my_func.h"
 
 #define UART_BRR (F_CPU / BRATE)
@@ -175,20 +171,20 @@ void STM32_UART::send_char(char ch)
     m_busy = false;
 }
 
-void STM32_UART::send_str(const char *str, UART_MODE mode)
+void STM32_UART::send_str(const char *str, TXRX_MODE mode)
 {
     while (m_busy) {}
     send_buf(str, strlen(str) + 1, mode);
 }
 
-void STM32_UART::send_buf(const char *buf, int size, UART_MODE mode)
+void STM32_UART::send_buf(const char *buf, int size, TXRX_MODE mode)
 {
 	m_tx_size = size;
     m_tx_pos = 0;
 
     switch (mode)
     {
-    case UART_MODE::DIRECT:
+    case TXRX_MODE::DIRECT:
         m_busy = true;
         while (m_tx_pos < m_tx_size)
         {
@@ -197,7 +193,7 @@ void STM32_UART::send_buf(const char *buf, int size, UART_MODE mode)
         }
         m_busy = false;
         break;
-    case UART_MODE::INTERRUPT:
+    case TXRX_MODE::INTERRUPT:
         #ifdef STM32_UART_MODE_IT_ENABLE
         m_busy = true;
         memcpy((uint8_t*)m_tx_buf, (uint8_t*)buf, size);
@@ -205,7 +201,7 @@ void STM32_UART::send_buf(const char *buf, int size, UART_MODE mode)
         BIT_BAND_PER(m_uart->CR1, USART_CR1_TXEIE) = 1;
         #endif
         break;
-    case UART_MODE::DMA:
+    case TXRX_MODE::DMA:
         ///TODO
         #ifdef STM32_UART_MODE_DMA_ENABLE
         #endif

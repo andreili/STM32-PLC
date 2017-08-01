@@ -9,6 +9,7 @@
 #define STM32_RESULT_OK         0
 #define STM32_RESULT_FAIL       1
 #define STM32_RESULT_TIMEOUT    2
+#define STM32_RESULT_BUSY       3
 
 #define INSTRUCTION_CACHE_ENABLE
 #define DATA_CACHE_ENABLE
@@ -26,6 +27,13 @@
 //#define STM32_USE_UART7
 //#define STM32_USE_UART8
 
+//#define STM32_USE_SPI1
+//#define STM32_USE_SPI2
+//#define STM32_USE_SPI3
+//#define STM32_USE_SPI4
+#define STM32_USE_SPI5
+#define STM32_USE_SPI6
+
 /* Clock settings */
 #define STM32_USE_HSE
 #define STM32_HSE_STATE RCC_CR_HSEON
@@ -40,7 +48,7 @@
 #define STM32_PLL_STATE RCC_PLL_ON
 #define STM32_PLL_SOURCE RCC_PLLSOURCE_HSE
 #define STM32_PLLM 4
-#define STM32_PLLN 215
+#define STM32_PLLN 192
 #define STM32_PLLP RCC_PLLP_DIV2
 #define STM32_PLLQ 7
 #define STM32_CLOCK_TYPE (RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2)
@@ -88,16 +96,49 @@
 #define STM32_SDRAM_BURST_LENGTH SDRAM_MODEREG_BURST_LENGTH_2
 
 /* FATFS configurstion */
-#define STM32_FATFS_USE
+//#define STM32_FATFS_USE
 #define STM32_FATFS_CARD_DETECT_PORT gpiog
 #define STM32_FATFS_CARD_DETECT_PIN GPIO_PIN_10
 #define STM32_FATFS_BUS_4BITS 1
 #define STM32_FATFS_DRIVER SDDriver
 #define STM32_FATFS_DRIVER_INC "sddriver.h"
 
+/* SPI configuraion */
+// SPI5
+#define STM32_SPI5_MODE SPI_MODE_MASTER
+#define STM32_SPI5_DIRECTION SPI_DIRECTION_2LINES
+#define STM32_SPI5_DATA_SIZE SPI_DATASIZE_8BIT
+#define STM32_SPI5_CLK_POL SPI_POLARITY_LOW
+#define STM32_SPI5_CLK_PH SPI_PHASE_1EDGE
+#define STM32_SPI5_NSS SPI_NSS_SOFT
+#define STM32_SPI5_BRP SPI_BAUDRATEPRESCALER_32
+#define STM32_SPI5_FIRST_BIT SPI_FIRSTBIT_MSB
+#define STM32_SPI5_TI_MODE SPI_TIMODE_DISABLE
+#define STM32_SPI5_CRC SPI_CRCCALCULATION_DISABLE
+#define STM32_SPI5_CRC_POL 10
+// SPI6
+#define STM32_SPI6_MODE SPI_MODE_MASTER
+#define STM32_SPI6_DIRECTION SPI_DIRECTION_2LINES
+#define STM32_SPI6_DATA_SIZE SPI_DATASIZE_8BIT
+#define STM32_SPI6_CLK_POL SPI_POLARITY_LOW
+#define STM32_SPI6_CLK_PH SPI_PHASE_1EDGE
+#define STM32_SPI6_NSS SPI_NSS_SOFT
+#define STM32_SPI6_BRP SPI_BAUDRATEPRESCALER_32
+#define STM32_SPI6_FIRST_BIT SPI_FIRSTBIT_MSB
+#define STM32_SPI6_TI_MODE SPI_TIMODE_DISABLE
+#define STM32_SPI6_CRC SPI_CRCCALCULATION_DISABLE
+#define STM32_SPI6_CRC_POL 10
+
 #define ENDIS_REG_FLAG(name, reg, mask) \
     static inline void enable_ ## name() { BIT_BAND_PER(reg, mask) = ENABLE; } \
     static inline void disable_ ## name() { BIT_BAND_PER(reg, mask) = DISABLE; }
+
+#define ENDIS_REG_FLAG_(reg, mask) \
+    inline void enable() { BIT_BAND_PER(reg, mask) = ENABLE; } \
+    inline void disable() { BIT_BAND_PER(reg, mask) = DISABLE; }
+#define ENDIS_REG_FLAG_NAME(name, reg, mask) \
+    inline void enable_ ## name() { BIT_BAND_PER(reg, mask) = ENABLE; } \
+    inline void disable_ ## name() { BIT_BAND_PER(reg, mask) = DISABLE; }
 
 #define CLK_ENDIS(enr, name) \
     ENDIS_REG_FLAG(clk_ ## name, RCC->enr ## ENR, RCC_ ## enr ## ENR_ ## name ## EN) \
@@ -132,5 +173,12 @@ void Error_Handler();
 
 class STM32_SDRAM;
 extern STM32_SDRAM sdram;
+
+enum class TXRX_MODE
+{
+    DIRECT,
+    INTERRUPT,
+    DMA,
+};
 
 #endif

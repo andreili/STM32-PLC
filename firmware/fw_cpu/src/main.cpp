@@ -65,10 +65,15 @@ int main()
     PLC_CONTROL::set_stop(0);
     PLC_CONTROL::set_run(1);
 
+    uint8_t buf[1024];
+    memset(buf, 0x55, 1024);
+
     PLC_CONTROL::print_message("Start main cycle\n");
     int iteration = 0;
     while (1)
     {
+        spi5.transmit(buf, 1024, TXRX_MODE::INTERRUPT, 1000);
+
         PLC_CONTROL::print_message("\r\tTest iteration: %U", ++iteration);
         if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1,
                                    (STM32_SDRAM_SIZE_MB * 1024 * 1024), false) != STM32_RESULT_OK)

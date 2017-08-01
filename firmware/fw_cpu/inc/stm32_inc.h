@@ -11,5 +11,6 @@
 #include "stm32_systick.h"
 #include "stm32_uart.h"
 #include "stm32_sd.h"
+#include "stm32_spi.h"
 
 #endif // STM32_INC_H
