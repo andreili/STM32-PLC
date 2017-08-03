@@ -182,6 +182,12 @@ void STM32_SPI::irq()
     }
 }
 
+uint32_t STM32_SPI::wait_busy(uint32_t timeout)
+{
+    WAIT_TIMEOUT(m_busy, timeout);
+    return STM32_RESULT_OK;
+}
+
 uint32_t STM32_SPI::transmit(uint8_t* data, uint32_t size, TXRX_MODE mode, uint32_t timeout)
 {
     switch (mode)
@@ -199,6 +205,150 @@ uint32_t STM32_SPI::transmit(uint8_t* data, uint32_t size, TXRX_MODE mode, uint3
     return STM32_RESULT_FAIL;
 }
 
+uint32_t STM32_SPI::recieve(uint8_t* data, uint32_t size, TXRX_MODE mode, uint32_t timeout)
+{
+    switch (mode)
+    {
+    case TXRX_MODE::DIRECT:
+        return recieve_blocked(data, size, timeout);
+        break;
+    case TXRX_MODE::INTERRUPT:
+        return recieve_IT(data, size);
+        break;
+    case TXRX_MODE::DMA:
+        //return recieve_blocked(data, size, timeout);
+        break;
+    }
+    return STM32_RESULT_FAIL;
+}
+
+uint32_t STM32_SPI::transmit_recieve(uint8_t* tx_buf, uint8_t* rx_buf, uint32_t size, TXRX_MODE mode, uint32_t timeout)
+{
+    (void)(mode);
+    uint32_t tout = timeout + STM32_SYSTICK::get_tick();
+
+    m_rx_buf = rx_buf;
+    m_rx_count = size;
+    m_rx_size = size;
+
+    m_tx_buf = tx_buf;
+    m_tx_count = size;
+    m_tx_size = size;
+
+    m_tx_call = nullptr;
+    m_rx_call = nullptr;
+
+    if (m_crc_calc == SPI_CRCCALCULATION_ENABLE)
+        crc_reset();
+
+    if (!is_enabled())
+        enable();
+
+    uint32_t txallowed = 1;
+
+    if (m_data_size == SPI_DATASIZE_16BIT)
+    {
+        /* Transmit and Receive data in 16 Bit mode */
+        if ((m_mode == SPI_MODE_SLAVE) || (m_tx_count == 0x01))
+        {
+            m_spi->DR = *((uint16_t *)m_tx_buf);
+            m_tx_buf += sizeof(uint16_t);
+            --m_tx_count;
+        }
+
+        while ((m_tx_count) || (m_rx_count))
+        {
+            /* Check TXE flag */
+            if ((txallowed) && (m_tx_count >0) && (get_flag(SPI_FLAG_TXE)))
+            {
+                m_spi->DR = *((uint16_t *)m_tx_buf);
+                m_tx_buf += sizeof(uint16_t);
+                --m_tx_count;
+                /* Next Data is a reception (Rx). Tx not allowed */
+                txallowed = 0;
+            }
+
+            if ((m_tx_count == 0) && (m_crc_calc == SPI_CRCCALCULATION_ENABLE))
+                enable_CRC();
+
+            /* Check RXNE flag */
+            if ((m_rx_count > 0) && (get_flag(SPI_FLAG_RXNE)))
+            {
+                *((uint16_t*)m_rx_buf) = m_spi->DR;
+                m_rx_buf += sizeof(uint16_t);
+                --m_rx_count;
+                /* Next Data is a Transmission (Tx). Tx is allowed */
+                txallowed = 1U;
+            }
+
+            if (STM32_SYSTICK::get_tick() >= tout)
+                return STM32_RESULT_TIMEOUT;
+        }
+    }
+    else
+    {
+        /* Transmit and Receive data in 8 Bit mode */
+        if ((m_mode == SPI_MODE_SLAVE) || (m_tx_count == 0x01))
+        {
+            *((__IO uint8_t*)&m_spi->DR) = *((uint8_t *)m_tx_buf);
+            m_tx_buf += sizeof(uint8_t);
+            --m_tx_count;
+        }
+
+        while ((m_tx_count) || (m_rx_count))
+        {
+            /* Check TXE flag */
+            if ((txallowed) && (m_tx_count >0) && (get_flag(SPI_FLAG_TXE)))
+            {
+                *((__IO uint8_t*)&m_spi->DR) = *((uint16_t *)m_tx_buf);
+                m_tx_buf += sizeof(uint8_t);
+                --m_tx_count;
+                /* Next Data is a reception (Rx). Tx not allowed */
+                txallowed = 0;
+            }
+
+            if ((m_tx_count == 0) && (m_crc_calc == SPI_CRCCALCULATION_ENABLE))
+                enable_CRC();
+
+            /* Check RXNE flag */
+            if ((m_rx_count > 0) && (get_flag(SPI_FLAG_RXNE)))
+            {
+                *((uint8_t*)m_rx_buf) = *((__IO uint8_t*)&m_spi->DR);
+                m_rx_buf += sizeof(uint8_t);
+                --m_rx_count;
+                /* Next Data is a Transmission (Tx). Tx is allowed */
+                txallowed = 1U;
+            }
+
+            if (STM32_SYSTICK::get_tick() >= tout)
+                return STM32_RESULT_TIMEOUT;
+        }
+    }
+
+    /* Read CRC from DR to close CRC calculation process */
+    if (m_crc_calc == SPI_CRCCALCULATION_ENABLE)
+    {
+        /* Read the latest data */
+        WAIT_TIMEOUT(((m_spi->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE), timeout);
+
+        /* Read CRC to Flush DR and RXNE flag */
+        uint32_t tmp = m_spi->DR;
+        (void)(tmp);
+    }
+
+    /* Check if CRC error occurred */
+    if (get_flag(SPI_FLAG_CRCERR))
+        clear_CRCerror();
+
+    /* Wait until TXE flag */
+    WAIT_TIMEOUT(((m_spi->SR & SPI_FLAG_TXE) == SPI_FLAG_TXE), timeout);
+
+    SPI_CheckFlag_BSY(timeout);
+
+    if (m_mode == SPI_DIRECTION_2LINES)
+        clear_ovrflag();
+}
+
 uint32_t STM32_SPI::transmit_blocked(uint8_t* data, uint32_t size, uint32_t timeout)
 {
     if ((data == nullptr) || (size == 0))
@@ -213,6 +363,9 @@ uint32_t STM32_SPI::transmit_blocked(uint8_t* data, uint32_t size, uint32_t time
     m_rx_count = 0;
     m_rx_size = 0;
     m_rx_buf = nullptr;
+
+    m_tx_call = nullptr;
+    m_rx_call = nullptr;
 
     if (m_direction == SPI_DIRECTION_1LINE)
         tx_1line();
@@ -327,6 +480,105 @@ uint32_t STM32_SPI::transmit_IT(uint8_t* data, uint32_t size)
         enable();
 
     return STM32_RESULT_OK;
+}
+
+uint32_t STM32_SPI::recieve_blocked(uint8_t* data, uint32_t size, uint32_t timeout)
+{
+    if ((data == nullptr) || (size == 0))
+        return STM32_RESULT_FAIL;
+
+    uint32_t tout = timeout + STM32_SYSTICK::get_tick();
+
+    m_tx_count = 0;
+    m_tx_size = 0;
+    m_tx_buf = nullptr;
+
+    m_rx_count = size;
+    m_rx_size = size;
+    m_rx_buf = data;
+
+    if (m_crc_calc == SPI_CRCCALCULATION_ENABLE)
+        crc_reset();
+
+    if (m_direction == SPI_DIRECTION_1LINE)
+        rx_1line();
+
+    if (!is_enabled())
+        enable();
+
+    if (m_data_size == SPI_DATASIZE_16BIT)
+    {
+        /* Transmit data in 16 Bit mode */
+        while (m_rx_count)
+        {
+            if (get_flag(SPI_FLAG_RXNE))
+            {
+                *data = m_spi->DR;
+                data += sizeof(uint16_t);
+                --m_rx_count;
+            }
+            else
+            {
+                if (STM32_SYSTICK::get_tick() >= tout)
+                    return STM32_RESULT_TIMEOUT;
+            }
+        }
+    }
+    else
+    {
+        /* Transmit data in 8 Bit mode */
+        while (m_rx_count)
+        {
+            if (get_flag(SPI_FLAG_TXE))
+            {
+                *data = m_spi->DR;
+                data += sizeof(uint8_t);
+                --m_rx_count;
+            }
+            else
+            {
+                if (STM32_SYSTICK::get_tick() >= tout)
+                    return STM32_RESULT_TIMEOUT;
+            }
+        }
+    }
+
+    if (m_crc_calc == SPI_CRCCALCULATION_ENABLE)
+    {
+        /* freeze the CRC before the latest data */
+        enable_CRC();
+
+        /* Read the latest data */
+        WAIT_TIMEOUT(((m_spi->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE), timeout);
+
+        if (m_data_size == SPI_DATASIZE_16BIT)
+            /* Receive last data in 16 Bit mode */
+            *((uint16_t*)data) = m_spi->DR;
+        else
+            /* Receive last data in 8 Bit mode */
+            *data = m_spi->DR;
+
+        /* Wait the CRC data */
+        WAIT_TIMEOUT(((m_spi->SR & SPI_FLAG_RXNE) == SPI_FLAG_RXNE), timeout);
+
+        /* Read CRC to Flush DR and RXNE flag */
+        uint32_t tmp = m_spi->DR;
+        (void)(tmp);
+    }
+
+    if ((m_mode == SPI_MODE_MASTER) &&
+        ((m_direction == SPI_DIRECTION_1LINE) || (m_direction == SPI_DIRECTION_2LINES_RXONLY)))
+        disable();
+
+    if (get_flag(SPI_FLAG_CRCERR))
+        clear_CRCerror();
+
+    return STM32_RESULT_OK;
+}
+
+uint32_t STM32_SPI::recieve_IT(uint8_t* data, uint32_t size)
+{
+    //
 }
 
 void STM32_SPI::callback_tx_8bit()

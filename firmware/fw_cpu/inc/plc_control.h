@@ -27,6 +27,7 @@ class PLC_CONTROL
 {
 public:
     static void init();
+    static void init_hw();
     static void print_message(const char* fmt, ...);
 
     static inline uint8_t in_run() { return m_state.run; }

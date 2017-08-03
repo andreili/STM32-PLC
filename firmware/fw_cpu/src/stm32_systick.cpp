@@ -1,7 +1,5 @@
-#include "stm32_systick.h"
+#include "stm32_inc.h"
 #include "plc_io.h"
-#include "stm32_rcc.h"
-#include "stm32_nvic.h"
 
 volatile uint32_t STM32_SYSTICK::m_tick;
 

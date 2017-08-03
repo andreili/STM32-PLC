@@ -18,12 +18,12 @@ linux:QMAKE_LFLAGS += -L/usr/lib/gcc/arm-none-eabi/7.1.0/
 
 createlist.target = all
 createlist.commands += arm-none-eabi-objdump -S $${OUT_PWD}/$${APP}$${EXT} > $$join(APP,,,".lst")
-#createlist.commands += && arm-none-eabi-objcopy --remove-section .got* $${OUT_PWD}/$${APP}$${EXT}
 createlist.commands += && arm-none-eabi-objcopy -Obinary $${OUT_PWD}/$${APP}$${EXT} $${OUT_PWD}/$${APP}.bin
-createlist.commands += && arm-none-eabi-nm -nalS --size-sort $${OUT_PWD}/$${APP}$${EXT} | grep " T " | tail && arm-none-eabi-size $${OUT_PWD}/$${APP}$${EXT}
+!win32:createlist.commands += && arm-none-eabi-nm -nalS --size-sort $${OUT_PWD}/$${APP}$${EXT} | grep " T " | tail
+createlist.commands += && arm-none-eabi-size $${OUT_PWD}/$${APP}$${EXT}
 QMAKE_EXTRA_TARGETS += createlist
 
-INCLUDEPATH += ./CMSIS/ ./inc/
+INCLUDEPATH += ./CMSIS/ ./inc/ ../shared/inc/
 INCLUDEPATH += ./Third_Party/FatFs/src/ ./Third_Party/FatFs/src/option/ ./Third_Party/FatFs/src/drivers
 
 HEADERS += \
@@ -58,7 +58,8 @@ HEADERS += \
     inc/sddriver.h \
     inc/diskio.h \
     inc/memmanager.h \
-    inc/stm32_spi.h
+    inc/stm32_spi.h \
+    ../shared/inc/plc_mod.h
 
 SOURCES += \
     CMSIS/ISRstm32f429xx.cpp \
@@ -83,5 +84,6 @@ SOURCES += \
     src/sddriver.cpp \
     src/stm32_sd.cpp \
     src/memmanager.cpp \
-    src/stm32_spi.cpp
+    src/stm32_spi.cpp \
+    ../shared/src/plc_mod.cpp
 
