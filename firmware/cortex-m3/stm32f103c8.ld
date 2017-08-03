@@ -152,7 +152,9 @@ MEMORY
 _RAM_Start = 0x20000000;
 
 /* highest address of the user mode stack */
-_estack = 0x20003000;
+__stack = ORIGIN(RAM) + LENGTH(RAM);
+__Main_Stack_Size = 1024 ;
+_estack = __stack - __Main_Stack_Size; 	/* STM specific definition */
 
 /*
 Common part of the linker scripts for STR71x devices in FLASH mode
@@ -185,6 +187,9 @@ SECTIONS
         *(.rodata*)
         *(.glue_7)
         *(.glue_7t)
+        
+        /* GLOBAL OFFSET TABLE*/
+        *(.got*)
 
 	    . = ALIGN(4);
    	 _etext = .;
