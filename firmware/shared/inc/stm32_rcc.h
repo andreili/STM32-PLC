@@ -92,7 +92,7 @@ public:
     #endif
 
     static inline void set_config_SYSCLK(uint32_t value) { MODIFY_REG(RCC->CFGR, RCC_CFGR_SW, value); }
-    static inline uint32_t get_source_SYSCLK() { return RCC->CFGR & RCC_CFGR_SWS; }
+    static inline uint32_t get_source_SYSCLK() { return (RCC->CFGR & RCC_CFGR_SWS); }
 
     #ifdef STM32F10X_MD
     static inline void set_config_MCO1(uint32_t source)

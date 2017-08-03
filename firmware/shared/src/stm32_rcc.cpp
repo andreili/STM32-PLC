@@ -88,6 +88,22 @@ const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
 #define RCC_PLL_MUL16                   RCC_CFGR_PLLMULL16
 #endif /* STM32F105xC || STM32F107xC */
 
+#define RCC_SYSCLK_DIV1                  RCC_CFGR_HPRE_DIV1   /*!< SYSCLK not divided */
+#define RCC_SYSCLK_DIV2                  RCC_CFGR_HPRE_DIV2   /*!< SYSCLK divided by 2 */
+#define RCC_SYSCLK_DIV4                  RCC_CFGR_HPRE_DIV4   /*!< SYSCLK divided by 4 */
+#define RCC_SYSCLK_DIV8                  RCC_CFGR_HPRE_DIV8   /*!< SYSCLK divided by 8 */
+#define RCC_SYSCLK_DIV16                 RCC_CFGR_HPRE_DIV16  /*!< SYSCLK divided by 16 */
+#define RCC_SYSCLK_DIV64                 RCC_CFGR_HPRE_DIV64  /*!< SYSCLK divided by 64 */
+#define RCC_SYSCLK_DIV128                RCC_CFGR_HPRE_DIV128 /*!< SYSCLK divided by 128 */
+#define RCC_SYSCLK_DIV256                RCC_CFGR_HPRE_DIV256 /*!< SYSCLK divided by 256 */
+#define RCC_SYSCLK_DIV512                RCC_CFGR_HPRE_DIV512 /*!< SYSCLK divided by 512 */
+
+#define RCC_HCLK_DIV1                    RCC_CFGR_PPRE1_DIV1  /*!< HCLK not divided */
+#define RCC_HCLK_DIV2                    RCC_CFGR_PPRE1_DIV2  /*!< HCLK divided by 2 */
+#define RCC_HCLK_DIV4                    RCC_CFGR_PPRE1_DIV4  /*!< HCLK divided by 4 */
+#define RCC_HCLK_DIV8                    RCC_CFGR_PPRE1_DIV8  /*!< HCLK divided by 8 */
+#define RCC_HCLK_DIV16                   RCC_CFGR_PPRE1_DIV16 /*!< HCLK divided by 16 */
+
 void STM32_RCC::init()
 {
     enable_clk_PWR();
@@ -292,13 +308,13 @@ uint32_t STM32_RCC::config_clock(uint32_t flash_latency)
 
     if ((STM32_CLOCK_TYPE & RCC_CLOCKTYPE_SYSCLK) == RCC_CLOCKTYPE_SYSCLK)
     {
-        if (STM32_CLOCK_SYSCLK_SOURCE == RCC_CFGR_SW_HSE)
+        if (STM32_CLOCK_SYSCLK_SOURCE == RCC_SYSCLKSOURCE_HSE)
         {
             if (get_flag(RCC_FLAG_HSERDY) == RESET)
                 return STM32_RESULT_FAIL;
         }
-        else if ((STM32_CLOCK_SYSCLK_SOURCE == RCC_CFGR_SW_PLL) ||
-                 (STM32_CLOCK_SYSCLK_SOURCE == (RCC_CFGR_SW_HSE | RCC_CFGR_SW_PLL)))
+        else if ((STM32_CLOCK_SYSCLK_SOURCE == RCC_SYSCLKSOURCE_PLLCLK) ||
+                 (STM32_CLOCK_SYSCLK_SOURCE == (RCC_SYSCLKSOURCE_HSE | RCC_SYSCLKSOURCE_PLLCLK)))
         {
             if (get_flag(RCC_FLAG_PLLRDY) == RESET)
                 return STM32_RESULT_FAIL;
@@ -310,13 +326,13 @@ uint32_t STM32_RCC::config_clock(uint32_t flash_latency)
         switch (STM32_CLOCK_SYSCLK_SOURCE)
         {
         case RCC_CFGR_SW_HSE:
-            WAIT_TIMEOUT(get_source_SYSCLK() == RCC_SYSCLKSOURCE_STATUS_HSE, CLOCKSWITCH_TIMEOUT_VALUE);
+            WAIT_TIMEOUT(get_source_SYSCLK() != RCC_SYSCLKSOURCE_STATUS_HSE, CLOCKSWITCH_TIMEOUT_VALUE);
             break;
         case RCC_CFGR_SW_PLL:
-            WAIT_TIMEOUT(get_source_SYSCLK() == RCC_CFGR_SW_PLL, CLOCKSWITCH_TIMEOUT_VALUE);
+            WAIT_TIMEOUT(get_source_SYSCLK() != RCC_SYSCLKSOURCE_PLLCLK, CLOCKSWITCH_TIMEOUT_VALUE);
             break;
         default:
-            WAIT_TIMEOUT(get_source_SYSCLK() != RCC_CFGR_SW_HSI, CLOCKSWITCH_TIMEOUT_VALUE);
+            WAIT_TIMEOUT(get_source_SYSCLK() != RCC_SYSCLKSOURCE_PLLCLK, CLOCKSWITCH_TIMEOUT_VALUE);
             break;
         }
     }
