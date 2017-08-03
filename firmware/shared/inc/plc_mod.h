@@ -49,6 +49,10 @@ typedef struct
     };
 } plc_mod_pkt_t;
 
+#ifdef PLC_CPU
+class STM32_SPI;
+#endif
+
 class PLC_MOD
 {
 public:
@@ -57,6 +61,7 @@ public:
     void find_modules();
     #else
     void init(SPI_HandleTypeDef *spi);
+    void init_seq();
     #endif
 private:
     #ifdef PLC_CPU
@@ -80,6 +85,9 @@ private:
 
     #else
 
+    bool init_seq_get_req();
+    void init_seq_send_info();
+
     bool is_CSin_on();
     void CSout_on();
     void CSout_off();
@@ -90,6 +98,8 @@ private:
 #ifdef PLC_CPU
 extern PLC_MOD plc_mod_com;
 extern PLC_MOD plc_mod_ext;
+#else
+extern PLC_MOD plc_mod;
 #endif
 
 #endif // PLC_MOD_H

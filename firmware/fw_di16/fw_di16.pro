@@ -66,7 +66,9 @@ HEADERS += \
     inc/stm32f1xx_hal_conf.h \
     inc/stm32f1xx_it.h \
     ../shared/inc/plc_mod.h \
-    inc/plc_conf.h
+    inc/plc_conf.h \
+    inc/plc_mod_info.h \
+    ../shared/inc/my_func.h
 
 SOURCES += \
     ../shared/HAL/src/stm32f1xx_hal.c \
@@ -84,11 +86,12 @@ SOURCES += \
     ../shared/HAL/src/stm32f1xx_hal_spi_ex.c \
     ../shared/HAL/src/stm32f1xx_hal_tim.c \
     ../shared/HAL/src/stm32f1xx_hal_tim_ex.c \
-    src/main.c \
     src/stm32f1xx_hal_msp.c \
     src/stm32f1xx_it.c \
     src/system_stm32f1xx.c \
     src/startup_stm32f103xb.s \
-    ../shared/src/plc_mod.cpp
+    ../shared/src/plc_mod.cpp \
+    src/main.cpp \
+    ../shared/src/my_func.cpp
 
 DISTFILES +=

@@ -37,7 +37,7 @@ HEADERS += \
 	inc/stm32_uart.h \
 	inc/stm32_rcc.h \
 	inc/stm32_gpio.h \
-	inc/my_func.h \
+    ../shared/inc/my_func.h \
     inc/bitbanding.h \
     inc/plc_io.h \
     inc/stm32_pwr.h \
@@ -68,7 +68,7 @@ SOURCES += \
 	src/stm32_uart.cpp \
 	src/stm32_rcc.cpp \
 	src/stm32_gpio.cpp \
-	src/my_func.cpp \
+    ../shared/src/my_func.cpp \
     src/plc_io.cpp \
     src/stm32_pwr.cpp \
     src/stm32_flash.cpp \
