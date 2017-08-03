@@ -1,5 +1,6 @@
 #include "plc_control.h"
 #include "stm32_uart.h"
+#include "plc_mod.h"
 #include "xprintf.h"
 #include <stdarg.h>
 
@@ -17,6 +18,15 @@ void PLC_CONTROL::init()
     m_state.stop = 1;
     m_state.fault = 0;
     m_state.initialized = 0;
+}
+
+void PLC_CONTROL::init_hw()
+{
+    plc_mod_com.init(&spi6, true);
+    plc_mod_ext.init(&spi5, false);
+
+    plc_mod_com.find_modules();
+    plc_mod_ext.find_modules();
 }
 
 void xvprintf(const char* fmt, va_list arp);

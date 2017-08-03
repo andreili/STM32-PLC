@@ -59,6 +59,8 @@ HEADERS += \
     inc/sddriver.h \
     inc/diskio.h \
     inc/memmanager.h \
+    inc/plc_mod.h \
+    inc/plc_conf.h
 
 SOURCES += \
     ../shared/CMSIS/ISRstm32f429xx.cpp \
@@ -84,4 +86,5 @@ SOURCES += \
     src/fatfs.cpp \
     src/sddriver.cpp \
     src/memmanager.cpp \
+    src/plc_mod.cpp
 

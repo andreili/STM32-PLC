@@ -2,8 +2,12 @@
 #define STM32_CONF_H
 
 #include <stdint.h>
-#include "ISRstm32f429xx.h"
+#ifdef STM32F10X_MD
+#include "stm32f10x.h"
+#endif
+#ifdef STM32F429xx
 #include "stm32f4xx.h"
+#endif
 #include "bitbanding.h"
 
 #define STM32_RESULT_OK         0
