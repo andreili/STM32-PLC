@@ -109,17 +109,15 @@ public:
     #ifdef STM32F429xx
     /* Voltage control */
     static inline void set_voltage_scaling_config(uint32_t config) { MODIFY_REG(PWR->CR, PWR_CR_VOS, config);  }
-    #endif
 
     static uint32_t enable_overdrive();
     static uint32_t disable_overdrive();
 
-    #ifdef STM32F429xx
     ENDIS_REG_FLAG(overdrive_switching, PWR->CR, PWR_CR_ODSWEN)
     ENDIS_REG_FLAG(underdrive, PWR->CR, PWR_CR_UDEN)
-    #endif
 
     static uint32_t enter_underdrive_stop_mode(uint32_t Regulator, uint8_t STOPEntry);
+    #endif
 
     static inline uint32_t get_flag(uint32_t flag_msk) { return (PWR->CSR & flag_msk); }
 
@@ -128,13 +126,11 @@ public:
     static inline void clear_odrudr_flag() { BIT_BAND_PER(PWR->CSR, PWR_FLAG_UDRDY) = ENABLE; }
 
     static inline uint32_t get_voltage_range() { return PWR->CR & PWR_CR_VOS; }
-    #endif
 
     /* Backup regulator */
     static uint32_t enable_backup_regulator();
     static uint32_t disable_backup_regulator();
 
-    #ifdef STM32F429xx
     /* flash control */
     ENDIS_REG_FLAG(flash_power_down, PWR->CR, PWR_CR_FPDS)
     #endif

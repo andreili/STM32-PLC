@@ -1,5 +1,7 @@
-#include "stm32_nvic.h"
+#include "stm32_inc.h"
+#ifdef STM32F429xx
 #include "plc_io.h"
+#endif
 
 /* from core_cm4.h */
 

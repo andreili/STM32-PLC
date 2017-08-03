@@ -11,7 +11,7 @@
 #include "stm32_systick.h"
 
 #ifdef STM32F10X_MD
-#include "stm32f10x.h"
+#include "stm32f1xx.h"
 
 #include "ISRstm32f10x_md.h"
 #endif

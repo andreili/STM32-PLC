@@ -24,8 +24,10 @@ public:
     ENDIS_REG_FLAG(DBG_sleep_mode, DBGMCU->CR, DBGMCU_CR_DBG_SLEEP)
     ENDIS_REG_FLAG(DBG_stop_mode, DBGMCU->CR, DBGMCU_CR_DBG_SLEEP)
     ENDIS_REG_FLAG(DBG_standby_mode, DBGMCU->CR, DBGMCU_CR_DBG_SLEEP)
+    #ifdef STM32F429xx
     ENDIS_REG_FLAG(compensation_cell, SYSCFG->CMPCR, SYSCFG_CMPCR_CMP_PD)
     ENDIS_REG_FLAG(memory_swapping_bank, SYSCFG->MEMRMP, SYSCFG_MEMRMP_UFB_MODE)
+    #endif
 private:
     static volatile uint32_t m_tick;
 };

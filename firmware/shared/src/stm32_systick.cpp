@@ -1,7 +1,7 @@
-#include "stm32_systick.h"
+#include "stm32_inc.h"
+#ifdef STM32F429xx
 #include "plc_io.h"
-#include "stm32_rcc.h"
-#include "stm32_nvic.h"
+#endif
 
 volatile uint32_t STM32_SYSTICK::m_tick;
 
@@ -29,7 +29,9 @@ void STM32_SYSTICK::set_clock_source(uint32_t src)
 void STM32_SYSTICK::on_tick()
 {
     ++m_tick;
+    #ifdef STM32F429xx
     PLC_IO::timer_proc();
+#endif
 }
 
 void STM32_SYSTICK::delay(__IO uint32_t delay_ms)

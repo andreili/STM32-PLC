@@ -56,9 +56,9 @@ void STM32_GPIO::init_all()
 	gpioc.init(GPIOC);
 	gpiod.init(GPIOD);
 	gpioe.init(GPIOE);
-	gpiof.init(GPIOF);
-	gpiog.init(GPIOG);
-    #ifdef GPIOH
+    #ifdef STM32F429xx
+    gpiof.init(GPIOF);
+    gpiog.init(GPIOG);
 	gpioh.init(GPIOH);
     #endif
 }

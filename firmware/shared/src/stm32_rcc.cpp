@@ -38,8 +38,13 @@ uint32_t STM32_RCC::m_system_core_clock;
 #define RCC_PLLP_DIV6                    ((uint32_t)0x00000006U)
 #define RCC_PLLP_DIV8                    ((uint32_t)0x00000008U)
 
+#ifdef RCC_PLLCFGR_PLLSRC_HSI
 #define RCC_PLLSOURCE_HSI                RCC_PLLCFGR_PLLSRC_HSI
 #define RCC_PLLSOURCE_HSE                RCC_PLLCFGR_PLLSRC_HSE
+#else
+#define RCC_PLLSOURCE_HSI_DIV2      ((uint32_t)0x00000000)     /*!< HSI clock divided by 2 selected as PLL entry clock source */
+#define RCC_PLLSOURCE_HSE           RCC_CFGR_PLLSRC            /*!< HSE clock selected as PLL entry clock source */
+#endif
 
 #define RCC_CLOCKTYPE_SYSCLK             ((uint32_t)0x00000001U)
 #define RCC_CLOCKTYPE_HCLK               ((uint32_t)0x00000002U)
@@ -60,13 +65,38 @@ const uint8_t APBAHBPrescTable[16] = {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U, 1U, 2U, 3U
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
 const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
 
+#if defined(STM32F105xC) || defined(STM32F107xC)
+#else
+#define RCC_PLL_MUL2                    RCC_CFGR_PLLMULL2
+#define RCC_PLL_MUL3                    RCC_CFGR_PLLMULL3
+#endif /* STM32F105xC || STM32F107xC */
+#define RCC_PLL_MUL4                    RCC_CFGR_PLLMULL4
+#define RCC_PLL_MUL5                    RCC_CFGR_PLLMULL5
+#define RCC_PLL_MUL6                    RCC_CFGR_PLLMULL6
+#define RCC_PLL_MUL7                    RCC_CFGR_PLLMULL7
+#define RCC_PLL_MUL8                    RCC_CFGR_PLLMULL8
+#define RCC_PLL_MUL9                    RCC_CFGR_PLLMULL9
+#if defined(STM32F105xC) || defined(STM32F107xC)
+#define RCC_PLL_MUL6_5                  RCC_CFGR_PLLMULL6_5
+#else
+#define RCC_PLL_MUL10                   RCC_CFGR_PLLMULL10
+#define RCC_PLL_MUL11                   RCC_CFGR_PLLMULL11
+#define RCC_PLL_MUL12                   RCC_CFGR_PLLMULL12
+#define RCC_PLL_MUL13                   RCC_CFGR_PLLMULL13
+#define RCC_PLL_MUL14                   RCC_CFGR_PLLMULL14
+#define RCC_PLL_MUL15                   RCC_CFGR_PLLMULL15
+#define RCC_PLL_MUL16                   RCC_CFGR_PLLMULL16
+#endif /* STM32F105xC || STM32F107xC */
+
 void STM32_RCC::init()
 {
     enable_clk_PWR();
+    #ifdef STM32F429xx
     STM32_PWR::set_voltage_scaling_config(PWR_REGULATOR_VOLTAGE_SCALE1);
+    #endif
     if (config_osc() != STM32_RESULT_OK)
         Error_Handler();
-    if (config_clock(FLASH_ACR_LATENCY_5WS) != STM32_RESULT_OK)
+    if (config_clock(STM32_FLASH_LAT) != STM32_RESULT_OK)
         Error_Handler();
 
     STM32_SYSTICK::update_freq();
@@ -75,6 +105,16 @@ void STM32_RCC::init()
 void STM32_RCC::deinit()
 {
     m_system_core_clock = HSI_VALUE;
+
+    #ifdef STM32F10X_MD
+    CLEAR_BIT(RCC->CFGR, RCC_CFGR_SW);
+    CLEAR_BIT(RCC->CR, RCC_CR_HSEON | RCC_CR_CSSON | RCC_CR_PLLON);
+    CLEAR_BIT(RCC->CR, RCC_CR_HSEBYP);
+    CLEAR_REG(RCC->CFGR);
+    MODIFY_REG(RCC->CR, RCC_CR_HSITRIM, ((uint32_t)0x10 << POSITION_VAL(RCC_CR_HSITRIM)));
+    #endif
+
+    #ifdef STM32F429xx
     RCC->CR |= RCC_CR_HSION | RCC_CR_HSITRIM_4;
     RCC->CFGR = 0;
     RCC->CR &= ~(RCC_CR_HSEON | RCC_CR_CSSON | RCC_CR_PLLON | RCC_CR_PLLI2SON);
@@ -82,10 +122,9 @@ void STM32_RCC::deinit()
     RCC->PLLCFGR = RCC_PLLCFGR_PLLM_4 | RCC_PLLCFGR_PLLN_6 | RCC_PLLCFGR_PLLN_7 | RCC_PLLCFGR_PLLQ_2;
     
     RCC->PLLI2SCFGR = RCC_PLLI2SCFGR_PLLI2SN_6 | RCC_PLLI2SCFGR_PLLI2SN_7 | RCC_PLLI2SCFGR_PLLI2SR_1;
-    
-    RCC->CR &= ~RCC_CR_HSEBYP;
+    #endif
+
     RCC->CIR = 0;
-    
     m_system_core_clock = update_system_core_clock();
 }
 
@@ -121,6 +160,7 @@ void STM32_RCC::config_LSE(uint32_t state)
     }
 }
 
+#ifdef STM32F429xx
 void STM32_RCC::set_prescaler_RTC(uint32_t value)
 {
     if ((value & RCC_BDCR_RTCSEL) == RCC_BDCR_RTCSEL)
@@ -134,10 +174,26 @@ void STM32_RCC::set_config_RTC(uint32_t value)
     set_prescaler_RTC(value);
     RCC->BDCR |= value & 0x00000FFFU;
 }
+#endif
 
 uint32_t STM32_RCC::get_PCLK1_freq()
 {
+    #ifdef STM32F10X_MD
+    return (get_HCLK_freq() >> APBPrescTable[(RCC->CFGR & RCC_CFGR_PPRE1) >> POSITION_VAL(RCC_CFGR_PPRE1)]);
+    #endif
+    #ifdef STM32F429xx
     return (get_HCLK_freq() >> APBAHBPrescTable[(RCC->CFGR & RCC_CFGR_PPRE1) >> POSITION_VAL(RCC_CFGR_PPRE1)]);
+    #endif
+}
+
+uint32_t STM32_RCC::get_PCLK2_freq()
+{
+    #ifdef STM32F10X_MD
+    return (get_HCLK_freq() >> APBPrescTable[(RCC->CFGR & RCC_CFGR_PPRE2) >> POSITION_VAL(RCC_CFGR_PPRE2)]);
+    #endif
+    #ifdef STM32F429xx
+    return (get_HCLK_freq() >> APBAHBPrescTable[(RCC->CFGR & RCC_CFGR_PPRE2) >> POSITION_VAL(RCC_CFGR_PPRE2)]);
+    #endif
 }
 
 uint32_t STM32_RCC::config_osc()
@@ -200,9 +256,15 @@ uint32_t STM32_RCC::config_osc()
         WAIT_TIMEOUT(get_flag(RCC_FLAG_PLLRDY) != RESET, PLL_TIMEOUT_VALUE);
         if (STM32_PLL_STATE == RCC_PLL_ON)
         {
+            #ifdef STM32F10X_MD
+            MODIFY_REG(RCC->CFGR, (RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL),
+                       STM32_PLL_SOURCE | STM32_PLL_MUL);
+            #endif
+            #ifdef STM32F429xx
             WRITE_REG(RCC->PLLCFGR, (STM32_PLL_SOURCE | STM32_PLLM | (STM32_PLLN << POSITION_VAL(RCC_PLLCFGR_PLLN)) |
                       (((STM32_PLLP >> 1U) - 1U) << POSITION_VAL(RCC_PLLCFGR_PLLP)) |
                       (STM32_PLLQ << POSITION_VAL(RCC_PLLCFGR_PLLQ))));
+            #endif
             enable_PLL();
             WAIT_TIMEOUT(get_flag(RCC_FLAG_PLLRDY) == RESET, PLL_TIMEOUT_VALUE);
         }
@@ -276,7 +338,12 @@ uint32_t STM32_RCC::config_clock(uint32_t flash_latency)
         MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2, STM32_CLOCK_APB2_DIV);
     }
 
+    #ifdef STM32F10X_MD
+    m_system_core_clock = update_system_core_clock() >> AHBPrescTable[(RCC->CFGR & RCC_CFGR_HPRE)>> RCC_CFGR_HPRE_Pos];
+    #endif
+    #ifdef STM32F429xx
     m_system_core_clock = update_system_core_clock() >> APBAHBPrescTable[(RCC->CFGR & RCC_CFGR_HPRE)>> RCC_CFGR_HPRE_Pos];
+    #endif
     STM32_SYSTICK::init();
 
     return STM32_RESULT_OK;
@@ -303,18 +370,20 @@ bool STM32_RCC::get_flag(uint32_t value)
     return (reg & (0x01U << (value & RCC_FLAG_MASK)));
 }
 
-uint32_t STM32_RCC::get_PCLK2_freq()
-{
-    return (get_HCLK_freq() >> APBAHBPrescTable[(RCC->CFGR & RCC_CFGR_PPRE2) >> POSITION_VAL(RCC_CFGR_PPRE2)]);
-}
-
 void STM32_RCC::config_MCO(uint32_t RCC_MCOx, uint32_t RCC_MCOSource, uint32_t RCC_MCODiv)
 {
     if (RCC_MCOx == RCC_MCO1)
     {
         __MCO1_CLK_ENABLE();
+        #ifdef STM32F10X_MD
+        MCO1_GPIO_PORT.set_config(MCO1_PIN, GPIO_MODE_AF_PP, 0, GPIO_SPEED_FREQ_HIGH, GPIO_NOPULL);
+        set_config_MCO1(RCC_MCOSource);
+        (void)(RCC_MCODiv);
+        #endif
+        #ifdef STM32F429xx
         MCO1_GPIO_PORT.set_config(MCO1_PIN, GPIO_MODE_AF_PP, GPIO_AF0_MCO, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
         MODIFY_REG(RCC->CFGR, (RCC_CFGR_MCO1 | RCC_CFGR_MCO1PRE), (RCC_MCOSource | RCC_MCODiv));
+        #endif
     }
     #ifdef RCC_CFGR_MCO2
     else
@@ -335,13 +404,32 @@ void STM32_RCC::NMI_IRQ_Handler()
     }
 }
 
+#if   defined(RCC_CFGR2_PREDIV1SRC)
+  const uint8_t aPLLMULFactorTable[12] = {0, 0, 4,  5,  6,  7,  8,  9, 0, 0, 0, 13};
+  const uint8_t aPredivFactorTable[16] = { 1, 2,  3,  4,  5,  6,  7,  8, 9,10, 11, 12, 13, 14, 15, 16};
+#else
+  const uint8_t aPLLMULFactorTable[16] = { 2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 16};
+#if defined(RCC_CFGR2_PREDIV1)
+  const uint8_t aPredivFactorTable[16] = { 1, 2,  3,  4,  5,  6,  7,  8, 9,10, 11, 12, 13, 14, 15, 16};
+#else
+  const uint8_t aPredivFactorTable[2] = { 1, 2};
+#endif /*RCC_CFGR2_PREDIV1*/
+#endif
+
 uint32_t STM32_RCC::update_system_core_clock()
 {
     uint32_t tmp = 0,
+            #ifdef STM32F10X_MD
+            prediv = 0,
+            pllclk = 0,
+            pllmul = 0;
+            #endif
+            #ifdef STM32F429xx
             pllvco = 0,
             pllp = 2,
             pllsource = 0,
             pllm = 2;
+            #endif
     uint32_t sysclockfreq = 0U;
 
     /* Get SYSCLK source -------------------------------------------------------*/
@@ -356,6 +444,50 @@ uint32_t STM32_RCC::update_system_core_clock()
         sysclockfreq = HSE_VALUE;
         break;
     case RCC_CFGR_SWS_PLL:  /* PLL used as system clock source */
+        #ifdef STM32F10X_MD
+        pllmul = aPLLMULFactorTable[(uint32_t)(tmp & RCC_CFGR_PLLMULL) >> POSITION_VAL(RCC_CFGR_PLLMULL)];
+        if ((tmp & RCC_CFGR_PLLSRC) != RCC_PLLSOURCE_HSI_DIV2)
+        {
+            #if defined(RCC_CFGR2_PREDIV1)
+            prediv = aPredivFactorTable[(uint32_t)(RCC->CFGR2 & RCC_CFGR2_PREDIV1) >> POSITION_VAL(RCC_CFGR2_PREDIV1)];
+            #else
+            prediv = aPredivFactorTable[(uint32_t)(RCC->CFGR & RCC_CFGR_PLLXTPRE) >> POSITION_VAL(RCC_CFGR_PLLXTPRE)];
+            #endif /*RCC_CFGR2_PREDIV1*/
+            #if defined(RCC_CFGR2_PREDIV1SRC)
+
+            if(HAL_IS_BIT_SET(RCC->CFGR2, RCC_CFGR2_PREDIV1SRC))
+            {
+                /* PLL2 selected as Prediv1 source */
+                /* PLLCLK = PLL2CLK / PREDIV1 * PLLMUL with PLL2CLK = HSE/PREDIV2 * PLL2MUL */
+                prediv2 = ((RCC->CFGR2 & RCC_CFGR2_PREDIV2) >> POSITION_VAL(RCC_CFGR2_PREDIV2)) + 1;
+                pll2mul = ((RCC->CFGR2 & RCC_CFGR2_PLL2MUL) >> POSITION_VAL(RCC_CFGR2_PLL2MUL)) + 2;
+                pllclk = (uint32_t)((((HSE_VALUE / prediv2) * pll2mul) / prediv) * pllmul);
+            }
+            else
+            {
+                /* HSE used as PLL clock source : PLLCLK = HSE/PREDIV1 * PLLMUL */
+                pllclk = (uint32_t)((HSE_VALUE / prediv) * pllmul);
+            }
+
+            /* If PLLMUL was set to 13 means that it was to cover the case PLLMUL 6.5 (avoid using float) */
+            /* In this case need to divide pllclk by 2 */
+            if (pllmul == aPLLMULFactorTable[(uint32_t)(RCC_CFGR_PLLMULL6_5) >> POSITION_VAL(RCC_CFGR_PLLMULL)])
+            {
+                pllclk = pllclk / 2;
+            }
+            #else
+            /* HSE used as PLL clock source : PLLCLK = HSE/PREDIV1 * PLLMUL */
+            pllclk = (uint32_t)((HSE_VALUE / prediv) * pllmul);
+            #endif /*RCC_CFGR2_PREDIV1SRC*/
+        }
+        else
+        {
+            /* HSI used as PLL clock source : PLLCLK = HSI/2 * PLLMUL */
+            pllclk = (uint32_t)((HSI_VALUE >> 1) * pllmul);
+        }
+        sysclockfreq = pllclk;
+        #endif
+        #ifdef STM32F429xx
         pllsource = get_source_PLL_OSC() >> 22;
         pllm = RCC->PLLCFGR & RCC_PLLCFGR_PLLM;
         if (pllsource != 0)
@@ -370,6 +502,7 @@ uint32_t STM32_RCC::update_system_core_clock()
         }
         pllp = (((RCC->PLLCFGR & RCC_PLLCFGR_PLLP) >>16) + 1 ) *2;
         sysclockfreq = pllvco/pllp;
+        #endif
         break;
     default:
         sysclockfreq = HSI_VALUE;

@@ -11,6 +11,8 @@ __attribute__((naked, noreturn)) void ISR::DefaultHandler()
    for(;;);
 }
 
+extern uint32_t _estack;
+
 
 #ifdef USE_MEMORY_ISR
 __attribute__((section(".isr_vector"))) const volatile ISR::ShortVectors interruptsVectorTable =
@@ -19,14 +21,14 @@ __attribute__((section(".isr_vector"))) const volatile ISR::Vectors interruptsVe
 #endif
 {
 #ifdef USE_MEMORY_ISR
-   0x20004ffc,
+   (uint32_t)&_estack,
    ISR::Reset
 };
 
 __attribute__((section(".isr_vector2"))) ISR::Vectors MeminterruptsVectorTable =
 {
 #endif
-   0x20000e78,
+   (uint32_t)&_estack,
    ISR::Reset,
    ISR::NMI,
    ISR::HardFault,
