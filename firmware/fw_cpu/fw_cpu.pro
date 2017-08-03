@@ -23,16 +23,16 @@ createlist.commands += && arm-none-eabi-objcopy -Obinary $${OUT_PWD}/$${APP}$${E
 createlist.commands += && arm-none-eabi-size $${OUT_PWD}/$${APP}$${EXT}
 QMAKE_EXTRA_TARGETS += createlist
 
-INCLUDEPATH += ./CMSIS/ ./inc/ ../shared/inc/
-INCLUDEPATH += ./Third_Party/FatFs/src/ ./Third_Party/FatFs/src/option/ ./Third_Party/FatFs/src/drivers
+INCLUDEPATH += ../shared/CMSIS/ ./inc/ ../shared/inc/
+INCLUDEPATH += ../shared/Third_Party/FatFs/src/ ../shared/Third_Party/FatFs/src/option/
 
 HEADERS += \
-    CMSIS/core_cm4.h \
-    CMSIS/core_cmFunc.h \
-    CMSIS/core_cmInstr.h \
-    CMSIS/stm32f429xx.h \
-    CMSIS/stm32f4xx.h \
-    CMSIS/ISRstm32f429xx.h \
+    ../shared/CMSIS/core_cm4.h \
+    ../shared/CMSIS/core_cmFunc.h \
+    ../shared/CMSIS/core_cmInstr.h \
+    ../shared/CMSIS/stm32f429xx.h \
+    ../shared/CMSIS/stm32f4xx.h \
+    ../shared/CMSIS/ISRstm32f429xx.h \
 	inc/init.h \
 	inc/stm32_uart.h \
 	inc/stm32_rcc.h \
@@ -49,8 +49,8 @@ HEADERS += \
     inc/plc_control.h \
     inc/stm32_nvic.h \
     inc/stm32_inc.h \
-    Third_Party/FatFs/src/ff.h \
-    Third_Party/FatFs/src/integer.h \
+    ../shared/Third_Party/FatFs/src/ff.h \
+    ../shared/Third_Party/FatFs/src/integer.h \
     inc/ffconf.h \
     inc/stm32_sd.h \
     inc/fatfs.h \
@@ -62,7 +62,7 @@ HEADERS += \
     ../shared/inc/plc_mod.h
 
 SOURCES += \
-    CMSIS/ISRstm32f429xx.cpp \
+    ../shared/CMSIS/ISRstm32f429xx.cpp \
     src/main.cpp \
 	src/init.cpp \
 	src/stm32_uart.cpp \
@@ -77,9 +77,9 @@ SOURCES += \
     src/stm32_sdram.cpp \
     src/plc_control.cpp \
     src/stm32_nvic.cpp \
-    Third_Party/FatFs/src/ff.c \
-    Third_Party/FatFs/src/option/syscall.c \
-    Third_Party/FatFs/src/option/ccsbcs.c \
+    ../shared/Third_Party/FatFs/src/ff.c \
+    ../shared/Third_Party/FatFs/src/option/syscall.c \
+    ../shared/Third_Party/FatFs/src/option/ccsbcs.c \
     src/fatfs.cpp \
     src/sddriver.cpp \
     src/stm32_sd.cpp \

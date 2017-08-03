@@ -88,8 +88,8 @@ SOURCES += \
     ../shared/HAL/src/stm32f1xx_hal_tim_ex.c \
     src/stm32f1xx_hal_msp.c \
     src/stm32f1xx_it.c \
-    src/system_stm32f1xx.c \
-    src/startup_stm32f103xb.s \
+    ../shared/CMSIS/system_stm32f1xx.c \
+    ../shared/CMSIS/startup_stm32f103xb.s \
     ../shared/src/plc_mod.cpp \
     src/main.cpp \
     ../shared/src/my_func.cpp
