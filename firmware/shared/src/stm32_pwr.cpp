@@ -1,6 +1,4 @@
-#include "stm32_pwr.h"
-#include "stm32_systick.h"
-#include "stm32_rcc.h"
+#include "stm32_inc.h"
 
 #define PWR_OVERDRIVE_TIMEOUT_VALUE  1000U
 #define PWR_UDERDRIVE_TIMEOUT_VALUE  1000U

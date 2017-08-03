@@ -23,7 +23,11 @@ public:
     void init();
     void irq();
 
+    uint32_t wait_busy(uint32_t timeout);
+
     uint32_t transmit(uint8_t* data, uint32_t size, TXRX_MODE mode, uint32_t timeout);
+    uint32_t recieve(uint8_t* data, uint32_t size, TXRX_MODE mode, uint32_t timeout);
+    uint32_t transmit_recieve(uint8_t* tx_buf, uint8_t* rx_buf, uint32_t size, TXRX_MODE mode, uint32_t timeout);
 
     ENDIS_REG_FLAG_(m_spi->CR1, SPI_CR1_SPE)
     inline uint32_t is_enabled() { return (m_spi->CR1 & SPI_CR1_SPE) == SPI_CR1_SPE; }
@@ -35,6 +39,7 @@ public:
 
     inline bool get_flag(uint32_t flag_msk) { return ((m_spi->SR & flag_msk) == flag_msk); }
     inline void clear_ovrflag() { uint32_t tmp; tmp = m_spi->DR; tmp = m_spi->SR ; (void)(tmp); }
+    inline void clear_CRCerror() { m_spi->SR &= ~SPI_FLAG_CRCERR; }
 
     inline void tx_1line() { m_spi->CR1 |= SPI_CR1_BIDIOE; }
     inline void rx_1line() { m_spi->CR1 &= ~SPI_CR1_BIDIOE; }
@@ -65,6 +70,9 @@ private:
 
     uint32_t transmit_blocked(uint8_t* data, uint32_t size, uint32_t timeout);
     uint32_t transmit_IT(uint8_t* data, uint32_t size);
+
+    uint32_t recieve_blocked(uint8_t* data, uint32_t size, uint32_t timeout);
+    uint32_t recieve_IT(uint8_t* data, uint32_t size);
 
     void callback_tx_8bit();
     void callback_tx_16bit();

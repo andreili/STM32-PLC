@@ -5,6 +5,17 @@
 
 #define PWR_WAKEUP_PIN1                 ((uint32_t)0x00000100U)
 
+#ifdef STM32F10X_MD
+#define PWR_PVDLEVEL_0                  PWR_CR_PLS_2V2
+#define PWR_PVDLEVEL_1                  PWR_CR_PLS_2V3
+#define PWR_PVDLEVEL_2                  PWR_CR_PLS_2V4
+#define PWR_PVDLEVEL_3                  PWR_CR_PLS_2V5
+#define PWR_PVDLEVEL_4                  PWR_CR_PLS_2V6
+#define PWR_PVDLEVEL_5                  PWR_CR_PLS_2V7
+#define PWR_PVDLEVEL_6                  PWR_CR_PLS_2V8
+#define PWR_PVDLEVEL_7                  PWR_CR_PLS_2V9
+#endif
+#ifdef STM32F429xx
 #define PWR_PVDLEVEL_0                  PWR_CR_PLS_LEV0
 #define PWR_PVDLEVEL_1                  PWR_CR_PLS_LEV1
 #define PWR_PVDLEVEL_2                  PWR_CR_PLS_LEV2
@@ -14,6 +25,7 @@
 #define PWR_PVDLEVEL_6                  PWR_CR_PLS_LEV6
 #define PWR_PVDLEVEL_7                  PWR_CR_PLS_LEV7/* External input analog voltage
                                                           (Compare internally to VREFINT) */
+#endif
 
 #define PWR_PVD_MODE_NORMAL                 ((uint32_t)0x00000000U)   /*!< basic mode is used */
 #define PWR_PVD_MODE_IT_RISING              ((uint32_t)0x00010001U)   /*!< External Interrupt Mode with Rising edge trigger detection */
@@ -35,11 +47,14 @@
 #define PWR_FLAG_WU                     PWR_CSR_WUF
 #define PWR_FLAG_SB                     PWR_CSR_SBF
 #define PWR_FLAG_PVDO                   PWR_CSR_PVDO
+#ifdef STM32F429xx
 #define PWR_FLAG_BRR                    PWR_CSR_BRR
 #define PWR_FLAG_VOSRDY                 PWR_CSR_VOSRDY
+#endif
 
 #define PWR_EXTI_LINE_PVD  ((uint32_t)EXTI_IMR_MR16)  /*!< External interrupt line 16 Connected to the PVD EXTI Line */
 
+#ifdef STM32F429xx
 #define PWR_MAINREGULATOR_UNDERDRIVE_ON                       PWR_CR_MRUDS
 #define PWR_LOWPOWERREGULATOR_UNDERDRIVE_ON                   ((uint32_t)(PWR_CR_LPDS | PWR_CR_LPUDS))
 
@@ -52,6 +67,7 @@
 #define PWR_REGULATOR_VOLTAGE_SCALE2         PWR_CR_VOS_1           /* Scale 2 mode: the maximum value of fHCLK is 144 MHz. It can be extended to
                                                                        168 MHz by activating the over-drive mode. */
 #define PWR_REGULATOR_VOLTAGE_SCALE3         PWR_CR_VOS_0           /* Scale 3 mode: the maximum value of fHCLK is 120 MHz. */
+#endif
 
 #define PWR_WAKEUP_PIN3                 ((uint32_t)0x00000040U)
 
@@ -90,28 +106,38 @@ public:
 
     static inline void set_EXTI_generate_swit() { BIT_BAND_PER(EXTI->SWIER, PWR_EXTI_LINE_PVD) = ENABLE; }
 
+    #ifdef STM32F429xx
     /* Voltage control */
     static inline void set_voltage_scaling_config(uint32_t config) { MODIFY_REG(PWR->CR, PWR_CR_VOS, config);  }
+    #endif
 
     static uint32_t enable_overdrive();
     static uint32_t disable_overdrive();
 
+    #ifdef STM32F429xx
     ENDIS_REG_FLAG(overdrive_switching, PWR->CR, PWR_CR_ODSWEN)
     ENDIS_REG_FLAG(underdrive, PWR->CR, PWR_CR_UDEN)
+    #endif
 
     static uint32_t enter_underdrive_stop_mode(uint32_t Regulator, uint8_t STOPEntry);
 
+    static inline uint32_t get_flag(uint32_t flag_msk) { return (PWR->CSR & flag_msk); }
+
     static inline bool get_odrudr_flag(uint32_t flag_msk) { return ((PWR->CSR & flag_msk) == flag_msk); }
+    #ifdef STM32F429xx
     static inline void clear_odrudr_flag() { BIT_BAND_PER(PWR->CSR, PWR_FLAG_UDRDY) = ENABLE; }
 
     static inline uint32_t get_voltage_range() { return PWR->CR & PWR_CR_VOS; }
+    #endif
 
     /* Backup regulator */
     static uint32_t enable_backup_regulator();
     static uint32_t disable_backup_regulator();
 
+    #ifdef STM32F429xx
     /* flash control */
     ENDIS_REG_FLAG(flash_power_down, PWR->CR, PWR_CR_FPDS)
+    #endif
 };
 
 #endif // STM32_PWR_H
