@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #ifdef STM32F10X_MD
-#include "stm32f10x.h"
+#include "stm32f1xx.h"
 #endif
 #ifdef STM32F429xx
 #include "stm32f4xx.h"
@@ -23,7 +23,7 @@
 
 //#define STM32_USE_UART1
 //#define STM32_USE_UART2
-#define STM32_USE_UART3
+//#define STM32_USE_UART3
 #define STM32_BRATE_UART3 115200
 //#define STM32_USE_UART4
 //#define STM32_USE_UART5
@@ -35,26 +35,33 @@
 //#define STM32_USE_SPI2
 //#define STM32_USE_SPI3
 //#define STM32_USE_SPI4
-#define STM32_USE_SPI5
-#define STM32_USE_SPI6
+//#define STM32_USE_SPI5
+//#define STM32_USE_SPI6
 
 /* Clock settings */
-#define STM32_USE_HSE
+//#define STM32_USE_HSE
 #define STM32_HSE_STATE RCC_CR_HSEON
-//#define STM32_USE_HSI
-//#define STM32_HSI_STATE RCC_CR_HSION
-//#define STM32_HSI_CALIBRATION 0
+#define STM32_USE_HSI
+#define STM32_HSI_STATE RCC_CR_HSION
+#define STM32_HSI_CALIBRATION 0
 //#define STM32_USE_LSI
 //#define STM32_LSI_STATE RCC_CSR_LSION
 //#define STM32_USE_LSE
 #define STM32_LSE_STATE RCC_BDCR_LSEOFF
 #define STM32_USE_PLL
 #define STM32_PLL_STATE RCC_PLL_ON
-#define STM32_PLL_SOURCE RCC_PLLSOURCE_HSE
+#define STM32_PLL_SOURCE RCC_PLLSOURCE_HSI_DIV2
+#ifdef STM32F10X_MD
+#define STM32_PLL_MUL RCC_PLL_MUL6
+#define STM32_FLASH_LAT FLASH_LATENCY_0
+#endif
+#ifdef STM32F429xx
 #define STM32_PLLM 4
 #define STM32_PLLN 192
 #define STM32_PLLP RCC_PLLP_DIV2
 #define STM32_PLLQ 7
+#define STM32_FLASH_LAT FLASH_ACR_LATENCY_5WS
+#endif
 #define STM32_CLOCK_TYPE (RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2)
 #define STM32_CLOCK_AHB_DIV RCC_CFGR_HPRE_DIV1
 #define STM32_CLOCK_SYSCLK_SOURCE RCC_CFGR_SW_PLL
@@ -148,10 +155,16 @@
     ENDIS_REG_FLAG(clk_ ## name, RCC->enr ## ENR, RCC_ ## enr ## ENR_ ## name ## EN) \
     static inline bool check_enable_clk_ ## name() { return BIT_BAND_PER(RCC->enr ## ENR, RCC_ ## enr ## ENR_ ## name ## EN); }
 
+#ifdef STM32F429xx
 #define PER_RESET_SLEEP(enr, name) \
     static inline void force_reset_ ## name() { BIT_BAND_PER(RCC-> enr ## RSTR, RCC_ ## enr ## RSTR_ ## name ## RST) = ENABLE; } \
     static inline void release_reset_ ## name() { BIT_BAND_PER(RCC-> enr ## RSTR, RCC_ ## enr ## RSTR_ ## name ## RST) = DISABLE; } \
     static inline void sleep_enable_ ## name() { BIT_BAND_PER(RCC-> enr ## LPENR, RCC_ ## enr ## LPENR_ ## name ## LPEN) = ENABLE; }
+#else
+#define PER_RESET_SLEEP(enr, name) \
+    static inline void force_reset_ ## name() { BIT_BAND_PER(RCC-> enr ## RSTR, RCC_ ## enr ## RSTR_ ## name ## RST) = ENABLE; } \
+    static inline void release_reset_ ## name() { BIT_BAND_PER(RCC-> enr ## RSTR, RCC_ ## enr ## RSTR_ ## name ## RST) = DISABLE; }
+#endif
 
 #define WAIT_TIMEOUT(condition, timeout) \
     { \
@@ -184,5 +197,16 @@ enum class TXRX_MODE
     INTERRUPT,
     DMA,
 };
+
+#ifndef STM32F429xx
+#define SET_BIT(REG, BIT)     ((REG) |= (BIT))
+#define CLEAR_BIT(REG, BIT)   ((REG) &= ~(BIT))
+#define READ_BIT(REG, BIT)    ((REG) & (BIT))
+#define CLEAR_REG(REG)        ((REG) = (0x0))
+#define WRITE_REG(REG, VAL)   ((REG) = (VAL))
+#define READ_REG(REG)         ((REG))
+#define MODIFY_REG(REG, CLEARMASK, SETMASK)  WRITE_REG((REG), (((READ_REG(REG)) & (~(CLEARMASK))) | (SETMASK)))
+#define POSITION_VAL(VAL)     (__CLZ(__RBIT(VAL)))
+#endif
 
 #endif

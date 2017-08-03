@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.3.0, 2017-07-19T15:58:10. -->
+<!-- Written by QtCreator 4.3.0, 2017-08-03T11:21:31. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -59,8 +59,8 @@
  <data>
   <variable>ProjectExplorer.Project.Target.0</variable>
   <valuemap type="QVariantMap">
-   <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">ARM</value>
-   <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">ARM</value>
+   <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">ARM_m4</value>
+   <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">ARM_m4</value>
    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">{8157e6c5-6a9e-44b9-8b78-c1ee7cb6b8e5}</value>
    <value type="int" key="ProjectExplorer.Target.ActiveBuildConfiguration">0</value>
    <value type="int" key="ProjectExplorer.Target.ActiveDeployConfiguration">-1</value>

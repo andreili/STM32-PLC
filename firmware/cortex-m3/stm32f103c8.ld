@@ -149,9 +149,10 @@ MEMORY
   EXTMEMB2 (rx) : ORIGIN = 0x00000000, LENGTH = 0
   EXTMEMB3 (rx) : ORIGIN = 0x00000000, LENGTH = 0
 }
+_RAM_Start = 0x20000000;
 
 /* highest address of the user mode stack */
-_estack = 0x20004ffc;
+_estack = 0x20003000;
 
 /*
 Common part of the linker scripts for STR71x devices in FLASH mode
