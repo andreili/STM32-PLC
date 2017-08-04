@@ -111,7 +111,7 @@ void STM32_SPI::init()
     #ifdef STM32_USE_SPI5
     case SPI5_BASE:
         STM32_RCC::enable_clk_SPI5();
-        gpiof.set_config(GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
+        gpiof.set_config(GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
                          GPIO_MODE_AF_PP, GPIO_AF5_SPI5,
                          GPIO_SPEED_FREQ_VERY_HIGH, GPIO_PULLUP);
         STM32_NVIC::enable_and_set_prior_IRQ(SPI5_IRQn, 0, 0);
@@ -158,6 +158,7 @@ void STM32_SPI::init()
     #endif /* SPI_I2SCFGR_I2SMOD */
 
     m_busy = false;
+    disable();
 }
 
 void STM32_SPI::irq()
@@ -207,6 +208,9 @@ uint32_t STM32_SPI::transmit(uint8_t* data, uint32_t size, TXRX_MODE mode, uint3
 
 uint32_t STM32_SPI::recieve(uint8_t* data, uint32_t size, TXRX_MODE mode, uint32_t timeout)
 {
+    if ((m_mode == SPI_MODE_MASTER) && (m_direction == SPI_DIRECTION_2LINES))
+        return transmit_recieve(data, data, size, mode, timeout);
+
     switch (mode)
     {
     case TXRX_MODE::DIRECT:
@@ -347,6 +351,8 @@ uint32_t STM32_SPI::transmit_recieve(uint8_t* tx_buf, uint8_t* rx_buf, uint32_t 
 
     if (m_mode == SPI_DIRECTION_2LINES)
         clear_ovrflag();
+
+    return STM32_RESULT_OK;
 }
 
 uint32_t STM32_SPI::transmit_blocked(uint8_t* data, uint32_t size, uint32_t timeout)
@@ -578,6 +584,9 @@ uint32_t STM32_SPI::recieve_blocked(uint8_t* data, uint32_t size, uint32_t timeo
 
 uint32_t STM32_SPI::recieve_IT(uint8_t* data, uint32_t size)
 {
+    (void)(data);
+    (void)(size);
+    return 0;
     //
 }
 

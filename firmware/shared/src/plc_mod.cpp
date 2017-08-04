@@ -23,16 +23,21 @@ void PLC_MOD::init(STM32_SPI *spi, bool is_com)
 {
     m_spi = spi;
     m_bus_com = is_com;
+
+    /*CS_off();
+    if (m_bus_com)
+        PLC_MOD_COM_SEL_GPIO.set_config(PLC_MOD_COM_SEL_PIN, GPIO_MODE_OUTPUT_PP, 0,
+                                        GPIO_SPEED_FREQ_LOW, GPIO_PULLUP);
+    else
+        PLC_MOD_EXT_SEL_GPIO.set_config(PLC_MOD_EXT_SEL_PIN, GPIO_MODE_OUTPUT_PP, 0,
+                                        GPIO_SPEED_FREQ_LOW, GPIO_PULLUP);
+    CS_off();*/
 }
 
 void PLC_MOD::find_modules()
 {
     m_mod_count = 0;
 
-    CS_off();
-    STM32_SYSTICK::delay(PLC_MOD_RESET_TIMEOUT);
-    CS_on();
-    STM32_SYSTICK::delay(PLC_MOD_RESET_TIMEOUT);
 
     memset((uint8_t*)&m_pkt_send, 0, sizeof(plc_mod_pkt_t));
     m_pkt_send.data_size = 0;
@@ -46,6 +51,9 @@ void PLC_MOD::find_modules()
         m_pkt_send.target_id = m_mod_count;
         m_pkt_recv.request = EModRequest::NONE;
 
+        CS_off();
+        STM32_SYSTICK::delay(PLC_MOD_RESET_TIMEOUT);
+        CS_on();
         m_spi->transmit((uint8_t*)&m_pkt_send, sizeof(plc_mod_pkt_t),
                         TXRX_MODE::DIRECT, PLC_MOD_DATA_TIMEOUT);
         STM32_SYSTICK::delay(PLC_MOD_PKT_PAUSE);
@@ -66,18 +74,18 @@ void PLC_MOD::find_modules()
 
 void PLC_MOD::CS_on()
 {
-    if (m_bus_com)
+    /*if (m_bus_com)
         PLC_MOD_COM_SEL_GPIO.pin_OFF(PLC_MOD_COM_SEL_PIN);
     else
-        PLC_MOD_EXT_SEL_GPIO.pin_OFF(PLC_MOD_EXT_SEL_PIN);
+        PLC_MOD_EXT_SEL_GPIO.pin_OFF(PLC_MOD_EXT_SEL_PIN);*/
 }
 
 void PLC_MOD::CS_off()
 {
-    if (m_bus_com)
+    /*if (m_bus_com)
         PLC_MOD_COM_SEL_GPIO.pin_ON(PLC_MOD_COM_SEL_PIN);
     else
-        PLC_MOD_EXT_SEL_GPIO.pin_ON(PLC_MOD_EXT_SEL_PIN);
+        PLC_MOD_EXT_SEL_GPIO.pin_ON(PLC_MOD_EXT_SEL_PIN);*/
 }
 
 void PLC_MOD::print_module_info(plc_mod_info_t *mod)
