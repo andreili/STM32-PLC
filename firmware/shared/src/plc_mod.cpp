@@ -12,6 +12,10 @@ PLC_MOD plc_mod_com;
 PLC_MOD plc_mod_ext;
 #else
 PLC_MOD plc_mod;
+
+#define SPI_SEL() m_spi->Instance->CR1 |= SPI_CR1_SSI
+#define SPI_UNSEL() m_spi->Instance->CR1 &= ~SPI_CR1_SSI
+
 #endif
 
 #define PLC_MOD_RESET_TIMEOUT 100
@@ -101,12 +105,19 @@ void PLC_MOD::print_module_info(plc_mod_info_t *mod)
 void PLC_MOD::init(SPI_HandleTypeDef *spi)
 {
     m_spi = spi;
+    CSout_off();
+    m_spi->Instance->CR1 &= ~SPI_CR1_SSI;
 }
 
 void PLC_MOD::init_seq()
 {
+    __HAL_SPI_ENABLE(m_spi);
+    //HAL_SPI_Receive(m_spi, (uint8_t*)&m_pkt_recv, sizeof(plc_mod_pkt_t), 10);
+
     // wait, while CSin is a HIGH
-    while (HAL_GPIO_ReadPin(SEL_IN_GPIO_Port, SEL_IN_Pin) == GPIO_PIN_SET);
+    while (!is_CSin_on()) {};
+
+    SPI_SEL();
 
     while (!init_seq_get_req())
         HAL_Delay(10);
@@ -117,14 +128,16 @@ void PLC_MOD::init_seq()
 bool PLC_MOD::init_seq_get_req()
 {
     // recieve packet from CPU
-    HAL_SPI_Receive_DMA(m_spi, (uint8_t*)&m_pkt_recv, sizeof(plc_mod_pkt_t));
+    while (HAL_SPI_GetState(m_spi) != HAL_SPI_STATE_READY) {};
+    HAL_SPI_TransmitReceive(m_spi, (uint8_t*)&m_pkt_send, (uint8_t*)&m_pkt_recv, sizeof(plc_mod_pkt_t) / 2, 3000);
     // wait, while packet recieved
-    while (HAL_SPI_GetState(m_spi) == HAL_SPI_STATE_BUSY_RX);
+    while (HAL_SPI_GetState(m_spi) != HAL_SPI_STATE_READY) {};
+    CSout_off();
 
-    if (m_pkt_recv.request == EModRequest::GET_INFO)
+    //if (m_pkt_recv.request == EModRequest::GET_INFO)
         return true;
-    else
-        return false;
+    //else
+    //    return false;
 }
 
 void PLC_MOD::init_seq_send_info()
@@ -141,18 +154,28 @@ void PLC_MOD::init_seq_send_info()
 
 bool PLC_MOD::is_CSin_on()
 {
-    //
-    return true;
+    if (HAL_GPIO_ReadPin(SEL_IN_GPIO_Port, SEL_IN_Pin) == GPIO_PIN_RESET)
+    {
+        CSout_on();
+        //SPI_SEL();
+        return true;
+    }
+    else
+    {
+        CSout_off();
+        //SPI_UNSEL();
+        return false;
+    }
 }
 
 void PLC_MOD::CSout_on()
 {
-    //
+    HAL_GPIO_WritePin(SEL_OUT_GPIO_Port, SEL_OUT_Pin, GPIO_PIN_RESET);
 }
 
 void PLC_MOD::CSout_off()
 {
-    //
+    HAL_GPIO_WritePin(SEL_OUT_GPIO_Port, SEL_OUT_Pin, GPIO_PIN_SET);
 }
 
 #endif
