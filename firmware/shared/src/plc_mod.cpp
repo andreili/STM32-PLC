@@ -152,7 +152,7 @@ void PLC_MOD::init_seq_send_info()
         Error_Handler();
 }
 
-bool PLC_MOD::is_CSin_on()
+/*bool PLC_MOD::is_CSin_on()
 {
     if (HAL_GPIO_ReadPin(SEL_IN_GPIO_Port, SEL_IN_Pin) == GPIO_PIN_RESET)
     {
@@ -166,7 +166,7 @@ bool PLC_MOD::is_CSin_on()
         //SPI_UNSEL();
         return false;
     }
-}
+}*/
 
 void PLC_MOD::CSout_on()
 {
