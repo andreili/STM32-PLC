@@ -88,7 +88,7 @@ private:
     bool init_seq_get_req();
     void init_seq_send_info();
 
-    inline bool is_CSin_on() { return ((SEL_IN_GPIO_Port->IDR & SEL_IN_Pin) == SEL_IN_Pin); }
+    //inline bool is_CSin_on() { return ((SEL_IN_GPIO_Port->IDR & SEL_IN_Pin) != SEL_IN_Pin); }
     void CSout_on();
     void CSout_off();
 

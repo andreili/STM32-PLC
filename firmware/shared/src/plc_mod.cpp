@@ -115,9 +115,9 @@ void PLC_MOD::init_seq()
     //HAL_SPI_Receive(m_spi, (uint8_t*)&m_pkt_recv, sizeof(plc_mod_pkt_t), 10);
 
     // wait, while CSin is a HIGH
-    while (!is_CSin_on()) {};
+    //while (!is_CSin_on()) {};
 
-    SPI_SEL();
+    //SPI_SEL();
 
     while (!init_seq_get_req())
         HAL_Delay(10);
@@ -127,6 +127,7 @@ void PLC_MOD::init_seq()
 
 bool PLC_MOD::init_seq_get_req()
 {
+    CSout_on();
     // recieve packet from CPU
     while (HAL_SPI_GetState(m_spi) != HAL_SPI_STATE_READY) {};
     HAL_SPI_TransmitReceive(m_spi, (uint8_t*)&m_pkt_send, (uint8_t*)&m_pkt_recv, sizeof(plc_mod_pkt_t) / 2, 3000);
