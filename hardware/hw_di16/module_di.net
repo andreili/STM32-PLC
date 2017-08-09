@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source /media/Dev/Projects/stm_plc/hardware/hw_di16/module_di.sch)
-    (date "Вт 08 авг 2017 13:03:39")
+    (date "Ср 09 авг 2017 12:36:50")
     (tool "Eeschema 4.0.6")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -95,6 +95,7 @@
       (tstamp 594186AF))
     (comp (ref P4)
       (value MOD_IN)
+      (footprint Projects:Pin_Header_2.00mm_SMD)
       (libsource (lib conn) (part CONN_02X14))
       (sheetpath (names /) (tstamps /))
       (tstamp 5988C187))
@@ -1082,14 +1083,14 @@
         (pin (num 15) (name ~) (type passive))
         (pin (num 16) (name ~) (type passive)))))
   (libraries
-    (library (logical opto)
-      (uri /usr/share/kicad/library/opto.lib))
-    (library (logical conn)
-      (uri /usr/share/kicad/library/conn.lib))
     (library (logical device)
       (uri /usr/share/kicad/library/device.lib))
+    (library (logical conn)
+      (uri /usr/share/kicad/library/conn.lib))
     (library (logical stm32)
-      (uri /usr/share/kicad/library/stm32.lib)))
+      (uri /usr/share/kicad/library/stm32.lib))
+    (library (logical opto)
+      (uri /usr/share/kicad/library/opto.lib)))
   (nets
     (net (code 1) (name VDD)
       (node (ref R1) (pin 1))
