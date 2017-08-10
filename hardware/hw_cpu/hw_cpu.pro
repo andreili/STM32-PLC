@@ -1,4 +1,4 @@
-update=23.06.2017 22:44:39
+update=Чт 10 авг 2017 12:48:00
 version=1
 last_client=kicad
 [general]
@@ -58,6 +58,16 @@ LibName26=open-project
 LibName27=inductances
 LibName28=w_smd_qfn
 LibName29=xtal
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=../_rel_/
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=
+SpiceAjustPassiveValues=0
+LabSize=60
+ERC_TestSimilarLabels=1
 [eeschema]
 version=1
 LibDir=../../../SH/Devices/main
@@ -95,13 +105,4 @@ LibName30=valves
 LibName31=stm32
 LibName32=stm8
 LibName33=powerint
-[schematic_editor]
-version=1
-PageLayoutDescrFile=
-PlotDirectoryName=../_rel_/
-SubpartIdSeparator=0
-SubpartFirstId=65
-NetFmtName=
-SpiceAjustPassiveValues=0
-LabSize=60
-ERC_TestSimilarLabels=1
+LibName34=/media/Dev/KiCad/conn_an
