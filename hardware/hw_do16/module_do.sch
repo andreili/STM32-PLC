@@ -33,7 +33,7 @@ LIBS:stm32
 LIBS:stm8
 LIBS:powerint
 LIBS:module_do-cache
-EELAYER 25 0
+EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8

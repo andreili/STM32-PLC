@@ -33,7 +33,7 @@ LIBS:stm32
 LIBS:stm8
 LIBS:powerint
 LIBS:module_di-cache
-EELAYER 25 0
+EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -47,9 +47,9 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-Text GLabel 4925 2650 0    60   Input ~ 0
+Text GLabel 4925 3050 0    60   Input ~ 0
 DI15
-Text GLabel 4925 2550 0    60   Input ~ 0
+Text GLabel 4925 2950 0    60   Input ~ 0
 DI14
 Text GLabel 4925 2250 0    60   Input ~ 0
 DI0
@@ -63,15 +63,15 @@ Text GLabel 4925 3350 0    60   Input ~ 0
 DI4
 Text GLabel 4925 3450 0    60   Input ~ 0
 DI5
-Text GLabel 10725 3750 2    60   Input ~ 0
+Text GLabel 4925 2850 0    60   Input ~ 0
 DI13
-Text GLabel 10725 3450 2    60   Input ~ 0
+Text GLabel 4925 2750 0    60   Input ~ 0
 DI12
-Text GLabel 10725 3350 2    60   Input ~ 0
+Text GLabel 4925 2650 0    60   Input ~ 0
 DI11
-Text GLabel 10725 3150 2    60   Input ~ 0
+Text GLabel 10725 3750 2    60   Input ~ 0
 DI9
-Text GLabel 10725 3250 2    60   Input ~ 0
+Text GLabel 4925 2550 0    60   Input ~ 0
 DI10
 Text GLabel 10725 3650 2    60   Input ~ 0
 SWCLK
@@ -81,7 +81,7 @@ Text GLabel 4925 3550 0    60   Input ~ 0
 DI6
 Text GLabel 4925 3650 0    60   Input ~ 0
 DI7
-Text GLabel 10725 3050 2    60   Input ~ 0
+Text GLabel 10725 3250 2    60   Input ~ 0
 DI8
 Text GLabel 3925 2775 0    60   Input ~ 0
 IDI0
@@ -378,7 +378,7 @@ F 3 "" H -6075 -4125 50  0000 C CNN
 $EndComp
 Text GLabel 10725 2650 2    60   Input ~ 0
 SEL_IN
-Text GLabel 4925 1650 0    60   Input ~ 0
+Text GLabel 10725 2550 2    60   Input ~ 0
 SEL_OUT
 Text GLabel 1800 700  0    60   Input ~ 0
 SWDIO
@@ -2757,8 +2757,8 @@ Text GLabel 5175 4550 0    60   Input ~ 0
 SOK
 Text GLabel 5175 4725 0    60   Input ~ 0
 SFL
-Text GLabel 4925 2750 0    60   Input ~ 0
+Text GLabel 10725 3050 2    60   Input ~ 0
 SFL
-Text GLabel 4925 2850 0    60   Input ~ 0
+Text GLabel 10725 3150 2    60   Input ~ 0
 SOK
 $EndSCHEMATC

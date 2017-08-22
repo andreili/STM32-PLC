@@ -1,8 +1,8 @@
 (export (version D)
   (design
-    (source /media/Dev/Projects/stm_plc/hardware/hw_do16/module_do.sch)
-    (date "Пт 18 авг 2017 09:08:02")
-    (tool "Eeschema 4.0.6")
+    (source D:\Projects\STM32-PLC\hardware\hw_do16\module_do.sch)
+    (date "22.08.2017 19:04:44")
+    (tool "Eeschema (2017-06-13 revision e97f49e00)-makepkg")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
         (title)
@@ -995,7 +995,7 @@
         (pin (num 48) (name VDD) (type power_in))))
     (libpart (lib opto) (part TLP291-4)
       (description "Quad DC Optocoupler, Vce 80V, CTR 50-100%, SOP16")
-      (docs http://www.semicon.toshiba.co.jp/docs/datasheet/en/Opto/TLP291-4_en_datasheet_120322.pdf)
+      (docs https://toshiba.semicon-storage.com/info/docget.jsp?did=12858&prodName=TLP291-4)
       (footprints
         (fp DIP*W7.62mm*SMD*))
       (fields
@@ -1021,13 +1021,13 @@
         (pin (num 16) (name ~) (type passive)))))
   (libraries
     (library (logical device)
-      (uri /usr/share/kicad/library/device.lib))
+      (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\device.lib"))
     (library (logical conn)
-      (uri /usr/share/kicad/library/conn.lib))
+      (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\conn.lib"))
     (library (logical opto)
-      (uri /usr/share/kicad/library/opto.lib))
+      (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\opto.lib"))
     (library (logical stm32)
-      (uri /usr/share/kicad/library/stm32.lib)))
+      (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\stm32.lib")))
   (nets
     (net (code 1) (name "Net-(D18-Pad1)")
       (node (ref R28) (pin 1))

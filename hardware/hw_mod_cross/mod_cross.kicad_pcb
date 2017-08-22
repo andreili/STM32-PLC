@@ -1,11 +1,11 @@
-(kicad_pcb (version 4) (host pcbnew 4.0.6)
+(kicad_pcb (version 20170123) (host pcbnew "(2017-06-13 revision e97f49e00)-makepkg")
 
   (general
     (links 440)
-    (no_connects 440)
-    (area 150.731905 84.295 243.562262 186.855)
+    (no_connects 56)
+    (area 150.656905 84.295 253.31643 191.340001)
     (thickness 1.6)
-    (drawings 40)
+    (drawings 42)
     (tracks 136)
     (zones 0)
     (modules 40)
@@ -62,9 +62,9 @@
     (pad_drill 0.762)
     (pad_to_mask_clearance 0.2)
     (aux_axis_origin 0 0)
-    (visible_elements FFFFFF7F)
+    (visible_elements 7FFFFFFF)
     (pcbplotparams
-      (layerselection 0x00030_80000001)
+      (layerselection 0x010f0_ffffffff)
       (usegerberextensions false)
       (excludeedgelayer true)
       (linewidth 0.100000)
@@ -75,7 +75,6 @@
       (hpglpennumber 1)
       (hpglpenspeed 20)
       (hpglpendiameter 15)
-      (hpglpenoverlay 2)
       (psnegative false)
       (psa4output false)
       (plotreference true)
@@ -85,9 +84,9 @@
       (subtractmaskfromsilk false)
       (outputformat 1)
       (mirror false)
-      (drillshape 1)
+      (drillshape 0)
       (scaleselection 1)
-      (outputdirectory ""))
+      (outputdirectory ../gerber/hw_mod_cross/))
   )
 
   (net 0 "")
@@ -3013,6 +3012,30 @@
     (pad 1 thru_hole circle (at 0 0) (size 5.4 5.4) (drill 2.7) (layers *.Cu *.Mask))
   )
 
+  (dimension 97.79 (width 0.3) (layer Cmts.User)
+    (gr_text "97,790 мм" (at 247.095 137.16 90) (layer Cmts.User)
+      (effects (font (size 1.5 1.5) (thickness 0.3)))
+    )
+    (feature1 (pts (xy 241.935 88.265) (xy 248.445 88.265)))
+    (feature2 (pts (xy 241.935 186.055) (xy 248.445 186.055)))
+    (crossbar (pts (xy 245.745 186.055) (xy 245.745 88.265)))
+    (arrow1a (pts (xy 245.745 88.265) (xy 246.331421 89.391504)))
+    (arrow1b (pts (xy 245.745 88.265) (xy 245.158579 89.391504)))
+    (arrow2a (pts (xy 245.745 186.055) (xy 246.331421 184.928496)))
+    (arrow2b (pts (xy 245.745 186.055) (xy 245.158579 184.928496)))
+  )
+  (dimension 90.17 (width 0.3) (layer Cmts.User)
+    (gr_text "90,170 мм" (at 196.85 189.945) (layer Cmts.User)
+      (effects (font (size 1.5 1.5) (thickness 0.3)))
+    )
+    (feature1 (pts (xy 241.935 186.055) (xy 241.935 191.295)))
+    (feature2 (pts (xy 151.765 186.055) (xy 151.765 191.295)))
+    (crossbar (pts (xy 151.765 188.595) (xy 241.935 188.595)))
+    (arrow1a (pts (xy 241.935 188.595) (xy 240.808496 189.181421)))
+    (arrow1b (pts (xy 241.935 188.595) (xy 240.808496 188.008579)))
+    (arrow2a (pts (xy 151.765 188.595) (xy 152.891504 189.181421)))
+    (arrow2b (pts (xy 151.765 188.595) (xy 152.891504 188.008579)))
+  )
   (gr_line (start 242.18 138.265) (end 223.765 138.265) (layer F.SilkS) (width 0.2) (tstamp 599709FA))
   (gr_line (start 218.18 138.265) (end 199.765 138.265) (layer F.SilkS) (width 0.2) (tstamp 599709F9))
   (gr_line (start 194.18 138.265) (end 175.765 138.265) (layer F.SilkS) (width 0.2) (tstamp 599709F8))
@@ -3050,7 +3073,7 @@
   (gr_line (start 170.18 135.89) (end 170.18 88.265) (layer F.SilkS) (width 0.2))
   (gr_line (start 151.765 135.89) (end 170.18 135.89) (layer F.SilkS) (width 0.2))
   (dimension 48.26 (width 0.3) (layer Cmts.User)
-    (gr_text "48,260 mm" (at 175.34 112.395 270) (layer Cmts.User)
+    (gr_text "48,260 mm" (at 175.34 112.395 270) (layer Cmts.User) (tstamp 599AFA3E)
       (effects (font (size 1.5 1.5) (thickness 0.3)))
     )
     (feature1 (pts (xy 170.18 136.525) (xy 176.69 136.525)))
@@ -3062,7 +3085,7 @@
     (arrow2b (pts (xy 173.99 88.265) (xy 174.576421 89.391504)))
   )
   (dimension 18.415 (width 0.3) (layer Cmts.User)
-    (gr_text "18,415 mm" (at 160.9725 85.645) (layer Cmts.User)
+    (gr_text "18,415 mm" (at 160.9725 85.645) (layer Cmts.User) (tstamp 599AFA3F)
       (effects (font (size 1.5 1.5) (thickness 0.3)))
     )
     (feature1 (pts (xy 170.18 88.265) (xy 170.18 84.295)))
@@ -3074,7 +3097,7 @@
     (arrow2b (pts (xy 151.765 86.995) (xy 152.891504 86.408579)))
   )
   (dimension 6.35 (width 0.3) (layer Cmts.User)
-    (gr_text "6,350 mm" (at 172.165 128.905 270) (layer Cmts.User)
+    (gr_text "6,350 mm" (at 172.165 128.905 270) (layer Cmts.User) (tstamp 599AFA40)
       (effects (font (size 1.5 1.5) (thickness 0.3)))
     )
     (feature1 (pts (xy 161.29 132.08) (xy 173.515 132.08)))
@@ -3086,7 +3109,7 @@
     (arrow2b (pts (xy 170.815 125.73) (xy 171.401421 126.856504)))
   )
   (dimension 6.35 (width 0.3) (layer Cmts.User)
-    (gr_text "6,350 mm" (at 172.165 95.25 90) (layer Cmts.User)
+    (gr_text "6,350 mm" (at 172.165 95.25 90) (layer Cmts.User) (tstamp 599AFA41)
       (effects (font (size 1.5 1.5) (thickness 0.3)))
     )
     (feature1 (pts (xy 160.655 92.075) (xy 173.515 92.075)))
@@ -3241,7 +3264,7 @@
     (fill yes (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
-        (xy 151.765 108.585) (xy 168.91 108.585) (xy 168.91 117.475) (xy 151.765 117.475) (xy 151.765 117.475)
+        (xy 151.765 108.585) (xy 168.91 108.585) (xy 168.91 117.475) (xy 151.765 117.475)
       )
     )
     (filled_polygon
@@ -3431,7 +3454,7 @@
     (fill yes (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
-        (xy 175.765 108.585) (xy 192.91 108.585) (xy 192.91 117.475) (xy 175.765 117.475) (xy 175.765 117.475)
+        (xy 175.765 108.585) (xy 192.91 108.585) (xy 192.91 117.475) (xy 175.765 117.475)
       )
     )
     (filled_polygon
@@ -3536,7 +3559,7 @@
     (fill yes (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
-        (xy 199.765 108.585) (xy 216.91 108.585) (xy 216.91 117.475) (xy 199.765 117.475) (xy 199.765 117.475)
+        (xy 199.765 108.585) (xy 216.91 108.585) (xy 216.91 117.475) (xy 199.765 117.475)
       )
     )
     (filled_polygon
@@ -3641,7 +3664,7 @@
     (fill yes (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
-        (xy 223.765 108.585) (xy 240.91 108.585) (xy 240.91 117.475) (xy 223.765 117.475) (xy 223.765 117.475)
+        (xy 223.765 108.585) (xy 240.91 108.585) (xy 240.91 117.475) (xy 223.765 117.475)
       )
     )
     (filled_polygon
@@ -3746,7 +3769,7 @@
     (fill yes (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
-        (xy 151.765 158.585) (xy 168.91 158.585) (xy 168.91 167.475) (xy 151.765 167.475) (xy 151.765 167.475)
+        (xy 151.765 158.585) (xy 168.91 158.585) (xy 168.91 167.475) (xy 151.765 167.475)
       )
     )
     (filled_polygon
@@ -3851,7 +3874,7 @@
     (fill yes (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
-        (xy 175.765 158.585) (xy 192.91 158.585) (xy 192.91 167.475) (xy 175.765 167.475) (xy 175.765 167.475)
+        (xy 175.765 158.585) (xy 192.91 158.585) (xy 192.91 167.475) (xy 175.765 167.475)
       )
     )
     (filled_polygon
@@ -3956,7 +3979,7 @@
     (fill yes (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
-        (xy 199.765 158.585) (xy 216.91 158.585) (xy 216.91 167.475) (xy 199.765 167.475) (xy 199.765 167.475)
+        (xy 199.765 158.585) (xy 216.91 158.585) (xy 216.91 167.475) (xy 199.765 167.475)
       )
     )
     (filled_polygon
@@ -4061,7 +4084,7 @@
     (fill yes (arc_segments 16) (thermal_gap 0.508) (thermal_bridge_width 0.508))
     (polygon
       (pts
-        (xy 223.765 158.585) (xy 240.91 158.585) (xy 240.91 167.475) (xy 223.765 167.475) (xy 223.765 167.475)
+        (xy 223.765 158.585) (xy 240.91 158.585) (xy 240.91 167.475) (xy 223.765 167.475)
       )
     )
     (filled_polygon
