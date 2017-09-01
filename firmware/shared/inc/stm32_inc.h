@@ -13,5 +13,6 @@
 #include "stm32_uart.h"
 #include "stm32_sd.h"
 #include "stm32_spi.h"
+#include "bitbanding.h"
 
 #endif // STM32_INC_H

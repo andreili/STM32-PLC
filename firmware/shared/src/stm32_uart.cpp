@@ -114,6 +114,7 @@ void STM32_UART::init(uint32_t brate)
     case USART3_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_USART3EN) = ENABLE;
         break;
+    #ifdef STM32F429xx
     case UART4_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_UART4EN) = ENABLE;
         break;
@@ -129,6 +130,7 @@ void STM32_UART::init(uint32_t brate)
     case UART8_BASE:
         BIT_BAND_PER(RCC->APB1ENR, RCC_APB1ENR_UART8EN) = ENABLE;
         break;
+    #endif
     }
 
     UART_DISABLE();
@@ -155,7 +157,12 @@ void STM32_UART::set_baud_rate(uint32_t brate)
 {
     m_brate = brate;
     uint32_t freq;
-    if((m_uart == USART1) || (m_uart == USART6))
+    if((m_uart == USART1)
+        #ifdef STM32F429xx
+            || (m_uart == USART6))
+        #else
+            )
+        #endif
         freq = STM32_RCC::get_PCLK2_freq();
     else
         freq = STM32_RCC::get_PCLK1_freq();
