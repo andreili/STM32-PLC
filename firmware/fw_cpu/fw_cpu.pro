@@ -73,7 +73,6 @@ SOURCES += \
     src/stm32_pwr.cpp \
     src/stm32_flash.cpp \
     src/stm32_systick.cpp \
-    src/xprintf.cpp \
     src/stm32_sdram.cpp \
     src/plc_control.cpp \
     src/stm32_nvic.cpp \
@@ -85,5 +84,6 @@ SOURCES += \
     src/stm32_sd.cpp \
     src/memmanager.cpp \
     src/stm32_spi.cpp \
-    ../shared/src/plc_mod.cpp
+    ../shared/src/plc_mod.cpp \
+    src/xprintf.cpp
 
