@@ -58,6 +58,8 @@ int main()
 
     #ifdef STM32_FATFS_USE
     FAT_FS::init();
+    PLC_CONTROL::print_message("+-----------------------------+\n");
+    PLC_CONTROL::print_message("Pass to mount SD-card\n");
     while (f_mount(&SDFatFs, (TCHAR const*)SD_path, 1) != FR_OK);
     #endif
 

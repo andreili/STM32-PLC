@@ -52,5 +52,8 @@ void Error_Handler()
     PLC_CONTROL::set_run(0);
     PLC_CONTROL::set_fault(1);
     PLC_CONTROL::set_stop(1);
+    PLC_CONTROL::print_message("+-----------------------------+\n");
+    PLC_CONTROL::print_message("+!!!!!! Error Handler() !!!!!!+\n");
+    PLC_CONTROL::print_message("+-----------------------------+\n");
     while (1) {}
 }

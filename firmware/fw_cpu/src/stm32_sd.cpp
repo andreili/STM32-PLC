@@ -1,4 +1,5 @@
 #include "stm32_sd.h"
+#include "plc_control.h"
 
 #define SDIO_CLOCK_EDGE_RISING               ((uint32_t)0x00000000U)
 #define SDIO_CLOCK_EDGE_FALLING              SDIO_CLKCR_NEGEDGE
@@ -360,17 +361,21 @@ SD_ErrorTypedef STM32_SD::power_ON()
     power_state_ON();
     /* 1ms: required power up waiting time before starting the SD initialization sequence */
     STM32_SYSTICK::delay(1);
+    PLC_CONTROL::print_message("SD: power_ON\n");
     enable_SDIO();
 
     /* CMD0: GO_IDLE_STATE */
+    PLC_CONTROL::print_message("SD: GO_IDLE_STATE: ");
     send_command(0, SD_CMD_GO_IDLE_STATE, SDIO_RESPONSE_NO,
                  SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
     SD_ErrorTypedef errorstate = cmd_error();
     if (errorstate != SD_OK)
     {
+        PLC_CONTROL::print_message("Failed\n");
         clear_flag(SDIO_STATIC_FLAGS);
         return errorstate;
     }
+    PLC_CONTROL::print_message("OK\n");
 
     /* CMD8: SEND_IF_COND ------------------------------------------------------*/
     /* Send CMD8 to verify SD card interface operating condition */
@@ -378,18 +383,22 @@ SD_ErrorTypedef STM32_SD::power_ON()
     - [11:8]: Supply Voltage (VHS) 0x1 (Range: 2.7-3.6 V)
     - [7:0]: Check Pattern (recommended 0xAA) */
     uint32_t sdtype = SD_STD_CAPACITY;
+    PLC_CONTROL::print_message("SD: SEND_IF_COND: ");
     send_command(SD_CHECK_PATTERN, SD_SDIO_SEND_IF_COND, SDIO_RESPONSE_SHORT,
                  SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
     errorstate = cmd_resp7_error();
     if (errorstate == SD_OK)
     {
+        PLC_CONTROL::print_message("Failed\n");
         /* SD Card 2.0 */
         m_card_type = STD_CAPACITY_SD_CARD_V2_0;
         sdtype = SD_HIGH_CAPACITY;
     }
+    PLC_CONTROL::print_message("OK\n");
 
     /* Send CMD55 */
-    send_command(SD_CHECK_PATTERN, SD_CMD_APP_CMD, SDIO_RESPONSE_SHORT,
+    PLC_CONTROL::print_message("CMD55: ");
+    send_command(0, SD_CMD_APP_CMD, SDIO_RESPONSE_SHORT,
                  SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
     /* If errorstate is Command Timeout, it is a MMC card */
     /* If errorstate is SD_OK it is a SD card: SD card 2.0 (voltage range mismatch)
@@ -398,6 +407,7 @@ SD_ErrorTypedef STM32_SD::power_ON()
     errorstate = cmd_resp1_error(SD_CMD_APP_CMD);
     if (errorstate == SD_OK)
     {
+        PLC_CONTROL::print_message("OK\n");
         /* SD CARD */
         /* Send ACMD41 SD_APP_OP_COND with Argument 0x80100000 */
         uint32_t validvoltage = 0;
@@ -431,6 +441,10 @@ SD_ErrorTypedef STM32_SD::power_ON()
         if ((response & SD_HIGH_CAPACITY) == SD_HIGH_CAPACITY)
             m_card_type = HIGH_CAPACITY_SD_CARD;
     } /* else MMC Card */
+    else
+    {
+        PLC_CONTROL::print_message("Failed\n");
+    }
 
     return errorstate;
 }
@@ -533,17 +547,22 @@ SD_ErrorTypedef STM32_SD::cmd_resp1_error(uint32_t SD_CMD)
     if (get_flag(SDIO_FLAG_CTIMEOUT))
     {
         clear_flag(SDIO_FLAG_CTIMEOUT);
+        PLC_CONTROL::print_message("Timeout\n");
         return SD_CMD_RSP_TIMEOUT;
     }
     else if (get_flag(SDIO_FLAG_CCRCFAIL))
     {
         clear_flag(SDIO_FLAG_CCRCFAIL);
+        PLC_CONTROL::print_message("CRC failed\n");
         return SD_CMD_CRC_FAIL;
     }
 
     /* Check response received is of desired command */
     if (get_cmd_response() != SD_CMD)
+    {
+        PLC_CONTROL::print_message("Illegal CMD\n");
         return SD_ILLEGAL_CMD;
+    }
 
     /* Clear all the static flags */
     clear_flag(SDIO_STATIC_FLAGS);
@@ -577,8 +596,8 @@ SD_ErrorTypedef STM32_SD::cmd_resp1_error(uint32_t SD_CMD)
     if ((response_r1 & SD_OCR_COM_CRC_FAILED))
         return SD_COM_CRC_FAILED;
 
-    if ((response_r1 & SD_OCR_ILLEGAL_CMD))
-        return SD_ILLEGAL_CMD;
+    /*if ((response_r1 & SD_OCR_ILLEGAL_CMD))
+        return SD_ILLEGAL_CMD;*/
 
     if ((response_r1 & SD_OCR_CARD_ECC_FAILED))
         return SD_CARD_ECC_FAILED;

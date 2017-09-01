@@ -14,7 +14,7 @@ DESTDIR = ./
 
 #QMAKE_CXXFLAGS += -O0
 win32:QMAKE_LFLAGS += -L/mingw32/lib/gcc/arm-none-eabi/5.4.1/
-linux:QMAKE_LFLAGS += -L/usr/lib/gcc/arm-none-eabi/7.1.0/
+linux:QMAKE_LFLAGS += -L/usr/lib/gcc/arm-none-eabi/7.2.0/
 
 createlist.target = all
 createlist.commands += arm-none-eabi-objdump -S $${OUT_PWD}/$${APP}$${EXT} > $$join(APP,,,".lst")
