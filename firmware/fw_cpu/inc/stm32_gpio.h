@@ -1,10 +1,8 @@
 #ifndef __STM32_GPIO__
 #define __STM32_GPIO__
 
-#include "stm32_inc.h"
-
-#ifdef STM32F10X_MD
-#endif
+#include <stdint.h>
+#include "stm32f4xx.h"
 
 #define GPIO_PIN_0                 ((uint16_t)0x0001U)  /* Pin 0 selected    */
 #define GPIO_PIN_1                 ((uint16_t)0x0002U)  /* Pin 1 selected    */
@@ -57,17 +55,10 @@
   * @brief GPIO Output Maximum frequency
   * @{
   */
-#ifdef STM32F10X_MD
-#define  GPIO_SPEED_FREQ_LOW              (GPIO_CRL_MODE0_1) /*!< Low speed */
-#define  GPIO_SPEED_FREQ_MEDIUM           (GPIO_CRL_MODE0_0) /*!< Medium speed */
-#define  GPIO_SPEED_FREQ_HIGH             (GPIO_CRL_MODE0)   /*!< High speed */
-#endif
-#ifdef STM32F429xx
 #define  GPIO_SPEED_FREQ_LOW         ((uint32_t)0x00000000U)  /*!< IO works at 2 MHz, please refer to the product datasheet */
 #define  GPIO_SPEED_FREQ_MEDIUM      ((uint32_t)0x00000001U)  /*!< range 12,5 MHz to 50 MHz, please refer to the product datasheet */
 #define  GPIO_SPEED_FREQ_HIGH        ((uint32_t)0x00000002U)  /*!< range 25 MHz to 100 MHz, please refer to the product datasheet  */
 #define  GPIO_SPEED_FREQ_VERY_HIGH   ((uint32_t)0x00000003U)  /*!< range 50 MHz to 200 MHz, please refer to the product datasheet  */
-#endif
 /**
   * @}
   */
@@ -81,7 +72,6 @@
 #define  GPIO_PULLDOWN      ((uint32_t)0x00000002U)   /*!< Pull-down activation                */
 
 
-#ifdef STM32F429xx
 /** @defgroup GPIO_Alternate_function_selection GPIO Alternate Function Selection
   * @{
   */
@@ -200,7 +190,6 @@
   * @brief   AF 15 selection  
   */ 
 #define GPIO_AF15_EVENTOUT      ((uint8_t)0x0FU)  /* EVENTOUT Alternate Function mapping */
-#endif //STM32F429xx
 
 class STM32_GPIO
 {
@@ -211,7 +200,7 @@ public:
     inline uint32_t pin_read(uint32_t pin_mask) { return (m_gpio->IDR & pin_mask); }
 
     inline void pin_ON(uint32_t pin_mask) { m_gpio->BSRR = pin_mask; }
-    inline void pin_OFF(uint32_t pin_mask) { m_gpio->BSRR = (pin_mask << MASK_TO_BIT(GPIO_BSRR_BR0)); }
+    inline void pin_OFF(uint32_t pin_mask) { m_gpio->BSRR = (pin_mask << GPIO_BSRR_BR0_Pos); }
     
     void set_config(uint32_t pin_mask, uint32_t pin_mode, uint8_t pin_alt, uint32_t pin_speed, uint32_t pin_pull);
 private:

@@ -75,7 +75,6 @@ void STM32_PWR::enter_standby_mode()
     __WFI();
 }
 
-#ifdef STM32F429xx
 uint32_t STM32_PWR::enable_overdrive()
 {
     STM32_RCC::enable_clk_PWR();
@@ -215,7 +214,6 @@ uint32_t STM32_PWR::disable_backup_regulator()
     }
     return STM32_RESULT_OK;
 }
-#endif
 
 void ISR::PVD_IRQ()
 {
