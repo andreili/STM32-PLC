@@ -6,14 +6,25 @@
 
 void PLC_IO::init()
 {
+    STM32_RCC::enable_clk_GPIOA();
+    gpioa.set_config(PIN_RUN | PIN_STP,
+                     GPIO_MODE_OUTPUT_PP, 0, GPIO_SPEED_FREQ_LOW,
+                     GPIO_NOPULL);
     STM32_RCC::enable_clk_GPIOB();
-    gpiob.set_config(PIN_PWR | PIN_RUN | PIN_STP | PIN_FLT,
+    gpiob.set_config(PIN_PWR | PIN_ERR | PIN_FLT | PIN_CFL,
+                     GPIO_MODE_OUTPUT_PP, 0, GPIO_SPEED_FREQ_LOW,
+                     GPIO_NOPULL);
+    STM32_RCC::enable_clk_GPIOD();
+    gpiod.set_config(PIN_RSB,
                      GPIO_MODE_OUTPUT_PP, 0, GPIO_SPEED_FREQ_LOW,
                      GPIO_NOPULL);
     pin_off_POWER();
     pin_off_RUN();
     pin_off_STOP();
+    pin_off_RS_BLINK();
+    pin_off_ERROR();
     pin_off_FAULT();
+    pin_off_COM_FAULT();
 }
 
 void PLC_IO::timer_proc()
@@ -27,20 +38,27 @@ void PLC_IO::timer_proc()
         return;
     }
 
+    if (PLC_CONTROL::in_run())
+        pin_on_RUN();
+    else
+        pin_off_RUN();
+
+    if (PLC_CONTROL::in_stop())
+        pin_on_STOP();
+    else
+        pin_off_STOP();
+
     switch (STM32_SYSTICK::get_tick() % 1000)
     {
     case 0:
-        if (PLC_CONTROL::in_run())
-            pin_on_RUN();
-        if (PLC_CONTROL::in_stop())
-            pin_on_STOP();
         if (PLC_CONTROL::in_fault())
             pin_on_FAULT();
+
+        pin_on_RS_BLINK();
         break;
     case 500:
-        pin_off_RUN();
-        pin_off_STOP();
         pin_off_FAULT();
+        pin_off_RS_BLINK();
         break;
     }
 }
@@ -48,6 +66,7 @@ void PLC_IO::timer_proc()
 void Error_Handler()
 {
     PLC_IO::pin_on_FAULT();
+    PLC_IO::pin_on_RS_BLINK();
     PLC_IO::pin_on_STOP();
     PLC_CONTROL::set_run(0);
     PLC_CONTROL::set_fault(1);
