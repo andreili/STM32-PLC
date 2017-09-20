@@ -247,14 +247,14 @@ uint32_t STM32_RCC::config_clock(uint32_t flash_latency)
         set_config_SYSCLK(STM32_CLOCK_SYSCLK_SOURCE);
         switch (STM32_CLOCK_SYSCLK_SOURCE)
         {
-        case RCC_CFGR_SW_HSE:
+        case RCC_SYSCLKSOURCE_HSE:
             WAIT_TIMEOUT(get_source_SYSCLK() != RCC_SYSCLKSOURCE_STATUS_HSE, CLOCKSWITCH_TIMEOUT_VALUE);
             break;
-        case RCC_CFGR_SW_PLL:
-            WAIT_TIMEOUT(get_source_SYSCLK() != RCC_SYSCLKSOURCE_PLLCLK, CLOCKSWITCH_TIMEOUT_VALUE);
+        case RCC_SYSCLKSOURCE_PLLCLK:
+            WAIT_TIMEOUT(get_source_SYSCLK() != RCC_SYSCLKSOURCE_STATUS_PLLCLK, CLOCKSWITCH_TIMEOUT_VALUE);
             break;
         default:
-            WAIT_TIMEOUT(get_source_SYSCLK() != RCC_SYSCLKSOURCE_PLLCLK, CLOCKSWITCH_TIMEOUT_VALUE);
+            WAIT_TIMEOUT(get_source_SYSCLK() != RCC_SYSCLKSOURCE_STATUS_HSI, CLOCKSWITCH_TIMEOUT_VALUE);
             break;
         }
     }
@@ -301,6 +301,11 @@ bool STM32_RCC::get_flag(uint32_t value)
         break;
     }
     return (reg & (0x01U << (value & RCC_FLAG_MASK)));
+}
+
+uint32_t STM32_RCC::get_PCLK2_freq()
+{
+    return (get_HCLK_freq() >> APBAHBPrescTable[(RCC->CFGR & RCC_CFGR_PPRE2) >> POSITION_VAL(RCC_CFGR_PPRE2)]);
 }
 
 void STM32_RCC::config_MCO(uint32_t RCC_MCOx, uint32_t RCC_MCOSource, uint32_t RCC_MCODiv)
