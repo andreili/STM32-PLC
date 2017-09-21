@@ -124,10 +124,35 @@ typedef struct
     uint8_t             CardType;       /*!< SD card type                           */
 } SD_CardInfo;
 
+typedef enum
+{
+    SD_TRANSFER_OK    = 0U,     /*!< Transfer success      */
+    SD_TRANSFER_BUSY  = 1U,     /*!< Transfer is occurring */
+    SD_TRANSFER_ERROR = 2U      /*!< Transfer failed       */
+} SD_TransferStateTypedef;
+
+typedef enum
+{
+    SD_CARD_READY                  = ((uint32_t)0x00000001U),  /*!< Card state is ready                     */
+    SD_CARD_IDENTIFICATION         = ((uint32_t)0x00000002U),  /*!< Card is in identification state         */
+    SD_CARD_STANDBY                = ((uint32_t)0x00000003U),  /*!< Card is in standby state                */
+    SD_CARD_TRANSFER               = ((uint32_t)0x00000004U),  /*!< Card is in transfer state               */
+    SD_CARD_SENDING                = ((uint32_t)0x00000005U),  /*!< Card is sending an operation            */
+    SD_CARD_RECEIVING              = ((uint32_t)0x00000006U),  /*!< Card is receiving operation information */
+    SD_CARD_PROGRAMMING            = ((uint32_t)0x00000007U),  /*!< Card is in programming state            */
+    SD_CARD_DISCONNECTED           = ((uint32_t)0x00000008U),  /*!< Card is disconnected                    */
+    SD_CARD_ERROR                  = ((uint32_t)0x000000FFU)   /*!< Card is in error state                  */
+} SD_CardStateTypedef;
+
 class STM32_SD
 {
 public:
     static uint32_t init();
+
+    static SD_ErrorTypedef wide_bus_config(uint32_t mode);
+    static SD_TransferStateTypedef get_status();
+
+    static SD_ErrorTypedef read_blocks(uint8_t *buf, uint64_t read_addr, uint32_t block_size, uint32_t blocks);
 private:
     static uint32_t m_card_type;
     static uint32_t m_RCA;
@@ -141,6 +166,10 @@ private:
                          uint32_t hw_control, uint32_t clock_div);
 
     static SD_ErrorTypedef power_ON();
+    static SD_ErrorTypedef power_OFF();
+
+    static SD_ErrorTypedef send_status(uint32_t *card_status);
+
     static SD_ErrorTypedef initialize_cards();
 
     static void send_command(uint32_t arg, uint32_t cmd_idx, uint32_t resp,
@@ -151,6 +180,11 @@ private:
     static SD_ErrorTypedef cmd_resp3_error();
     static SD_ErrorTypedef cmd_resp2_error();
     static SD_ErrorTypedef cmd_resp6_error(uint8_t SD_CMD, uint32_t *pRCA);
+
+    static SD_ErrorTypedef data_config(uint32_t time_out, uint32_t dat_len,
+                                       uint32_t block_size, uint32_t transf_dir,
+                                       uint32_t transf_mode, uint32_t DPSM);
+    static SD_ErrorTypedef stop_transfer();
 
     static SD_ErrorTypedef get_card_info();
     static SD_ErrorTypedef select_deselect(uint32_t addr);
@@ -168,6 +202,15 @@ private:
     static inline uint32_t get_response(uint32_t SDIO_RESP) { return (&SDIO->RESP1)[SDIO_RESP >> 2]; }
 
     static inline uint32_t get_power_state() { return (SDIO->POWER & SDIO_POWER_PWRCTRL); }
+
+    static inline uint32_t read_FIFO() { return SDIO->FIFO; }
+
+    static SD_ErrorTypedef wide_bus_enable();
+    static SD_ErrorTypedef wide_bus_disable();
+
+    static SD_ErrorTypedef find_SCR(uint32_t *scr);
+
+    static SD_CardStateTypedef get_state();
 };
 
 #endif // STM32_SD_H
