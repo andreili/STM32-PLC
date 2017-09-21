@@ -104,7 +104,7 @@
 #define STM32_FATFS_DRIVER_INC "sddriver.h"
 
 #define STM32_SDIO_BUS SDIO_CLKCR_WIDBUS_0
-#define STM32_SDIO_CLOCK_DIV 0
+#define STM32_SDIO_CLOCK_DIV 6
 
 /* SPI configuraion */
 // SPI5

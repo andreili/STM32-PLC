@@ -324,11 +324,8 @@ uint32_t STM32_SD::init()
     if ((errorstate = initialize_cards()) != SD_OK)
         return errorstate;
 
-    if ((errorstate = get_card_info()) != SD_OK)
-    {
+    if ((errorstate = get_card_info()) == SD_OK)
         select_deselect(m_card_info.RCA << 16);
-        return errorstate;
-    }
 
     init_low(SDIO_CLOCK_EDGE_RISING, SDIO_CLOCK_BYPASS_DISABLE,
              SDIO_CLOCK_POWER_SAVE_DISABLE, SDIO_BUS_WIDE_1B,

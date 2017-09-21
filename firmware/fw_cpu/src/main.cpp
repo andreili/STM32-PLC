@@ -62,7 +62,8 @@ int main()
     FAT_FS::init();
     PLC_CONTROL::print_message("+-----------------------------+\n");
     PLC_CONTROL::print_message("Pass to mount SD-card\n");
-    while (f_mount(&SDFatFs, (TCHAR const*)SD_path, 1) != FR_OK);
+    while (f_mount(&SDFatFs, (TCHAR const*)SD_path, 1) != FR_OK)
+        STM32_SYSTICK::delay(300);
     #endif
 
     PLC_CONTROL::set_initialized(1);
