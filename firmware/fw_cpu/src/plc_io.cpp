@@ -31,6 +31,22 @@ void PLC_IO::timer_proc()
 {
     pin_on_POWER();
 
+    uint32_t ticks = STM32_SYSTICK::get_tick();
+    if (PLC_CONTROL::in_rs_blink())
+    {
+        switch (ticks % 1000)
+        {
+        case 0:
+            pin_on_RS_BLINK();
+            break;
+        case 500:
+            pin_off_RS_BLINK();
+            break;
+        }
+    }
+    else
+        pin_on_RS_BLINK();
+
     if (!PLC_CONTROL::is_initialized())
     {
         pin_on_STOP();
@@ -48,17 +64,14 @@ void PLC_IO::timer_proc()
     else
         pin_off_STOP();
 
-    switch (STM32_SYSTICK::get_tick() % 1000)
+    switch (ticks % 1000)
     {
     case 0:
         if (PLC_CONTROL::in_fault())
             pin_on_FAULT();
-
-        pin_on_RS_BLINK();
         break;
     case 500:
         pin_off_FAULT();
-        pin_off_RS_BLINK();
         break;
     }
 }

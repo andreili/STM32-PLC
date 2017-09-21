@@ -16,6 +16,7 @@ void PLC_CONTROL::init()
 {
     m_state.run = 0;
     m_state.stop = 1;
+    m_state.rs_blink = 0;
     m_state.fault = 0;
     m_state.initialized = 0;
 }

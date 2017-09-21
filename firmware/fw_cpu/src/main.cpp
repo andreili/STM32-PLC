@@ -33,6 +33,8 @@ extern char SD_path[4];
 
 int main()
 {
+    PLC_CONTROL::set_rs_blink(1);
+
     PLC_CONTROL::print_message("\033[2J+-----------------------------+\n"
                                       "|          STM32 PLC          |\n"
                                       "|         System info         |\n"
@@ -71,6 +73,7 @@ int main()
 
     PLC_CONTROL::set_stop(0);
     PLC_CONTROL::set_run(1);
+    PLC_CONTROL::set_rs_blink(0);
 
     PLC_CONTROL::print_message("Start main cycle\n");
     int iteration = 0;
