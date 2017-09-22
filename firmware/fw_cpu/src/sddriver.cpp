@@ -39,15 +39,19 @@ uint8_t SDDriver::status(uint8_t)
 
 uint8_t SDDriver::read(uint8_t lun, uint8_t*buf, uint32_t sector, uint32_t count)
 {
+    UNUSED(lun);
     if (STM32_SD::read_blocks(buf, sector * BLOCK_SIZE, BLOCK_SIZE, count) != SD_OK)
         return SD_ERROR;
     return SD_OK;
 }
 
 #if _USE_WRITE == 1
-uint8_t SDDriver::write(uint8_t, uint8_t*, uint32_t, uint32_t)
+uint8_t SDDriver::write(uint8_t lun, uint8_t*buf, uint32_t sector, uint32_t count)
 {
-    return 0;
+    UNUSED(lun);
+    if (STM32_SD::write_blocks(buf, sector * BLOCK_SIZE, BLOCK_SIZE, count) != SD_OK)
+        return SD_ERROR;
+    return SD_OK;
 }
 
 #endif
