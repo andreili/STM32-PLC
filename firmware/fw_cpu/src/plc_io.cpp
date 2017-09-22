@@ -75,17 +75,3 @@ void PLC_IO::timer_proc()
         break;
     }
 }
-
-void Error_Handler()
-{
-    PLC_IO::pin_on_FAULT();
-    PLC_IO::pin_on_RS_BLINK();
-    PLC_IO::pin_on_STOP();
-    PLC_CONTROL::set_run(0);
-    PLC_CONTROL::set_fault(1);
-    PLC_CONTROL::set_stop(1);
-    PLC_CONTROL::print_message("+-----------------------------+\n");
-    PLC_CONTROL::print_message("+!!!!!! Error Handler() !!!!!!+\n");
-    PLC_CONTROL::print_message("+-----------------------------+\n");
-    while (1) {}
-}

@@ -15,4 +15,6 @@
 #include "stm32_spi.h"
 #include "bitbanding.h"
 
+#define UNUSED(x) (void)(x)
+
 #endif // STM32_INC_H

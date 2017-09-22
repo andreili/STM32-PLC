@@ -1,6 +1,7 @@
 #include "plc_control.h"
 #include "stm32_uart.h"
 #include "plc_mod.h"
+#include "plc_io.h"
 #include "xprintf.h"
 #include <stdarg.h>
 
@@ -46,4 +47,20 @@ void PLC_CONTROL::print_message(const char* fmt, ...)
     *outptr = 0;
     outptr = 0;
     uart3.send_str(m_text_buf, TXRX_MODE::INTERRUPT);
+}
+
+void Error_Handler()
+{
+    PLC_IO::pin_on_FAULT();
+    PLC_IO::pin_on_RS_BLINK();
+    PLC_IO::pin_on_STOP();
+    PLC_CONTROL::set_run(0);
+    PLC_CONTROL::set_fault(1);
+    PLC_CONTROL::set_stop(1);
+    PLC_CONTROL::print_message("+-----------------------------+\n"
+                               "+!!!!!! Error Handler() !!!!!!+\n"
+                               "+!!!!!! Software reset  !!!!!!+\n"
+                               "+-----------------------------+\n");
+
+    NVIC_SystemReset();
 }
