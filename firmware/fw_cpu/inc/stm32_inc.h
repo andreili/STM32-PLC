@@ -13,6 +13,7 @@
 #include "stm32_uart.h"
 #include "stm32_sd.h"
 #include "stm32_spi.h"
+#include "stm32_rtc.h"
 #include "bitbanding.h"
 
 #define UNUSED(x) (void)(x)

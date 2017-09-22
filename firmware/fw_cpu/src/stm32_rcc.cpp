@@ -56,9 +56,61 @@ uint32_t STM32_RCC::m_system_core_clock;
 #define RCC_SYSCLKSOURCE_STATUS_PLLCLK  RCC_CFGR_SWS_PLL   /*!< PLL used as system clock */
 #define RCC_SYSCLKSOURCE_STATUS_PLLRCLK ((uint32_t)(RCC_CFGR_SWS_0 | RCC_CFGR_SWS_1))   /*!< PLLR used as system clock */
 
+#define RCC_SYSCLK_DIV1                  RCC_CFGR_HPRE_DIV1
+#define RCC_SYSCLK_DIV2                  RCC_CFGR_HPRE_DIV2
+#define RCC_SYSCLK_DIV4                  RCC_CFGR_HPRE_DIV4
+#define RCC_SYSCLK_DIV8                  RCC_CFGR_HPRE_DIV8
+#define RCC_SYSCLK_DIV16                 RCC_CFGR_HPRE_DIV16
+#define RCC_SYSCLK_DIV64                 RCC_CFGR_HPRE_DIV64
+#define RCC_SYSCLK_DIV128                RCC_CFGR_HPRE_DIV128
+#define RCC_SYSCLK_DIV256                RCC_CFGR_HPRE_DIV256
+#define RCC_SYSCLK_DIV512                RCC_CFGR_HPRE_DIV512
+
+#define RCC_HCLK_DIV1                    RCC_CFGR_PPRE1_DIV1
+#define RCC_HCLK_DIV2                    RCC_CFGR_PPRE1_DIV2
+#define RCC_HCLK_DIV4                    RCC_CFGR_PPRE1_DIV4
+#define RCC_HCLK_DIV8                    RCC_CFGR_PPRE1_DIV8
+#define RCC_HCLK_DIV16                   RCC_CFGR_PPRE1_DIV16
+
+#define RCC_RTCCLKSOURCE_LSE             ((uint32_t)0x00000100U)
+#define RCC_RTCCLKSOURCE_LSI             ((uint32_t)0x00000200U)
+#define RCC_RTCCLKSOURCE_HSE_DIV2        ((uint32_t)0x00020300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV3        ((uint32_t)0x00030300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV4        ((uint32_t)0x00040300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV5        ((uint32_t)0x00050300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV6        ((uint32_t)0x00060300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV7        ((uint32_t)0x00070300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV8        ((uint32_t)0x00080300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV9        ((uint32_t)0x00090300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV10       ((uint32_t)0x000A0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV11       ((uint32_t)0x000B0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV12       ((uint32_t)0x000C0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV13       ((uint32_t)0x000D0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV14       ((uint32_t)0x000E0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV15       ((uint32_t)0x000F0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV16       ((uint32_t)0x00100300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV17       ((uint32_t)0x00110300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV18       ((uint32_t)0x00120300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV19       ((uint32_t)0x00130300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV20       ((uint32_t)0x00140300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV21       ((uint32_t)0x00150300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV22       ((uint32_t)0x00160300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV23       ((uint32_t)0x00170300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV24       ((uint32_t)0x00180300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV25       ((uint32_t)0x00190300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV26       ((uint32_t)0x001A0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV27       ((uint32_t)0x001B0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV28       ((uint32_t)0x001C0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV29       ((uint32_t)0x001D0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV30       ((uint32_t)0x001E0300U)
+#define RCC_RTCCLKSOURCE_HSE_DIV31       ((uint32_t)0x001F0300U)
+
 const uint8_t APBAHBPrescTable[16] = {0U, 0U, 0U, 0U, 1U, 2U, 3U, 4U, 1U, 2U, 3U, 4U, 6U, 7U, 8U, 9U};
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
 const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
+
+#define PLLI2S_TIMEOUT_VALUE       ((uint32_t)2)  /* Timeout value fixed to 2 ms  */
+#define PLLSAI_TIMEOUT_VALUE       ((uint32_t)2)  /* Timeout value fixed to 2 ms  */
 
 void STM32_RCC::init()
 {
@@ -68,6 +120,18 @@ void STM32_RCC::init()
         Error_Handler();
     if (config_clock(FLASH_ACR_LATENCY_5WS) != STM32_RESULT_OK)
         Error_Handler();
+
+    #ifdef STM32_RTC_ENABLE
+    RCC_Periph_Clock_Source sources;
+    sources.selector = RCC_PERIPHCLK_RTC;
+    sources.RTCClockSelection = STM32_RTC_CLOCK_SOURCE;
+    if (periph_CLK_config(&sources) != STM32_RESULT_OK)
+        Error_Handler();
+    #endif
+
+    #ifdef STM32_USE_CSE
+    enable_CSS();
+    #endif
 
     STM32_SYSTICK::update_freq();
 }
@@ -333,6 +397,121 @@ void STM32_RCC::NMI_IRQ_Handler()
         ///TODO: CSSCallback
         clear_IT(RCC_IT_CSS);
     }
+}
+
+uint32_t STM32_RCC::periph_CLK_config(RCC_Periph_Clock_Source *sources)
+{
+    uint32_t tmpreg1 = 0U;
+
+    /*----------------------- SAI/I2S Configuration (PLLI2S) -------------------*/
+    if (((sources->selector & RCC_PERIPHCLK_I2S) == RCC_PERIPHCLK_I2S) ||
+        ((sources->selector & RCC_PERIPHCLK_SAI_PLLI2S) == RCC_PERIPHCLK_SAI_PLLI2S))
+    {
+        disable_PLLI2S();
+        /* Wait till PLLI2S is disabled */
+        WAIT_TIMEOUT(get_flag(RCC_FLAG_PLLI2SRDY) != RESET, PLLI2S_TIMEOUT_VALUE);
+        /*---------------------------- SAI configuration -------------------------*/
+        /* In Case of SAI Clock Configuration through PLLI2S, PLLI2SQ and PLLI2S_DIVQ must
+        be added only for SAI configuration */
+        if ((sources->selector & RCC_PERIPHCLK_SAI_PLLI2S) == RCC_PERIPHCLK_SAI_PLLI2S)
+        {
+            /* Read PLLI2SR value from PLLI2SCFGR register (this value is not need for SAI configuration) */
+            tmpreg1 = ((RCC->PLLI2SCFGR & RCC_PLLI2SCFGR_PLLI2SR) >> POSITION_VAL(RCC_PLLI2SCFGR_PLLI2SR));
+            /* Configure the PLLI2S division factors */
+            /* PLLI2S_VCO Input  = PLL_SOURCE/PLLM */
+            /* PLLI2S_VCO Output = PLLI2S_VCO Input * PLLI2SN */
+            /* SAI_CLK(first level) = PLLI2S_VCO Output/PLLI2SQ */
+            PLLI2S_SAI_config(sources->PLLI2SN, sources->PLLI2SQ , tmpreg1);
+            /* SAI_CLK_x = SAI_CLK(first level)/PLLI2SDIVQ */
+            PLLI2S_SAI_configQ(sources->PLLI2SDivQ);
+        }
+
+        /* Enable the PLLI2S */
+        enable_PLLI2S();
+        /* Wait till PLLI2S is ready */
+        WAIT_TIMEOUT(get_flag(RCC_FLAG_PLLI2SRDY) == RESET, PLLI2S_TIMEOUT_VALUE);
+    }
+
+    /*----------------------- SAI/LTDC Configuration (PLLSAI) ------------------*/
+    if (((sources->selector & RCC_PERIPHCLK_SAI_PLLSAI) == RCC_PERIPHCLK_SAI_PLLSAI) ||
+        ((sources->selector & RCC_PERIPHCLK_LTDC) == RCC_PERIPHCLK_LTDC))
+    {
+        /* Disable PLLSAI Clock */
+        disable_PLLSAI();
+        /* Wait till PLLSAI is disabled */
+        WAIT_TIMEOUT(get_PLLSAI_flag() != RESET, PLLSAI_TIMEOUT_VALUE);
+
+        /*---------------------------- SAI configuration -------------------------*/
+        /* In Case of SAI Clock Configuration through PLLSAI, PLLSAIQ and PLLSAI_DIVQ must
+        be added only for SAI configuration */
+        if ((sources->selector & RCC_PERIPHCLK_SAI_PLLSAI) == RCC_PERIPHCLK_SAI_PLLSAI)
+        {
+            /* Read PLLSAIR value from PLLSAICFGR register (this value is not need for SAI configuration) */
+            tmpreg1 = ((RCC->PLLSAICFGR & RCC_PLLSAICFGR_PLLSAIR) >> POSITION_VAL(RCC_PLLSAICFGR_PLLSAIR));
+            /* PLLSAI_VCO Input  = PLL_SOURCE/PLLM */
+            /* PLLSAI_VCO Output = PLLSAI_VCO Input * PLLSAIN */
+            /* SAI_CLK(first level) = PLLSAI_VCO Output/PLLSAIQ */
+            PLLSAI_config(sources->PLLSAIN , sources->PLLSAIQ, tmpreg1);
+            /* SAI_CLK_x = SAI_CLK(first level)/PLLSAIDIVQ */
+            PLLSAI_configQ(sources->PLLSAIDivQ);
+        }
+
+        /*---------------------------- LTDC configuration ------------------------*/
+        if (((sources->selector) & RCC_PERIPHCLK_LTDC) == (RCC_PERIPHCLK_LTDC))
+        {
+            /* Read PLLSAIR value from PLLSAICFGR register (this value is not need for SAI configuration) */
+            tmpreg1 = ((RCC->PLLSAICFGR & RCC_PLLSAICFGR_PLLSAIQ) >> POSITION_VAL(RCC_PLLSAICFGR_PLLSAIQ));
+            /* PLLSAI_VCO Input  = PLL_SOURCE/PLLM */
+            /* PLLSAI_VCO Output = PLLSAI_VCO Input * PLLSAIN */
+            /* LTDC_CLK(first level) = PLLSAI_VCO Output/PLLSAIR */
+            PLLSAI_config(sources->PLLSAIN , tmpreg1, sources->PLLSAIR);
+            /* LTDC_CLK = LTDC_CLK(first level)/PLLSAIDIVR */
+            PLLSAI_configR(sources->PLLSAIDivR);
+        }
+        /* Enable PLLSAI Clock */
+        enable_PLLSAI();
+        /* Wait till PLLSAI is ready */
+        WAIT_TIMEOUT(get_PLLSAI_flag() == RESET, PLLSAI_TIMEOUT_VALUE);
+    }
+
+    /*---------------------------- RTC configuration ---------------------------*/
+    if ((sources->selector & RCC_PERIPHCLK_RTC) == RCC_PERIPHCLK_RTC)
+    {
+        /* Enable Power Clock*/
+        enable_clk_PWR();
+
+        /* Enable write access to Backup domain */
+        STM32_PWR::enable_backup_access();
+        WAIT_TIMEOUT(STM32_PWR::is_backup_acces_RO(), RCC_DBP_TIMEOUT_VALUE);
+
+        /* Reset the Backup domain only if the RTC Clock source selection is modified from reset value */
+        tmpreg1 = (RCC->BDCR & RCC_BDCR_RTCSEL);
+        if ((tmpreg1 != 0x00000000U) &&
+            (tmpreg1 != (sources->RTCClockSelection & RCC_BDCR_RTCSEL)))
+        {
+            /* Store the content of BDCR register before the reset of Backup Domain */
+            tmpreg1 = (RCC->BDCR & ~(RCC_BDCR_RTCSEL));
+            /* RTC Clock selection can be changed only if the Backup Domain is reset */
+            force_reset_backup();
+            release_reset_backup();
+            /* Restore the Content of BDCR register */
+            RCC->BDCR = tmpreg1;
+
+            /* Wait for LSE reactivation if LSE was enable prior to Backup Domain reset */
+            if ((RCC->BDCR & RCC_BDCR_LSEON) == RCC_BDCR_LSEON)
+            {
+                /* Wait till LSE is ready */
+                WAIT_TIMEOUT(get_flag(RCC_FLAG_LSERDY) == RESET, LSE_TIMEOUT_VALUE);
+            }
+        }
+        set_config_RTC(sources->RTCClockSelection);
+    }
+
+    /*---------------------------- TIM configuration ---------------------------*/
+    if (((sources->selector) & RCC_PERIPHCLK_TIM) == RCC_PERIPHCLK_TIM)
+        set_TIM_prescaler(sources->TIMPresSelection);
+
+    return STM32_RESULT_OK;
 }
 
 uint32_t STM32_RCC::update_system_core_clock()

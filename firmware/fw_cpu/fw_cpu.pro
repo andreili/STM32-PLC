@@ -59,7 +59,8 @@ HEADERS += \
     inc/diskio.h \
     inc/memmanager.h \
     inc/stm32_spi.h \
-    ../shared/inc/plc_mod.h
+    ../shared/inc/plc_mod.h \
+    inc/stm32_rtc.h
 
 SOURCES += \
     ../shared/CMSIS/ISRstm32f429xx.cpp \
@@ -85,5 +86,6 @@ SOURCES += \
     src/memmanager.cpp \
     src/stm32_spi.cpp \
     ../shared/src/plc_mod.cpp \
-    src/xprintf.cpp
+    src/xprintf.cpp \
+    src/stm32_rtc.cpp
 

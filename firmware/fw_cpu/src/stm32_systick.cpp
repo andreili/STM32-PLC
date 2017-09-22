@@ -14,6 +14,7 @@ void STM32_SYSTICK::init()
 void STM32_SYSTICK::update_freq()
 {
     SysTick_Config(STM32_RCC::get_HCLK_freq() / 1000 - 1);
+    set_clock_source(SYSTICK_CLKSOURCE_HCLK);
 }
 
 void STM32_SYSTICK::set_clock_source(uint32_t src)

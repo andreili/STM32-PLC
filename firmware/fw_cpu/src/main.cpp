@@ -74,13 +74,17 @@ int main()
 
     PLC_CONTROL::set_stop(0);
     PLC_CONTROL::set_run(1);
-    PLC_CONTROL::set_rs_blink(0);
+    PLC_CONTROL::set_rs_blink(1);
 
     PLC_CONTROL::print_message("Start main cycle\n");
     int iteration = 0;
     while (1)
     {
-        PLC_CONTROL::print_message("\r\tTest iteration: %U", ++iteration);
+        STM32_RTC_Time time;
+        STM32_RTC::get_time(&time, ERTCFormat::BIN);
+        PLC_CONTROL::print_message("\r\t(%02U:%02U:%02U:%04U)Test iteration: %U",
+                                   time.Hours, time.Minutes, time.Seconds, time.SubSeconds,
+                                   ++iteration);
         if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1,
                                    (STM32_SDRAM_SIZE_MB * 1024 * 1024), false) != STM32_RESULT_OK)
             Error_Handler();

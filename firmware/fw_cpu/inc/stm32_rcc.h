@@ -38,6 +38,54 @@
 #define RCC_MCO1                         ((uint32_t)0x00000000U)
 #define RCC_MCO2                         ((uint32_t)0x00000001U)
 
+#define RCC_PERIPHCLK_I2S             ((uint32_t)0x00000001U)
+#define RCC_PERIPHCLK_SAI_PLLI2S      ((uint32_t)0x00000002U)
+#define RCC_PERIPHCLK_SAI_PLLSAI      ((uint32_t)0x00000004U)
+#define RCC_PERIPHCLK_LTDC            ((uint32_t)0x00000008U)
+#define RCC_PERIPHCLK_TIM             ((uint32_t)0x00000010U)
+#define RCC_PERIPHCLK_RTC             ((uint32_t)0x00000020U)
+#define RCC_PERIPHCLK_PLLI2S          ((uint32_t)0x00000040U)
+
+#define RCC_I2SCLKSOURCE_PLLI2S         ((uint32_t)0x00000000U)
+#define RCC_I2SCLKSOURCE_EXT            ((uint32_t)0x00000001U)
+#define RCC_PLLSAIDIVR_2                ((uint32_t)0x00000000U)
+#define RCC_PLLSAIDIVR_4                ((uint32_t)0x00010000U)
+#define RCC_PLLSAIDIVR_8                ((uint32_t)0x00020000U)
+#define RCC_PLLSAIDIVR_16               ((uint32_t)0x00030000U)
+#define RCC_SAIACLKSOURCE_PLLSAI        ((uint32_t)0x00000000U)
+#define RCC_SAIACLKSOURCE_PLLI2S        ((uint32_t)0x00100000U)
+#define RCC_SAIACLKSOURCE_EXT           ((uint32_t)0x00200000U)
+#define RCC_SAIBCLKSOURCE_PLLSAI        ((uint32_t)0x00000000U)
+#define RCC_SAIBCLKSOURCE_PLLI2S        ((uint32_t)0x00400000U)
+#define RCC_SAIBCLKSOURCE_EXT           ((uint32_t)0x00800000U)
+#define RCC_MCO2SOURCE_SYSCLK           ((uint32_t)0x00000000U)
+#define RCC_MCO2SOURCE_PLLI2SCLK        RCC_CFGR_MCO2_0
+#define RCC_MCO2SOURCE_HSE              RCC_CFGR_MCO2_1
+#define RCC_MCO2SOURCE_PLLCLK           RCC_CFGR_MCO2
+
+#define RCC_TIMPRES_DESACTIVATED        ((uint8_t)0x00U)
+#define RCC_TIMPRES_ACTIVATED           ((uint8_t)0x01U)
+
+typedef struct
+{
+    uint32_t    selector;
+    uint32_t    PLLI2S;
+    uint32_t    PLLSAI;
+    uint32_t    PLLI2SDivQ;
+    uint32_t    PLLSAIDivQ;
+    uint32_t    PLLSAIDivR;
+    uint32_t    RTCClockSelection;
+    uint32_t    TIMPresSelection;
+
+    uint32_t    PLLSAIN;
+    uint32_t    PLLSAIQ;
+    uint32_t    PLLSAIR;
+
+    uint32_t    PLLI2SN;
+    uint32_t    PLLI2SR;
+    uint32_t    PLLI2SQ;
+} RCC_Periph_Clock_Source;
+
 class STM32_RCC
 {
 public:
@@ -59,6 +107,8 @@ public:
     ENDIS_REG_FLAG(RTC, RCC->BDCR, RCC_BDCR_RTCEN)
     static void set_prescaler_RTC(uint32_t value);
     static void set_config_RTC(uint32_t value);
+
+    static inline void set_TIM_prescaler(uint32_t val) { MODIFY_REG(RCC->DCKCFGR, RCC_DCKCFGR_TIMPRE_Msk, val << RCC_DCKCFGR_TIMPRE_Pos); }
 
     static inline void force_reset_backup() { BIT_BAND_PER(RCC->BDCR, RCC_BDCR_BDRST) = ENABLE; }
     static inline void release_reset_backup() { BIT_BAND_PER(RCC->BDCR, RCC_BDCR_BDRST) = DISABLE; }
@@ -201,6 +251,33 @@ public:
     PER_RESET_SLEEP(APB2, TIM11)
 
     static void NMI_IRQ_Handler();
+
+    /* RCCex */
+    static uint32_t periph_CLK_config(RCC_Periph_Clock_Source *sources);
+
+    ENDIS_REG_FLAG_NAME(PLLSAI_IT, RCC->CIR, RCC_CIR_PLLSAIRDYIE)
+    static inline void clear_PLLSAI_IT() { clear_IT(RCC_CIR_PLLSAIRDYF); }
+    static bool get_PLLSAI_IT() { return get_IT(RCC_CIR_PLLSAIRDYIE); }
+    static bool get_PLLSAI_flag() { return ((RCC->CR & RCC_CR_PLLSAIRDY) == RCC_CR_PLLSAIRDY); }
+
+    static inline void PLLI2S_SAI_config(uint32_t sn, uint32_t sq, uint32_t sr)
+        { RCC->PLLI2SCFGR = (sn << RCC_PLLI2SCFGR_PLLI2SN_Pos) |
+                (sq << RCC_PLLI2SCFGR_PLLI2SQ_Pos) |
+                (sr << RCC_PLLI2SCFGR_PLLI2SR_Pos); }
+    static inline void PLLI2S_SAI_configQ(uint32_t sq)
+        { MODIFY_REG(RCC->DCKCFGR, RCC_DCKCFGR_PLLI2SDIVQ, sq); }
+
+    static inline void PLLSAI_config(uint32_t sn, uint32_t sq, uint32_t sr)
+        { RCC->PLLSAICFGR = (sn << RCC_PLLSAICFGR_PLLSAIN_Pos) |
+                (sq << RCC_PLLSAICFGR_PLLSAIQ_Pos) |
+                (sr << RCC_PLLSAICFGR_PLLSAIR_Pos); }
+    static inline void PLLSAI_configQ(uint32_t sq)
+        { MODIFY_REG(RCC->DCKCFGR, RCC_DCKCFGR_PLLSAIDIVQ, ((sq - 1) << 8)); }
+    static inline void PLLSAI_configR(uint32_t sr)
+        { MODIFY_REG(RCC->DCKCFGR, RCC_DCKCFGR_PLLSAIDIVR, sr); }
+
+    ENDIS_REG_FLAG(PLLI2S, RCC->CR, RCC_CR_PLLI2SON)
+    ENDIS_REG_FLAG(PLLSAI, RCC->CR, RCC_CR_PLLSAION)
 private:
     static uint32_t m_system_core_clock;
 

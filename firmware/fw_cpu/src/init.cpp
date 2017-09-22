@@ -71,6 +71,7 @@ void SystemInit()
     /* Other IO and peripheral initializations */
     STM32_UART::init_all();
     STM32_SPI::init_all();
+    STM32_RTC::init();
     #ifdef STM32_FATFS_USE
     sd_driver.init_gpio();
     #endif
