@@ -132,6 +132,60 @@ void STM32_GPIO::set_config(uint32_t pin_mask, uint32_t pin_mode, uint8_t pin_al
     }
 }
 
+void STM32_GPIO::unset_config(uint32_t pin_mask)
+{
+    uint32_t position;
+    uint32_t ioposition = 0x00U;
+    uint32_t iocurrent = 0x00U;
+    uint32_t tmp = 0x00U;
+
+    /* Configure the port pins */
+    for (position = 0U; position < GPIO_NUMBER; position++)
+    {
+        /* Get the IO position */
+        ioposition = ((uint32_t)0x01U) << position;
+        /* Get the current IO position */
+        iocurrent = (pin_mask) & ioposition;
+
+        if (iocurrent == ioposition)
+        {
+            /*------------------------- GPIO Mode Configuration --------------------*/
+            /* Configure IO Direction in Input Floating Mode */
+            m_gpio->MODER &= ~(GPIO_MODER_MODER0 << (position * 2U));
+
+            /* Configure the default Alternate Function in current IO */
+            m_gpio->AFR[position >> 3U] &= ~((uint32_t)0xFU << ((uint32_t)(position & (uint32_t)0x07U) * 4U)) ;
+
+            /* Configure the default value for IO Speed */
+            m_gpio->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR0 << (position * 2U));
+
+            /* Configure the default value IO Output Type */
+            m_gpio->OTYPER  &= ~(GPIO_OTYPER_OT_0 << position) ;
+
+            /* Deactivate the Pull-up and Pull-down resistor for the current IO */
+            m_gpio->PUPDR &= ~(GPIO_PUPDR_PUPDR0 << (position * 2U));
+
+            /*------------------------- EXTI Mode Configuration --------------------*/
+            tmp = SYSCFG->EXTICR[position >> 2U];
+            tmp &= (((uint32_t)0x0FU) << (4U * (position & 0x03U)));
+            if(tmp == ((uint32_t)(GPIO_GET_INDEX(m_gpio)) << (4U * (position & 0x03U))))
+            {
+                /* Configure the External Interrupt or event for the current IO */
+                tmp = ((uint32_t)0x0FU) << (4U * (position & 0x03U));
+                SYSCFG->EXTICR[position >> 2U] &= ~tmp;
+
+                /* Clear EXTI line configuration */
+                EXTI->IMR &= ~((uint32_t)iocurrent);
+                EXTI->EMR &= ~((uint32_t)iocurrent);
+
+                /* Clear Rising Falling edge configuration */
+                EXTI->RTSR &= ~((uint32_t)iocurrent);
+                EXTI->FTSR &= ~((uint32_t)iocurrent);
+            }
+        }
+    }
+}
+
 STM32_GPIO gpioa;
 STM32_GPIO gpiob;
 STM32_GPIO gpioc;

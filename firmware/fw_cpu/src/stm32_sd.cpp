@@ -1,5 +1,4 @@
 #include "stm32_sd.h"
-#include "plc_control.h"
 
 #define DATA_BLOCK_SIZE                  ((uint32_t)(9U << 4U))
 
@@ -334,10 +333,22 @@ uint32_t STM32_SD::init()
     return errorstate;
 }
 
+void STM32_SD::deinit()
+{
+    power_OFF();
+
+    STM32_RCC::disable_clk_SDIO();
+
+    deinit_gpio();
+
+    //TODO deinit DMA
+
+    STM32_NVIC::disable_IRQ(SDIO_IRQn);
+}
+
 SD_ErrorTypedef STM32_SD::wide_bus_config(uint32_t mode)
 {
     SD_ErrorTypedef errorstate = SD_OK;
-    PLC_CONTROL::print_message("wide_bus_config\n");
 
     /* MMC Card does not support this feature */
     if (m_card_type == MULTIMEDIA_CARD)
@@ -531,6 +542,472 @@ SD_ErrorTypedef STM32_SD::read_blocks(uint8_t *buf, uint64_t read_addr, uint32_t
     return errorstate;
 }
 
+SD_ErrorTypedef STM32_SD::write_blocks(uint8_t *buf, uint64_t write_addr, uint32_t block_size, uint32_t blocks)
+{
+    SD_ErrorTypedef errorstate = SD_OK;
+    uint32_t totalnumberofbytes = 0U, bytestransferred = 0U, count = 0U, restwords = 0U;
+    uint32_t *tempbuff = (uint32_t *)buf;
+    uint8_t cardstate  = 0U;
+
+    /* Initialize data control register */
+    SDIO->DCTRL = 0U;
+
+    if (m_card_type == HIGH_CAPACITY_SD_CARD)
+    {
+        block_size = 512U;
+        write_addr /= 512U;
+    }
+
+    /* Set Block Size for Card */
+    send_command(block_size, SD_CMD_SET_BLOCKLEN, SDIO_RESPONSE_SHORT,
+                 SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+    /* Check for error conditions */
+    errorstate = cmd_resp1_error(SD_CMD_SET_BLOCKLEN);
+
+    if (errorstate != SD_OK)
+        return errorstate;
+
+    if (blocks > 1U)
+        /* Send CMD25 WRITE_MULT_BLOCK with argument data address */
+        send_command(write_addr, SD_CMD_WRITE_MULT_BLOCK, SDIO_RESPONSE_SHORT,
+                     SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+    else
+        /* Send CMD24 WRITE_SINGLE_BLOCK */
+        send_command(write_addr, SD_CMD_WRITE_SINGLE_BLOCK, SDIO_RESPONSE_SHORT,
+                     SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+    /* Check for error conditions */
+    if (blocks > 1U)
+        errorstate = cmd_resp1_error(SD_CMD_WRITE_MULT_BLOCK);
+    else
+        errorstate = cmd_resp1_error(SD_CMD_WRITE_SINGLE_BLOCK);
+
+    if (errorstate != SD_OK)
+        return errorstate;
+
+    /* Set total number of bytes to write */
+    totalnumberofbytes = blocks * block_size;
+
+    /* Configure the SD DPSM (Data Path State Machine) */
+    data_config(SD_DATATIMEOUT, blocks * block_size, SDIO_DATABLOCK_SIZE_512B,
+                SDIO_TRANSFER_DIR_TO_CARD, SDIO_TRANSFER_MODE_BLOCK,
+                SDIO_DPSM_ENABLE);
+
+    /* Write block(s) in polling mode */
+    if (blocks > 1U)
+    {
+        #ifdef SDIO_STA_STBITERR
+        while (!get_flag(SDIO_FLAG_TXUNDERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DATAEND | SDIO_FLAG_STBITERR))
+        #else /* SDIO_STA_STBITERR not defined */
+        while (!get_flag(SDIO_FLAG_TXUNDERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DATAEND))
+        #endif /* SDIO_STA_STBITERR */
+        {
+            if (get_flag(SDIO_FLAG_TXFIFOHE))
+            {
+                if ((totalnumberofbytes - bytestransferred) < 32U)
+                {
+                    restwords = ((totalnumberofbytes - bytestransferred) % 4U == 0U) ?
+                                ((totalnumberofbytes - bytestransferred) / 4U) :
+                                (( totalnumberofbytes -  bytestransferred) / 4U + 1U);
+
+                    /* Write data to SDIO Tx FIFO */
+                    for (count = 0U; count < restwords; count++)
+                    {
+                        write_FIFO(tempbuff);
+                        tempbuff++;
+                        bytestransferred += 4U;
+                    }
+                }
+                else
+                {
+                    /* Write data to SDIO Tx FIFO */
+                    for (count = 0U; count < 8U; count++)
+                        write_FIFO(tempbuff + count);
+
+                    tempbuff += 8U;
+                    bytestransferred += 32U;
+                }
+            }
+        }
+    }
+    else
+    {
+        /* In case of single data block transfer no need of stop command at all */
+        #ifdef SDIO_STA_STBITERR
+        while (!get_flag(SDIO_FLAG_TXUNDERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DBCKEND | SDIO_FLAG_STBITERR))
+        #else /* SDIO_STA_STBITERR not defined */
+        while (!get_flag(SDIO_FLAG_TXUNDERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DBCKEND))
+        #endif /* SDIO_STA_STBITERR */
+        {
+            if (get_flag(SDIO_FLAG_TXFIFOHE))
+            {
+                if ((totalnumberofbytes - bytestransferred) < 32U)
+                {
+                    restwords = ((totalnumberofbytes - bytestransferred) % 4U == 0U) ?
+                                ((totalnumberofbytes - bytestransferred) / 4U) :
+                                (( totalnumberofbytes -  bytestransferred) / 4U + 1U);
+
+                    /* Write data to SDIO Tx FIFO */
+                    for (count = 0U; count < restwords; count++)
+                    {
+                        write_FIFO(tempbuff);
+                        tempbuff++;
+                        bytestransferred += 4U;
+                    }
+                }
+                else
+                {
+                    /* Write data to SDIO Tx FIFO */
+                    for (count = 0U; count < 8U; count++)
+                        write_FIFO(tempbuff + count);
+
+                    tempbuff += 8U;
+                    bytestransferred += 32U;
+                }
+            }
+        }
+    }
+
+    /* Send stop transmission command in case of multiblock write */
+    if (get_flag(SDIO_FLAG_DATAEND) && (blocks > 1U))
+    {
+        if ((m_card_type == STD_CAPACITY_SD_CARD_V1_1) || (m_card_type == STD_CAPACITY_SD_CARD_V2_0) ||\
+            (m_card_type == HIGH_CAPACITY_SD_CARD))
+            /* Send stop transmission command */
+            errorstate = stop_transfer();
+    }
+
+    /* Get error state */
+    if (get_flag(SDIO_FLAG_DTIMEOUT))
+    {
+        clear_flag(SDIO_FLAG_DTIMEOUT);
+        return SD_DATA_TIMEOUT;
+    }
+    else if (get_flag(SDIO_FLAG_DCRCFAIL))
+    {
+        clear_flag(SDIO_FLAG_DCRCFAIL);
+        return SD_DATA_CRC_FAIL;
+    }
+    else if (get_flag(SDIO_FLAG_TXUNDERR))
+    {
+        clear_flag(SDIO_FLAG_TXUNDERR);
+        return SD_TX_UNDERRUN;
+    }
+    #ifdef SDIO_STA_STBITERR
+    else if (get_flag(SDIO_FLAG_STBITERR))
+    {
+        clear_flag(SDIO_FLAG_STBITERR);
+        return SD_START_BIT_ERR;
+    }
+    #endif /* SDIO_STA_STBITERR */
+    else
+    {
+        /* No error flag set */
+    }
+
+    /* Clear all the static flags */
+    clear_flag(SDIO_STATIC_FLAGS);
+
+    /* Wait till the card is in programming state */
+    errorstate = is_card_programming(&cardstate);
+
+    while ((errorstate == SD_OK) && ((cardstate == SD_CARD_PROGRAMMING) || (cardstate == SD_CARD_RECEIVING)))
+        errorstate = is_card_programming(&cardstate);
+
+    return errorstate;
+}
+
+SD_ErrorTypedef STM32_SD::erase(uint64_t start_addr, uint64_t end_addr)
+{
+    SD_ErrorTypedef errorstate = SD_OK;
+
+    uint32_t delay         = 0U;
+    __IO uint32_t maxdelay = 0U;
+    uint8_t cardstate      = 0U;
+
+    /* Check if the card command class supports erase command */
+    if (((m_CSD[1U] >> 20U) & SD_CCCC_ERASE) == 0U)
+        return SD_REQUEST_NOT_APPLICABLE;
+
+    /* Get max delay value */
+    maxdelay = 120000U / (((SDIO->CLKCR) & 0xFFU) + 2U);
+
+    if ((get_response(SDIO_RESP1) & SD_CARD_LOCKED) == SD_CARD_LOCKED)
+        return SD_LOCK_UNLOCK_FAILED;
+
+    /* Get start and end block for high capacity cards */
+    if (m_card_type == HIGH_CAPACITY_SD_CARD)
+    {
+        start_addr /= 512U;
+        end_addr   /= 512U;
+    }
+
+    /* According to sd-card spec 1.0 ERASE_GROUP_START (CMD32) and erase_group_end(CMD33) */
+    if ((m_card_type == STD_CAPACITY_SD_CARD_V1_1) ||
+        (m_card_type == STD_CAPACITY_SD_CARD_V2_0) ||
+        (m_card_type == HIGH_CAPACITY_SD_CARD))
+    {
+        /* Send CMD32 SD_ERASE_GRP_START with argument as addr  */
+        send_command((uint32_t)start_addr, SD_CMD_SD_ERASE_GRP_START, SDIO_RESPONSE_SHORT,
+                     SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+        /* Check for error conditions */
+        errorstate = cmd_resp1_error(SD_CMD_SD_ERASE_GRP_START);
+
+        if (errorstate != SD_OK)
+            return errorstate;
+
+        /* Send CMD33 SD_ERASE_GRP_END with argument as addr  */
+        send_command((uint32_t)end_addr, SD_CMD_SD_ERASE_GRP_END, SDIO_RESPONSE_SHORT,
+                     SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+        /* Check for error conditions */
+        errorstate = cmd_resp1_error(SD_CMD_SD_ERASE_GRP_END);
+
+        if (errorstate != SD_OK)
+            return errorstate;
+    }
+
+    /* Send CMD38 ERASE */
+    send_command(0, SD_CMD_ERASE, SDIO_RESPONSE_SHORT,
+                 SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+    /* Check for error conditions */
+    errorstate = cmd_resp1_error(SD_CMD_ERASE);
+
+    if (errorstate != SD_OK)
+        return errorstate;
+
+    for (; delay < maxdelay; delay++) {}
+
+    /* Wait until the card is in programming state */
+    errorstate = is_card_programming(&cardstate);
+
+    delay = SD_DATATIMEOUT;
+
+    while ((delay > 0U) &&
+           (errorstate == SD_OK) &&
+           ((cardstate == SD_CARD_PROGRAMMING) ||
+            (cardstate == SD_CARD_RECEIVING)))
+    {
+        errorstate = is_card_programming(&cardstate);
+        delay--;
+    }
+
+    return errorstate;
+}
+
+SD_ErrorTypedef STM32_SD::high_speed()
+{
+    SD_ErrorTypedef errorstate = SD_OK;
+
+    uint8_t SD_hs[64U]  = {0U};
+    uint32_t SD_scr[2U] = {0U, 0U};
+    uint32_t SD_SPEC    = 0U;
+    uint32_t count = 0U, *tempbuff = (uint32_t *)SD_hs;
+
+    /* Initialize the Data control register */
+    SDIO->DCTRL = 0U;
+
+    /* Get SCR Register */
+    errorstate = find_SCR(SD_scr);
+
+    if (errorstate != SD_OK)
+        return errorstate;
+
+    /* Test the Version supported by the card*/
+    SD_SPEC = (SD_scr[1U]  & 0x01000000U) | (SD_scr[1U]  & 0x02000000U);
+
+    if (SD_SPEC != SD_ALLZERO)
+    {
+        /* Set Block Size for Card */
+        send_command(64U, SD_CMD_SET_BLOCKLEN, SDIO_RESPONSE_SHORT,
+                     SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+        /* Check for error conditions */
+        errorstate = cmd_resp1_error(SD_CMD_SET_BLOCKLEN);
+
+        if (errorstate != SD_OK)
+            return errorstate;
+
+        /* Configure the SD DPSM (Data Path State Machine) */
+        data_config(SD_DATATIMEOUT, 64U, SDIO_DATABLOCK_SIZE_64B,
+                    SDIO_TRANSFER_DIR_TO_SDIO, SDIO_TRANSFER_MODE_BLOCK,
+                    SDIO_DPSM_ENABLE);
+
+        /* Send CMD6 switch mode */
+        send_command(0x80FFFF01U, SD_CMD_HS_SWITCH, SDIO_RESPONSE_SHORT,
+                     SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+        /* Check for error conditions */
+        errorstate = cmd_resp1_error(SD_CMD_HS_SWITCH);
+
+        if (errorstate != SD_OK)
+            return errorstate;
+        #ifdef SDIO_STA_STBITERR
+        while (!get_flag(SDIO_FLAG_RXOVERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DBCKEND | SDIO_FLAG_STBITERR))
+        #else /* SDIO_STA_STBITERR */
+        while (!get_flag(SDIO_FLAG_RXOVERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DBCKEND))
+        #endif /* SDIO_STA_STBITERR */
+        {
+            if (get_flag(SDIO_FLAG_RXFIFOHF))
+            {
+                for (count = 0U; count < 8U; count++)
+                    *(tempbuff + count) = read_FIFO();
+
+                tempbuff += 8U;
+            }
+        }
+
+        if (get_flag(SDIO_FLAG_DTIMEOUT))
+        {
+            clear_flag(SDIO_FLAG_DTIMEOUT);
+            return SD_DATA_TIMEOUT;
+        }
+        else if (get_flag(SDIO_FLAG_DCRCFAIL))
+        {
+            clear_flag(SDIO_FLAG_DCRCFAIL);
+            return SD_DATA_CRC_FAIL;
+        }
+        else if (get_flag(SDIO_FLAG_RXOVERR))
+        {
+            clear_flag(SDIO_FLAG_RXOVERR);
+            return SD_RX_OVERRUN;
+        }
+        #ifdef SDIO_STA_STBITERR
+        else if (get_flag(SDIO_FLAG_STBITERR))
+        {
+            clear_flag(SDIO_FLAG_STBITERR);
+            return SD_START_BIT_ERR;
+        }
+        #endif /* SDIO_STA_STBITERR */
+        else
+        {
+            /* No error flag set */
+        }
+
+        count = SD_DATATIMEOUT;
+
+        while ((get_flag(SDIO_FLAG_RXDAVL)) && (count > 0U))
+        {
+            *tempbuff = read_FIFO();
+            tempbuff++;
+            count--;
+        }
+
+        /* Clear all the static flags */
+        clear_flag(SDIO_STATIC_FLAGS);
+
+        /* Test if the switch mode HS is ok */
+        if ((SD_hs[13U]& 2U) != 2U)
+            errorstate = SD_UNSUPPORTED_FEATURE;
+    }
+
+    return errorstate;
+}
+
+SD_ErrorTypedef STM32_SD::send_SD_status(uint32_t *status)
+{
+    SD_ErrorTypedef errorstate = SD_OK;
+    uint32_t count = 0U;
+
+    /* Check SD response */
+    if ((get_response(SDIO_RESP1) & SD_CARD_LOCKED) == SD_CARD_LOCKED)
+        return SD_LOCK_UNLOCK_FAILED;
+
+    /* Set block size for card if it is not equal to current block size for card */
+    send_command(64U, SD_CMD_SET_BLOCKLEN, SDIO_RESPONSE_SHORT,
+                 SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+    /* Check for error conditions */
+    errorstate = cmd_resp1_error(SD_CMD_SET_BLOCKLEN);
+
+    if (errorstate != SD_OK)
+        return errorstate;
+
+    /* Send CMD55 */
+    send_command(m_RCA << 16U, SD_CMD_APP_CMD, SDIO_RESPONSE_SHORT,
+                 SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+    /* Check for error conditions */
+    errorstate = cmd_resp1_error(SD_CMD_APP_CMD);
+
+    if (errorstate != SD_OK)
+        return errorstate;
+
+    /* Configure the SD DPSM (Data Path State Machine) */
+    data_config(SD_DATATIMEOUT, 64U, SDIO_DATABLOCK_SIZE_64B,
+                SDIO_TRANSFER_DIR_TO_SDIO, SDIO_TRANSFER_MODE_BLOCK,
+                SDIO_DPSM_ENABLE);
+
+    /* Send ACMD13 (SD_APP_STATUS)  with argument as card's RCA */
+    send_command(0, SD_CMD_SD_APP_STATUS, SDIO_RESPONSE_SHORT,
+                 SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+    /* Check for error conditions */
+    errorstate = cmd_resp1_error(SD_CMD_SD_APP_STATUS);
+
+    if (errorstate != SD_OK)
+        return errorstate;
+
+    /* Get status data */
+    #ifdef SDIO_STA_STBITERR
+    while (!get_flag(SDIO_FLAG_RXOVERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DBCKEND | SDIO_FLAG_STBITERR))
+    #else /* SDIO_STA_STBITERR not defined */
+    while (!get_flag(SDIO_FLAG_RXOVERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DBCKEND))
+    #endif /* SDIO_STA_STBITERR */
+    {
+        if (get_flag(SDIO_FLAG_RXFIFOHF))
+        {
+            for (count = 0U; count < 8U; count++)
+                *(status + count) = read_FIFO();
+
+            status += 8U;
+        }
+    }
+
+    if (get_flag(SDIO_FLAG_DTIMEOUT))
+    {
+        clear_flag(SDIO_FLAG_DTIMEOUT);
+        return SD_DATA_TIMEOUT;
+    }
+    else if (get_flag(SDIO_FLAG_DCRCFAIL))
+    {
+        clear_flag(SDIO_FLAG_DCRCFAIL);
+        return SD_DATA_CRC_FAIL;
+    }
+    else if (get_flag(SDIO_FLAG_RXOVERR))
+    {
+        clear_flag(SDIO_FLAG_RXOVERR);
+        return SD_RX_OVERRUN;
+    }
+    #ifdef SDIO_STA_STBITERR
+    else if (get_flag(SDIO_FLAG_STBITERR))
+    {
+        clear_flag(SDIO_FLAG_STBITERR);
+        return SD_START_BIT_ERR;
+    }
+    #endif /* SDIO_STA_STBITERR */
+    else
+    {
+        /* No error flag set */
+    }
+
+    count = SD_DATATIMEOUT;
+    while ((get_flag(SDIO_FLAG_RXDAVL)) && (count > 0U))
+    {
+        *status = read_FIFO();
+        status++;
+        count--;
+    }
+
+    /* Clear all the static status flags*/
+    clear_flag(SDIO_STATIC_FLAGS);
+
+    return errorstate;
+}
+
 void STM32_SD::init_gpio()
 {
     STM32_RCC::enable_clk_SDIO();
@@ -542,6 +1019,13 @@ void STM32_SD::init_gpio()
 
     gpiod.set_config(GPIO_PIN_2, GPIO_MODE_AF_PP, GPIO_AF12_SDIO,
                      GPIO_SPEED_FREQ_VERY_HIGH, GPIO_NOPULL);
+}
+
+void STM32_SD::deinit_gpio()
+{
+    gpioc.unset_config(GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
+                       GPIO_PIN_11 | GPIO_PIN_12);
+    gpiod.unset_config(GPIO_PIN_2);
 }
 
 void STM32_SD::init_low(uint32_t clock_edge, uint32_t clock_bypass,
@@ -764,22 +1248,17 @@ SD_ErrorTypedef STM32_SD::cmd_resp1_error(uint32_t SD_CMD)
     if (get_flag(SDIO_FLAG_CTIMEOUT))
     {
         clear_flag(SDIO_FLAG_CTIMEOUT);
-        PLC_CONTROL::print_message("Timeout\n");
         return SD_CMD_RSP_TIMEOUT;
     }
     else if (get_flag(SDIO_FLAG_CCRCFAIL))
     {
         clear_flag(SDIO_FLAG_CCRCFAIL);
-        PLC_CONTROL::print_message("CRC failed\n");
         return SD_CMD_CRC_FAIL;
     }
 
     /* Check response received is of desired command */
     if (get_cmd_response() != SD_CMD)
-    {
-        PLC_CONTROL::print_message("Illegal CMD\n");
         return SD_ILLEGAL_CMD;
-    }
 
     /* Clear all the static flags */
     clear_flag(SDIO_STATIC_FLAGS);
@@ -1144,10 +1623,111 @@ SD_ErrorTypedef STM32_SD::select_deselect(uint32_t addr)
     return cmd_resp1_error(SD_CMD_SEL_DESEL_CARD);
 }
 
+SD_ErrorTypedef STM32_SD::is_card_programming(uint8_t *status)
+{
+    SD_ErrorTypedef errorstate = SD_OK;
+    __IO uint32_t responseR1 = 0U;
+
+    send_command(m_RCA << 16U, SD_CMD_SEND_STATUS, SDIO_RESPONSE_SHORT,
+                 SDIO_WAIT_NO, SDIO_CPSM_ENABLE);
+
+    while (!get_flag(SDIO_FLAG_CCRCFAIL | SDIO_FLAG_CMDREND | SDIO_FLAG_CTIMEOUT)) {}
+
+    if (get_flag(SDIO_FLAG_CTIMEOUT))
+    {
+        clear_flag(SDIO_FLAG_CTIMEOUT);
+        return SD_CMD_RSP_TIMEOUT;
+    }
+    else if (get_flag(SDIO_FLAG_CCRCFAIL))
+    {
+        clear_flag(SDIO_FLAG_CCRCFAIL);
+        return SD_CMD_CRC_FAIL;
+    }
+    else
+    {
+        /* No error flag set */
+    }
+
+    /* Check response received is of desired command */
+    if (get_cmd_response() != SD_CMD_SEND_STATUS)
+        return SD_ILLEGAL_CMD;
+
+    /* Clear all the static flags */
+    clear_flag(SDIO_STATIC_FLAGS);
+
+
+    /* We have received response, retrieve it for analysis */
+    responseR1 = get_response(SDIO_RESP1);
+
+    /* Find out card status */
+    *status = (uint8_t)((responseR1 >> 9U) & 0x0000000FU);
+
+    if ((responseR1 & SD_OCR_ERRORBITS) == SD_ALLZERO)
+        return errorstate;
+
+    if ((responseR1 & SD_OCR_ADDR_OUT_OF_RANGE) == SD_OCR_ADDR_OUT_OF_RANGE)
+        return(SD_ADDR_OUT_OF_RANGE);
+
+    if ((responseR1 & SD_OCR_ADDR_MISALIGNED) == SD_OCR_ADDR_MISALIGNED)
+        return(SD_ADDR_MISALIGNED);
+
+    if ((responseR1 & SD_OCR_BLOCK_LEN_ERR) == SD_OCR_BLOCK_LEN_ERR)
+        return(SD_BLOCK_LEN_ERR);
+
+    if ((responseR1 & SD_OCR_ERASE_SEQ_ERR) == SD_OCR_ERASE_SEQ_ERR)
+        return(SD_ERASE_SEQ_ERR);
+
+    if ((responseR1 & SD_OCR_BAD_ERASE_PARAM) == SD_OCR_BAD_ERASE_PARAM)
+        return(SD_BAD_ERASE_PARAM);
+
+    if ((responseR1 & SD_OCR_WRITE_PROT_VIOLATION) == SD_OCR_WRITE_PROT_VIOLATION)
+        return(SD_WRITE_PROT_VIOLATION);
+
+    if ((responseR1 & SD_OCR_LOCK_UNLOCK_FAILED) == SD_OCR_LOCK_UNLOCK_FAILED)
+        return(SD_LOCK_UNLOCK_FAILED);
+
+    if ((responseR1 & SD_OCR_COM_CRC_FAILED) == SD_OCR_COM_CRC_FAILED)
+        return(SD_COM_CRC_FAILED);
+
+    if ((responseR1 & SD_OCR_ILLEGAL_CMD) == SD_OCR_ILLEGAL_CMD)
+        return(SD_ILLEGAL_CMD);
+
+    if ((responseR1 & SD_OCR_CARD_ECC_FAILED) == SD_OCR_CARD_ECC_FAILED)
+        return(SD_CARD_ECC_FAILED);
+
+    if ((responseR1 & SD_OCR_CC_ERROR) == SD_OCR_CC_ERROR)
+        return(SD_CC_ERROR);
+
+    if ((responseR1 & SD_OCR_GENERAL_UNKNOWN_ERROR) == SD_OCR_GENERAL_UNKNOWN_ERROR)
+        return(SD_GENERAL_UNKNOWN_ERROR);
+
+    if ((responseR1 & SD_OCR_STREAM_READ_UNDERRUN) == SD_OCR_STREAM_READ_UNDERRUN)
+        return(SD_STREAM_READ_UNDERRUN);
+
+    if ((responseR1 & SD_OCR_STREAM_WRITE_OVERRUN) == SD_OCR_STREAM_WRITE_OVERRUN)
+        return(SD_STREAM_WRITE_OVERRUN);
+
+    if ((responseR1 & SD_OCR_CID_CSD_OVERWRITE) == SD_OCR_CID_CSD_OVERWRITE)
+        return(SD_CID_CSD_OVERWRITE);
+
+    if ((responseR1 & SD_OCR_WP_ERASE_SKIP) == SD_OCR_WP_ERASE_SKIP)
+        return(SD_WP_ERASE_SKIP);
+
+    if ((responseR1 & SD_OCR_CARD_ECC_DISABLED) == SD_OCR_CARD_ECC_DISABLED)
+        return(SD_CARD_ECC_DISABLED);
+
+    if ((responseR1 & SD_OCR_ERASE_RESET) == SD_OCR_ERASE_RESET)
+        return(SD_ERASE_RESET);
+
+    if ((responseR1 & SD_OCR_AKE_SEQ_ERROR) == SD_OCR_AKE_SEQ_ERROR)
+        return(SD_AKE_SEQ_ERROR);
+
+    return errorstate;
+}
+
 SD_ErrorTypedef STM32_SD::wide_bus_enable()
 {
     SD_ErrorTypedef errorstate = SD_OK;
-    PLC_CONTROL::print_message("wide_bus_enable\n");
 
     uint32_t scr[2U] = {0U, 0U};
 

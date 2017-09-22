@@ -148,11 +148,24 @@ class STM32_SD
 {
 public:
     static uint32_t init();
+    static void deinit();
 
     static SD_ErrorTypedef wide_bus_config(uint32_t mode);
     static SD_TransferStateTypedef get_status();
 
     static SD_ErrorTypedef read_blocks(uint8_t *buf, uint64_t read_addr, uint32_t block_size, uint32_t blocks);
+    /// TODO read_blocks_DMA
+    /// TODO HAL_SD_CheckReadOperation
+
+    static SD_ErrorTypedef write_blocks(uint8_t *buf, uint64_t write_addr, uint32_t block_size, uint32_t blocks);
+    /// TODO write_blocks_DMA
+    /// TODO HAL_SD_CheckWriteOperation
+
+    static SD_ErrorTypedef erase(uint64_t start_addr, uint64_t end_addr);
+
+    static SD_ErrorTypedef high_speed();
+
+    static SD_ErrorTypedef send_SD_status(uint32_t *status);
 private:
     static uint32_t m_card_type;
     static uint32_t m_RCA;
@@ -161,6 +174,7 @@ private:
     static SD_CardInfo  m_card_info;
 
     static void init_gpio();
+    static void deinit_gpio();
     static void init_low(uint32_t clock_edge, uint32_t clock_bypass,
                          uint32_t clock_power_save, uint32_t bus_wide,
                          uint32_t hw_control, uint32_t clock_div);
@@ -187,7 +201,10 @@ private:
     static SD_ErrorTypedef stop_transfer();
 
     static SD_ErrorTypedef get_card_info();
+
     static SD_ErrorTypedef select_deselect(uint32_t addr);
+
+    static SD_ErrorTypedef is_card_programming(uint8_t *status);
 
     static inline void enable_SDIO() { BIT_BAND_PER(SDIO->CLKCR, SDIO_CLKCR_CLKEN) = ENABLE; }
     static inline void disable_SDIO() { BIT_BAND_PER(SDIO->CLKCR, SDIO_CLKCR_CLKEN) = DISABLE; }
@@ -204,6 +221,7 @@ private:
     static inline uint32_t get_power_state() { return (SDIO->POWER & SDIO_POWER_PWRCTRL); }
 
     static inline uint32_t read_FIFO() { return SDIO->FIFO; }
+    static inline void write_FIFO(uint32_t *val) { SDIO->FIFO = *val; }
 
     static SD_ErrorTypedef wide_bus_enable();
     static SD_ErrorTypedef wide_bus_disable();
