@@ -79,6 +79,9 @@ typedef struct
 #define RTC_WEEKDAY_SATURDAY           ((uint8_t)0x06U)
 #define RTC_WEEKDAY_SUNDAY             ((uint8_t)0x07U)
 
+#define RTC_TR_RESERVED_MASK           ((uint32_t)0x007F7F7FU)
+#define RTC_DR_RESERVED_MASK           ((uint32_t)0x00FFFF3FU)
+
 class STM32_RTC
 {
 public:
@@ -105,5 +108,8 @@ private:
     /// HAL_RTC_AlarmIRQHandler
     /// HAL_RTC_PollForAlarmAEvent
 };
+
+uint8_t RTC_ByteToBcd2(uint8_t Value);
+uint8_t RTC_Bcd2ToByte(uint8_t Value);
 
 #endif // STM32_RTC_H

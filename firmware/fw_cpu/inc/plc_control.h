@@ -2,7 +2,6 @@
 #define PLC_CONTROL_H
 
 #include <stdint.h>
-#include "stm32_rtc.h"
 
 #define PLC_TEXT_BUF_SIZE 1024
 
@@ -33,8 +32,6 @@ private:
     static uint8_t      m_state_com_fault;
     static uint8_t      m_state_initialized;
     static char         m_text_buf[PLC_TEXT_BUF_SIZE];
-    static STM32_RTC_Date   m_start_date;
-    static STM32_RTC_Time   m_start_time;
 
     static inline void set_run(uint8_t val) { m_state_run = val; }
     static inline void set_stop(uint8_t val) { m_state_stop = val; }

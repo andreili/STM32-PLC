@@ -98,8 +98,6 @@
 #define RTC_FLAG_ALRBWF                   ((uint32_t)0x00000002U)
 #define RTC_FLAG_ALRAWF                   ((uint32_t)0x00000001U)
 
-#define RTC_TR_RESERVED_MASK    ((uint32_t)0x007F7F7FU)
-#define RTC_DR_RESERVED_MASK    ((uint32_t)0x00FFFF3FU)
 #define RTC_INIT_MASK           ((uint32_t)0xFFFFFFFFU)
 #define RTC_RSF_MASK            ((uint32_t)0xFFFFFF5FU)
 #define RTC_FLAGS_MASK          ((uint32_t)(RTC_FLAG_TSOVF | RTC_FLAG_TSF | RTC_FLAG_WUTF | \
@@ -107,9 +105,6 @@
                                             RTC_FLAG_RSF | RTC_FLAG_INITS | RTC_FLAG_WUTWF | \
                                             RTC_FLAG_ALRBWF | RTC_FLAG_ALRAWF | RTC_FLAG_TAMP1F | \
                                             RTC_FLAG_RECALPF | RTC_FLAG_SHPF))
-
-uint8_t RTC_ByteToBcd2(uint8_t Value);
-uint8_t RTC_Bcd2ToByte(uint8_t Value);
 
 uint32_t STM32_RTC::init()
 {

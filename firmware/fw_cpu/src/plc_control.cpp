@@ -20,8 +20,6 @@ uint8_t PLC_CONTROL::m_state_fault;
 uint8_t PLC_CONTROL::m_state_com_fault;
 uint8_t PLC_CONTROL::m_state_initialized;
 char PLC_CONTROL::m_text_buf[PLC_TEXT_BUF_SIZE];
-STM32_RTC_Date PLC_CONTROL::m_start_date;
-STM32_RTC_Time PLC_CONTROL::m_start_time;
 
 #ifdef STM32_FATFS_USE
 FATFS SDFatFs;
@@ -76,19 +74,19 @@ void PLC_CONTROL::init_seq()
     set_rs_blink(1);
 
     scheck_RTC();
-    STM32_RTC::get_date(&m_start_date, ERTCFormat::BIN);
-    STM32_RTC::get_time(&m_start_time, ERTCFormat::BIN);
+    PLC_STATE::init();
+    plc_datetime_t* start_dt = PLC_STATE::get_start_dt();
 
     print_message("\033[2J\n+-----------------------------+\n"
                   "|          STM32 PLC          |\n"
                   "|         System info         |\n"
                   "| CPU Speed: %03UMHz           |\n"
                   "| RAM size: 192kb + %03UMb     |\n"
-                  "| Cur. time %02U.%02U.%02U %02U:%02U:%02U |\n"
+                  "| Cur. date %02U.%02U.%02U %02U:%02U:%02U |\n"
                   "+-----------------------------+\n",
                   STM32_PLLN, STM32_SDRAM_SIZE_MB,
-                  m_start_date.Date, m_start_date.Month, m_start_date.Year,
-                  m_start_time.Hours, m_start_time.Minutes, m_start_time.Seconds);
+                  start_dt->day, start_dt->month, start_dt->year,
+                  start_dt->hour, start_dt->min, start_dt->sec);
 
     #if defined (DATA_IN_ExtSDRAM)
     test_RAM(true);
@@ -118,11 +116,10 @@ void PLC_CONTROL::main()
     int iteration = 0;
     while (1)
     {
-        STM32_RTC_Time time;
-        STM32_RTC::get_time(&time, ERTCFormat::BIN);
-        int millisecs = (1000 * (STM32_RTC_SYNC_PREDIV - time.SubSeconds)) / (STM32_RTC_SYNC_PREDIV + 1);
+        PLC_STATE::update_ct();
+        plc_datetime_t* dt = PLC_STATE::get_current_dt();
         print_message("\r\t(%02U:%02U:%02U:%03U) Test iteration: %U",
-                      time.Hours, time.Minutes, time.Seconds, millisecs,
+                      dt->hour, dt->min, dt->sec, dt->msec,
                       ++iteration);
 
         test_RAM(false);
@@ -149,9 +146,9 @@ void PLC_CONTROL::scheck_RTC()
         STM32_RTC::set_date(&date, ERTCFormat::BIN);
 
         STM32_RTC_Time time;
-        time.Hours = 20;
+        time.Hours = 23;
         time.Minutes = 01;
-        time.Seconds = 30;
+        time.Seconds = 0;
         time.TimeFormat = 0;
         STM32_RTC::set_time(&time, ERTCFormat::BIN);
     }
@@ -165,7 +162,11 @@ void PLC_CONTROL::init_fs()
         print_message("+-----------------------------+\n"
                       "Pass to mount SD-card\n");
         while (f_mount(&SDFatFs, (TCHAR const*)SD_path, 1) != FR_OK)
+        {
+            print_message("\rUnable to mount FAT partition! Check SD-card!");
             STM32_SYSTICK::delay(300);
+        }
+        print_message("FAT partition mounted\n");
     }
     else
         print_message("+-----------------------------+\n"

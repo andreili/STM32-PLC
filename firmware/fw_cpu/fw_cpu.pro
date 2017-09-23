@@ -60,7 +60,8 @@ HEADERS += \
     inc/memmanager.h \
     inc/stm32_spi.h \
     ../shared/inc/plc_mod.h \
-    inc/stm32_rtc.h
+    inc/stm32_rtc.h \
+    inc/plc_state.h
 
 SOURCES += \
     ../shared/CMSIS/ISRstm32f429xx.cpp \
@@ -87,5 +88,6 @@ SOURCES += \
     src/stm32_spi.cpp \
     ../shared/src/plc_mod.cpp \
     src/xprintf.cpp \
-    src/stm32_rtc.cpp
+    src/stm32_rtc.cpp \
+    src/plc_state.cpp
 
