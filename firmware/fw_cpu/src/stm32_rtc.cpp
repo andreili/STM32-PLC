@@ -131,7 +131,8 @@ uint32_t STM32_RTC::init()
     /* Set RTC_CR register */
     RTC->CR |= (STM32_RTC_FORMAT |
                 STM32_RTC_OUTPUT |
-                STM32_RTC_OUTPUT_POL);
+                STM32_RTC_OUTPUT_POL |
+                RTC_CR_BYPSHAD);
 
     /* Configure the RTC PRER */
     RTC->PRER = STM32_RTC_SYNC_PREDIV | (STM32_RTC_ASYNC_PREDIV << 16U);
@@ -292,7 +293,7 @@ uint32_t STM32_RTC::get_time(STM32_RTC_Time *time, ERTCFormat format)
     uint32_t tmpreg = 0U;
 
     /* Get subseconds structure field from the corresponding register */
-    //time->SubSeconds = (RTC->SSR);
+    time->SubSeconds = (RTC->SSR);
 
     /* Get SecondFraction structure field from the corresponding register field*/
     time->SecondFraction = (RTC->PRER & RTC_PRER_PREDIV_S);

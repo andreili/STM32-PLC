@@ -111,8 +111,9 @@ void PLC_CONTROL::main()
     {
         STM32_RTC_Time time;
         STM32_RTC::get_time(&time, ERTCFormat::BIN);
-        print_message("\r\t(%02U:%02U:%02U) Test iteration: %U",
-                      time.Hours, time.Minutes, time.Seconds,
+        int millisecs = (1000 * (STM32_RTC_SYNC_PREDIV - time.SubSeconds)) / (STM32_RTC_SYNC_PREDIV + 1);
+        print_message("\r\t(%02U:%02U:%02U:%03U) Test iteration: %U",
+                      time.Hours, time.Minutes, time.Seconds, millisecs,
                       ++iteration);
 
         test_RAM(false);
