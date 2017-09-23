@@ -5,13 +5,20 @@
 #include "xprintf.h"
 #include <stdarg.h>
 #include "memmanager.h"
+#include "plc_state.h"
 #ifdef STM32_FATFS_USE
 #include "fatfs.h"
 #include "ff.h"
 #include "sddriver.h"
 #endif
 
-plc_state_t PLC_CONTROL::m_state;
+uint8_t PLC_CONTROL::m_state_run;
+uint8_t PLC_CONTROL::m_state_stop;
+uint8_t PLC_CONTROL::m_state_rs_blink;
+uint8_t PLC_CONTROL::m_state_error;
+uint8_t PLC_CONTROL::m_state_fault;
+uint8_t PLC_CONTROL::m_state_com_fault;
+uint8_t PLC_CONTROL::m_state_initialized;
 char PLC_CONTROL::m_text_buf[PLC_TEXT_BUF_SIZE];
 STM32_RTC_Date PLC_CONTROL::m_start_date;
 STM32_RTC_Time PLC_CONTROL::m_start_time;
@@ -28,11 +35,13 @@ void xfunc_out(unsigned char ch)
 
 void PLC_CONTROL::init()
 {
-    m_state.run = 0;
-    m_state.stop = 1;
-    m_state.rs_blink = 0;
-    m_state.fault = 0;
-    m_state.initialized = 0;
+    m_state_run = 0;
+    m_state_stop = 1;
+    m_state_rs_blink = 0;
+    m_state_error = 0;
+    m_state_fault = 0;
+    m_state_com_fault = 0;
+    m_state_initialized = 0;
 }
 
 void PLC_CONTROL::init_hw()
@@ -120,6 +129,13 @@ void PLC_CONTROL::main()
     }
 }
 
+void PLC_CONTROL::fault_state_on()
+{
+    PLC_CONTROL::set_run(0);
+    PLC_CONTROL::set_fault(1);
+    PLC_CONTROL::set_stop(1);
+}
+
 void PLC_CONTROL::scheck_RTC()
 {
     STM32_RTC_Date date;
@@ -180,9 +196,7 @@ void Error_Handler()
     PLC_IO::pin_on_FAULT();
     PLC_IO::pin_on_RS_BLINK();
     PLC_IO::pin_on_STOP();
-    PLC_CONTROL::set_run(0);
-    PLC_CONTROL::set_fault(1);
-    PLC_CONTROL::set_stop(1);
+    PLC_CONTROL::fault_state_on();
     PLC_CONTROL::print_message("+-----------------------------+\n"
                                "+!!!!!! Error Handler() !!!!!!+\n"
                                "+!!!!!! Software reset  !!!!!!+\n"
