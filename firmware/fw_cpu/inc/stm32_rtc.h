@@ -58,6 +58,27 @@ typedef struct
 
 } STM32_RTC_Date;
 
+#define RTC_MONTH_JANUARY              ((uint8_t)0x01U)
+#define RTC_MONTH_FEBRUARY             ((uint8_t)0x02U)
+#define RTC_MONTH_MARCH                ((uint8_t)0x03U)
+#define RTC_MONTH_APRIL                ((uint8_t)0x04U)
+#define RTC_MONTH_MAY                  ((uint8_t)0x05U)
+#define RTC_MONTH_JUNE                 ((uint8_t)0x06U)
+#define RTC_MONTH_JULY                 ((uint8_t)0x07U)
+#define RTC_MONTH_AUGUST               ((uint8_t)0x08U)
+#define RTC_MONTH_SEPTEMBER            ((uint8_t)0x09U)
+#define RTC_MONTH_OCTOBER              ((uint8_t)0x10U)
+#define RTC_MONTH_NOVEMBER             ((uint8_t)0x11U)
+#define RTC_MONTH_DECEMBER             ((uint8_t)0x12U)
+
+#define RTC_WEEKDAY_MONDAY             ((uint8_t)0x01U)
+#define RTC_WEEKDAY_TUESDAY            ((uint8_t)0x02U)
+#define RTC_WEEKDAY_WEDNESDAY          ((uint8_t)0x03U)
+#define RTC_WEEKDAY_THURSDAY           ((uint8_t)0x04U)
+#define RTC_WEEKDAY_FRIDAY             ((uint8_t)0x05U)
+#define RTC_WEEKDAY_SATURDAY           ((uint8_t)0x06U)
+#define RTC_WEEKDAY_SUNDAY             ((uint8_t)0x07U)
+
 class STM32_RTC
 {
 public:

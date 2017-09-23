@@ -28,27 +28,6 @@
 #define RTC_STOREOPERATION_RESET        ((uint32_t)0x00000000U)
 #define RTC_STOREOPERATION_SET          ((uint32_t)0x00040000U)
 
-#define RTC_MONTH_JANUARY              ((uint8_t)0x01U)
-#define RTC_MONTH_FEBRUARY             ((uint8_t)0x02U)
-#define RTC_MONTH_MARCH                ((uint8_t)0x03U)
-#define RTC_MONTH_APRIL                ((uint8_t)0x04U)
-#define RTC_MONTH_MAY                  ((uint8_t)0x05U)
-#define RTC_MONTH_JUNE                 ((uint8_t)0x06U)
-#define RTC_MONTH_JULY                 ((uint8_t)0x07U)
-#define RTC_MONTH_AUGUST               ((uint8_t)0x08U)
-#define RTC_MONTH_SEPTEMBER            ((uint8_t)0x09U)
-#define RTC_MONTH_OCTOBER              ((uint8_t)0x10U)
-#define RTC_MONTH_NOVEMBER             ((uint8_t)0x11U)
-#define RTC_MONTH_DECEMBER             ((uint8_t)0x12U)
-
-#define RTC_WEEKDAY_MONDAY             ((uint8_t)0x01U)
-#define RTC_WEEKDAY_TUESDAY            ((uint8_t)0x02U)
-#define RTC_WEEKDAY_WEDNESDAY          ((uint8_t)0x03U)
-#define RTC_WEEKDAY_THURSDAY           ((uint8_t)0x04U)
-#define RTC_WEEKDAY_FRIDAY             ((uint8_t)0x05U)
-#define RTC_WEEKDAY_SATURDAY           ((uint8_t)0x06U)
-#define RTC_WEEKDAY_SUNDAY             ((uint8_t)0x07U)
-
 #define RTC_ALARMDATEWEEKDAYSEL_DATE      ((uint32_t)0x00000000U)
 #define RTC_ALARMDATEWEEKDAYSEL_WEEKDAY   ((uint32_t)0x40000000U)
 
@@ -155,7 +134,7 @@ uint32_t STM32_RTC::init()
                 STM32_RTC_OUTPUT_POL);
 
     /* Configure the RTC PRER */
-    RTC->PRER = STM32_RTC_ASYNC_PREDIV | (STM32_RTC_SYNC_PREDIV << 16U);
+    RTC->PRER = STM32_RTC_SYNC_PREDIV | (STM32_RTC_ASYNC_PREDIV << 16U);
 
     /* Exit Initialization mode */
     RTC->ISR &= ~RTC_ISR_INIT;
@@ -313,7 +292,7 @@ uint32_t STM32_RTC::get_time(STM32_RTC_Time *time, ERTCFormat format)
     uint32_t tmpreg = 0U;
 
     /* Get subseconds structure field from the corresponding register */
-    time->SubSeconds = (RTC->SSR);
+    //time->SubSeconds = (RTC->SSR);
 
     /* Get SecondFraction structure field from the corresponding register field*/
     time->SecondFraction = (RTC->PRER & RTC_PRER_PREDIV_S);
