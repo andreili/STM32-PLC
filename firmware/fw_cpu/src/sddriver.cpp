@@ -12,15 +12,20 @@ void SDDriver::init_gpio()
 {
     STM32_FATFS_CARD_DETECT_PORT.set_config(STM32_FATFS_CARD_DETECT_PIN,
                                             GPIO_MODE_INPUT, 0,
-                                            GPIO_SPEED_FREQ_LOW, GPIO_NOPULL);
+                                            GPIO_SPEED_FREQ_LOW, GPIO_PULLUP);
+}
+
+bool SDDriver::is_card_present()
+{
+    return CHECK_CARD_DETECT();
 }
 
 uint8_t SDDriver::init(uint8_t)
 {
     uint8_t sd_state = SD_OK;
     m_state = STA_NOINIT;
-    /*if (!CHECK_CARD_DETECT())
-        return SD_ERROR;*/
+    if (!is_card_present())
+        return SD_ERROR;
     sd_state = STM32_SD::init();
     #ifdef STM32_FATFS_BUS_4BITS
     if (sd_state == SD_OK)

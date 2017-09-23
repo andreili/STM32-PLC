@@ -2,6 +2,7 @@
 #define PLC_CONTROL_H
 
 #include <stdint.h>
+#include "stm32_rtc.h"
 
 #define PLC_TEXT_BUF_SIZE 1024
 
@@ -31,6 +32,9 @@ public:
     static void init_hw();
     static void print_message(const char* fmt, ...);
 
+    static void init_seq();
+    static void main();
+
     static inline uint8_t in_run() { return m_state.run; }
     static inline uint8_t in_stop() { return m_state.stop; }
     static inline uint8_t in_rs_blink() { return m_state.rs_blink; }
@@ -45,6 +49,10 @@ public:
 private:
     static plc_state_t  m_state;
     static char         m_text_buf[PLC_TEXT_BUF_SIZE];
+    static STM32_RTC_Date   m_start_date;
+    static STM32_RTC_Time   m_start_time;
+
+    static void scheck_RTC();
 };
 
 #endif // PLC_CONTROL_H

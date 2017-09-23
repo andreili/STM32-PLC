@@ -1,12 +1,6 @@
 #include "plc_control.h"
 #include "stm32_inc.h"
 #include "my_func.h"
-#ifdef STM32_FATFS_USE
-#include "fatfs.h"
-#include "ff.h"
-#include "sddriver.h"
-#endif
-#include "memmanager.h"
 
 //#define MEM_SPEED_TEST
 
@@ -26,69 +20,10 @@ void test_mem_speed(uint8_t *mem, const char *title)
 }
 #endif
 
-#ifdef STM32_FATFS_USE
-FATFS SDFatFs;
-extern char SD_path[4];
-#endif
-
 int main()
 {
-    PLC_CONTROL::set_rs_blink(1);
-
-    PLC_CONTROL::print_message("\033[2J+-----------------------------+\n"
-                                      "|          STM32 PLC          |\n"
-                                      "|         System info         |\n"
-                                      "| CPU Speed: %03UMHz           |\n"
-                                      "| RAM size: 192kb + %03UMb     |\n"
-                                      "+-----------------------------+\n",
-                               STM32_PLLN, STM32_SDRAM_SIZE_MB);
-
-    #if defined (DATA_IN_ExtSDRAM)
-    if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1,
-                               (STM32_SDRAM_SIZE_MB * 1024 * 1024)) != STM32_RESULT_OK)
-        Error_Handler();
-    #ifdef MEM_SPEED_TEST
-    PLC_CONTROL::print_message("+-----------------------------+\n"
-                               "Test RAM speeds\n");
-    uint8_t buf_int[TEST_SIZE];
-    test_mem_speed(buf_int, "Internal RAM");
-    test_mem_speed((uint8_t*)SDRAM_BASE_BANK1, "External RAM");
-    #endif
-    #endif
-
-    MemManager::init();
-
-    #ifdef STM32_FATFS_USE
-    FAT_FS::init();
-    PLC_CONTROL::print_message("+-----------------------------+\n");
-    PLC_CONTROL::print_message("Pass to mount SD-card\n");
-    while (f_mount(&SDFatFs, (TCHAR const*)SD_path, 1) != FR_OK)
-        STM32_SYSTICK::delay(300);
-    #endif
-
-    PLC_CONTROL::set_initialized(1);
-    PLC_CONTROL::print_message("+-----------------------------+\n"
-                               "Initialize PLC hardware\n");
-    PLC_CONTROL::init_hw();
-    PLC_CONTROL::print_message("+-----------------------------+\n");
-
-    PLC_CONTROL::set_stop(0);
-    PLC_CONTROL::set_run(1);
-    PLC_CONTROL::set_rs_blink(1);
-
-    PLC_CONTROL::print_message("Start main cycle\n");
-    int iteration = 0;
-    while (1)
-    {
-        STM32_RTC_Time time;
-        STM32_RTC::get_time(&time, ERTCFormat::BIN);
-        PLC_CONTROL::print_message("\r\t(%02U:%02U:%02U:%04U)Test iteration: %U",
-                                   time.Hours, time.Minutes, time.Seconds, time.SubSeconds,
-                                   ++iteration);
-        if (STM32_SDRAM::run_tests(SDRAM_BASE_BANK1,
-                                   (STM32_SDRAM_SIZE_MB * 1024 * 1024), false) != STM32_RESULT_OK)
-            Error_Handler();
-    }
+    PLC_CONTROL::init_seq();
+    PLC_CONTROL::main();
     
     return 0;
 }

@@ -12,6 +12,9 @@ class SDDriver
 {
 public:
     void init_gpio();
+
+    static bool is_card_present();
+
     uint8_t init(uint8_t);
     uint8_t status(uint8_t);
     uint8_t read(uint8_t lun, uint8_t*buf, uint32_t sector, uint32_t count);
