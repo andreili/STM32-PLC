@@ -244,7 +244,7 @@ uint32_t STM32_RCC::config_osc()
     #elif defined(STM32_USE_LSE)
     enable_clk_PWR();
     STM32_PWR::enable_backup_access();
-    WAIT_TIMEOUT(STM32_PWR::check_backup_access() == RESET, RCC_DBP_TIMEOUT_VALUE);
+    WAIT_TIMEOUT(STM32_PWR::is_backup_acces_RO(), RCC_DBP_TIMEOUT_VALUE);
     config_LSE(STM32_LSE_STATE);
 
     if (STM32_LSE_STATE != 0)
