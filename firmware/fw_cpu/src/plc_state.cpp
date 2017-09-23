@@ -1,7 +1,7 @@
 #include "plc_state.h"
 #include "stm32f4xx.h"
 
-uint16_t       PLC_STATE::m_last_cycle_time;
+uint32_t       PLC_STATE::m_last_cycle_time;
 plc_datetime_t PLC_STATE::m_start_dt;
 plc_datetime_t PLC_STATE::m_current_dt;
 
@@ -9,6 +9,21 @@ void PLC_STATE::init()
 {
     get_dt(&m_start_dt);
     m_current_dt = m_start_dt;
+}
+
+#define MSEC_MINUTE (1000*60)
+
+void PLC_STATE::update_ct()
+{
+    uint32_t last_msec = ((((m_current_dt.hour * 60) + m_current_dt.min) * 60) + m_current_dt.sec) * 1000 + m_current_dt.msec;
+    get_dt(&m_current_dt);
+    uint32_t new_msec = ((((m_current_dt.hour * 60) + m_current_dt.min) * 60) + m_current_dt.sec) * 1000 + m_current_dt.msec;
+
+    new_msec -= last_msec;
+    if (new_msec >= MSEC_MINUTE)
+        m_last_cycle_time = 1;
+    else
+        m_last_cycle_time = new_msec;
 }
 
 void PLC_STATE::get_dt(plc_datetime_t* dt)

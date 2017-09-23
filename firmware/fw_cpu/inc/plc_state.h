@@ -26,13 +26,13 @@ class PLC_STATE
 public:
     static void init();
 
-    static inline void update_ct() { get_dt(&m_current_dt); }
+    static void update_ct();
 
     static inline plc_datetime_t* get_start_dt() { return &m_start_dt; }
     static inline plc_datetime_t* get_current_dt() { return &m_current_dt; }
 
 private:
-    static uint16_t         m_last_cycle_time;
+    static uint32_t         m_last_cycle_time;
 
     static plc_datetime_t   m_start_dt;
     static plc_datetime_t   m_current_dt;
