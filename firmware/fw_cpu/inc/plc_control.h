@@ -53,6 +53,10 @@ private:
     static STM32_RTC_Time   m_start_time;
 
     static void scheck_RTC();
+    static void init_fs();
+
+    static void test_RAM(bool print_debug);
+    static void test_RAM_speed();
 };
 
 #endif // PLC_CONTROL_H
