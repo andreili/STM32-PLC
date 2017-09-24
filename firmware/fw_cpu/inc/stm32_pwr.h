@@ -64,6 +64,7 @@ class STM32_PWR
 {
 public:
     static void deinit();
+
     ENDIS_REG_FLAG(backup_access, PWR->CR, PWR_CR_DBP)
     static inline bool is_backup_acces_RO() { return ((PWR->CR & PWR_CR_DBP) == RESET); }
 
