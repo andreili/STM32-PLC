@@ -105,6 +105,7 @@ public:
     static void config_LSE(uint32_t state);
 
     ENDIS_REG_FLAG(RTC, RCC->BDCR, RCC_BDCR_RTCEN)
+    static inline bool get_enabled_RTC() { return ((RCC->BDCR & RCC_BDCR_RTCEN) == RCC_BDCR_RTCEN); }
     static void set_prescaler_RTC(uint32_t value);
     static void set_config_RTC(uint32_t value);
 

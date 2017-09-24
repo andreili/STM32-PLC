@@ -108,38 +108,45 @@
 
 uint32_t STM32_RTC::init()
 {
-    //STM32_RCC::enable_RTC();
-    RCC->BDCR |= RCC_BDCR_RTCEN;
+    STM32_RCC::enable_clk_PWR();
+    STM32_RCC::enable_clk_BKPSRAM();
+    STM32_PWR::enable_backup_regulator();
 
-    /* Disable the write protection for RTC registers */
-    write_protect_disable();
-
-    if (enter_init_mode() != STM32_RESULT_OK)
+    if (!STM32_RCC::get_enabled_RTC())
     {
+        STM32_RCC::force_reset_backup();
+        STM32_RCC::release_reset_backup();
+
+        STM32_RCC::enable_RTC();
+
+        /* Disable the write protection for RTC registers */
+        write_protect_disable();
+
+        if (enter_init_mode() != STM32_RESULT_OK)
+        {
+            /* Enable the write protection for RTC registers */
+            write_protect_enable();
+            return STM32_RESULT_FAIL;
+        }
+
+        /* Clear RTC_CR FMT, OSEL and POL Bits */
+        RTC->CR &= ~(RTC_CR_FMT | RTC_CR_OSEL | RTC_CR_POL);
+        /* Set RTC_CR register */
+        RTC->CR |= (STM32_RTC_FORMAT |
+                    STM32_RTC_OUTPUT |
+                    STM32_RTC_OUTPUT_POL);
+
+        config_prediv(STM32_RTC_SYNC_PREDIV, STM32_RTC_ASYNC_PREDIV);
+
+        /* Exit Initialization mode */
+        RTC->ISR &= ~RTC_ISR_INIT;
+
+        RTC->TAFCR &= ~RTC_TAFCR_ALARMOUTTYPE;
+        RTC->TAFCR |= STM32_RTC_OUTPUT_TYPE;
+
         /* Enable the write protection for RTC registers */
         write_protect_enable();
-        return STM32_RESULT_FAIL;
     }
-
-    /* Clear RTC_CR FMT, OSEL and POL Bits */
-    RTC->CR &= ~(RTC_CR_FMT | RTC_CR_OSEL | RTC_CR_POL);
-    /* Set RTC_CR register */
-    RTC->CR |= (STM32_RTC_FORMAT |
-                STM32_RTC_OUTPUT |
-                STM32_RTC_OUTPUT_POL |
-                RTC_CR_BYPSHAD);
-
-    /* Configure the RTC PRER */
-    RTC->PRER = STM32_RTC_SYNC_PREDIV | (STM32_RTC_ASYNC_PREDIV << 16U);
-
-    /* Exit Initialization mode */
-    RTC->ISR &= ~RTC_ISR_INIT;
-
-    RTC->TAFCR &= ~RTC_TAFCR_ALARMOUTTYPE;
-    RTC->TAFCR |= STM32_RTC_OUTPUT_TYPE;
-
-    /* Enable the write protection for RTC registers */
-    write_protect_enable();
 
     return STM32_RESULT_OK;
 }

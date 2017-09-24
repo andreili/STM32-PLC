@@ -98,6 +98,10 @@ private:
     static inline void write_protect_enable() { RTC->WPR = 0xFFU; }
 
     static uint32_t enter_init_mode();
+    static inline void exit_init_mode() { RTC->ISR &= ~RTC_ISR_INIT; }
+
+    static inline void config_prediv(uint32_t sync, uint32_t async) { RTC->PRER = sync | (async << 16U); }
+
     static uint32_t wait_for_synchro();
 
     /// TODO
