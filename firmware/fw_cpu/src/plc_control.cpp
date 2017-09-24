@@ -118,9 +118,9 @@ void PLC_CONTROL::main()
     {
         PLC_STATE::update_ct();
         plc_datetime_t* dt = PLC_STATE::get_current_dt();
-        print_message("\r\t(%02U:%02U:%02U:%03U) Test iteration: %U",
+        print_message("\r\t(%02U:%02U:%02U:%03U) Test iteration: %U (%04Umsec)",
                       dt->hour, dt->min, dt->sec, dt->msec,
-                      ++iteration);
+                      ++iteration, PLC_STATE::get_last_cycle_time());
 
         test_RAM(false);
     }
