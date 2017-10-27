@@ -1,7 +1,10 @@
 #include "plc_control.h"
+#ifdef PLATFORM_STM32
 #include "stm32_inc.h"
 #include "my_func.h"
+#endif
 
+#ifdef PLATFORM_STM32
 //#define MEM_SPEED_TEST
 
 #ifdef MEM_SPEED_TEST
@@ -18,6 +21,7 @@ void test_mem_speed(uint8_t *mem, const char *title)
     PLC_CONTROL::print_message("\t%S: %U ticks, ~%UMb/s\n",
                                title, time, speed_mb);
 }
+#endif
 #endif
 
 int main()

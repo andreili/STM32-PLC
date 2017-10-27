@@ -6,6 +6,10 @@
 #define PLC_MOD_COM_SEL_GPIO gpiog
 #define PLC_MOD_COM_SEL_PIN GPIO_PIN_11
 
+#define PLC_RESULT_OK 0
+
 #define PLC_CPU
+
+#define PLC_FW_MAX_SIZE (10*1024*1024)
 
 #endif // PLC_CONF_H

@@ -23,7 +23,7 @@ createlist.commands += && arm-none-eabi-objcopy -Obinary $${OUT_PWD}/$${APP}$${E
 createlist.commands += && arm-none-eabi-size $${OUT_PWD}/$${APP}$${EXT}
 QMAKE_EXTRA_TARGETS += createlist
 
-INCLUDEPATH += ../shared/CMSIS/ ./inc/ ../shared/inc/
+INCLUDEPATH += ../shared/CMSIS/ ./inc/ ../shared/inc/ platforms/stm32/
 INCLUDEPATH += ../shared/Third_Party/FatFs/src/ ../shared/Third_Party/FatFs/src/option/
 
 HEADERS += \
@@ -34,60 +34,60 @@ HEADERS += \
     ../shared/CMSIS/stm32f4xx.h \
     ../shared/CMSIS/ISRstm32f429xx.h \
 	inc/init.h \
-	inc/stm32_uart.h \
-	inc/stm32_rcc.h \
-	inc/stm32_gpio.h \
+        platforms/stm32/stm32_uart.h \
+        platforms/stm32/stm32_rcc.h \
+        platforms/stm32/stm32_gpio.h \
     ../shared/inc/my_func.h \
     inc/bitbanding.h \
     inc/plc_io.h \
-    inc/stm32_pwr.h \
-    inc/stm32_flash.h \
-    inc/stm32_systick.h \
-    inc/stm32_conf.h \
-    inc/xprintf.h \
-    inc/stm32_sdram.h \
+    platforms/stm32/stm32_pwr.h \
+    platforms/stm32/stm32_flash.h \
+    platforms/stm32/stm32_systick.h \
+    platforms/stm32/stm32_conf.h \
+    platforms/stm32/xprintf.h \
+    platforms/stm32/stm32_sdram.h \
     inc/plc_control.h \
-    inc/stm32_nvic.h \
-    inc/stm32_inc.h \
+    platforms/stm32/stm32_nvic.h \
+    platforms/stm32/stm32_inc.h \
     ../shared/Third_Party/FatFs/src/ff.h \
     ../shared/Third_Party/FatFs/src/integer.h \
-    inc/ffconf.h \
-    inc/stm32_sd.h \
-    inc/fatfs.h \
-    inc/diskiodriver.h \
-    inc/sddriver.h \
-    inc/diskio.h \
+    platforms/stm32/ffconf.h \
+    platforms/stm32/stm32_sd.h \
+    platforms/stm32/fatfs.h \
+    platforms/stm32/diskiodriver.h \
+    platforms/stm32/sddriver.h \
+    platforms/stm32/diskio.h \
     inc/memmanager.h \
-    inc/stm32_spi.h \
+    platforms/stm32/stm32_spi.h \
     ../shared/inc/plc_mod.h \
-    inc/stm32_rtc.h \
+    platforms/stm32/stm32_rtc.h \
     inc/plc_state.h
 
 SOURCES += \
     ../shared/CMSIS/ISRstm32f429xx.cpp \
     src/main.cpp \
 	src/init.cpp \
-	src/stm32_uart.cpp \
-	src/stm32_rcc.cpp \
-	src/stm32_gpio.cpp \
+        platforms/stm32/stm32_uart.cpp \
+        platforms/stm32/stm32_rcc.cpp \
+        platforms/stm32/stm32_gpio.cpp \
     ../shared/src/my_func.cpp \
     src/plc_io.cpp \
-    src/stm32_pwr.cpp \
-    src/stm32_flash.cpp \
-    src/stm32_systick.cpp \
-    src/stm32_sdram.cpp \
+    platforms/stm32/stm32_pwr.cpp \
+    platforms/stm32/stm32_flash.cpp \
+    platforms/stm32/stm32_systick.cpp \
+    platforms/stm32/stm32_sdram.cpp \
     src/plc_control.cpp \
-    src/stm32_nvic.cpp \
+    platforms/stm32/stm32_nvic.cpp \
     ../shared/Third_Party/FatFs/src/ff.c \
     ../shared/Third_Party/FatFs/src/option/syscall.c \
     ../shared/Third_Party/FatFs/src/option/ccsbcs.c \
-    src/fatfs.cpp \
-    src/sddriver.cpp \
-    src/stm32_sd.cpp \
+    platforms/stm32/fatfs.cpp \
+    platforms/stm32/sddriver.cpp \
+    platforms/stm32/stm32_sd.cpp \
     src/memmanager.cpp \
-    src/stm32_spi.cpp \
+    platforms/stm32/stm32_spi.cpp \
     ../shared/src/plc_mod.cpp \
-    src/xprintf.cpp \
-    src/stm32_rtc.cpp \
+    platforms/stm32/xprintf.cpp \
+    platforms/stm32/stm32_rtc.cpp \
     src/plc_state.cpp
 

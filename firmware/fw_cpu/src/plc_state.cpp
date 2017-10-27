@@ -1,6 +1,11 @@
 #include "plc_state.h"
+#ifdef PLATFORM_STM32
 #include "stm32f4xx.h"
 #include "my_func.h"
+#else
+#include <cstring>
+#include <ctime>
+#endif
 
 uint32_t       PLC_STATE::m_last_cycle_time[PLC_CYCLE_TIME_COUNT];
 uint32_t       PLC_STATE::m_last_cycle_time_idx;
@@ -41,6 +46,7 @@ void PLC_STATE::update_ct()
 
 void PLC_STATE::get_dt(plc_datetime_t* dt)
 {
+#ifdef PLATFORM_STM32
     uint32_t ssr = RTC->SSR;
     uint32_t tmpreg_tr = RTC->TR;
     uint32_t tmpreg_dr = RTC->DR;
@@ -55,4 +61,21 @@ void PLC_STATE::get_dt(plc_datetime_t* dt)
     dt->year = RTC_Bcd2ToByte((tmpreg_dr & (RTC_DR_YT | RTC_DR_YU)) >> 16U);
     dt->month = RTC_Bcd2ToByte((tmpreg_dr & (RTC_DR_MT | RTC_DR_MU)) >> 8U);
     dt->day = RTC_Bcd2ToByte(tmpreg_dr & (RTC_DR_DT | RTC_DR_DU));
+#else
+    std::time_t  timev;
+    time(&timev);
+    std::tm* tm = localtime(&timev);
+    
+    struct timespec info;
+    clock_gettime(CLOCK_MONOTONIC, &info);
+    dt->msec = info.tv_nsec / 1000000;
+    
+    dt->hour = tm->tm_hour;
+    dt->min = tm->tm_min;
+    dt->sec = tm->tm_sec;
+    
+    dt->year = (1900 + tm->tm_year) % 100;
+    dt->month = tm->tm_mon + 1; // start from 0
+    dt->day = tm->tm_mday;
+#endif
 }

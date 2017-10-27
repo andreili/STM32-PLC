@@ -48,4 +48,6 @@ private:
     static void test_RAM_speed();
 };
 
+void Error_Handler();
+
 #endif // PLC_CONTROL_H

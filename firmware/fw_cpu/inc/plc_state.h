@@ -1,7 +1,11 @@
 #ifndef PLC_STATE_H
 #define PLC_STATE_H
 
+#ifdef PLATFORM_STM32
 #include "stm32_rtc.h"
+#else
+#include <inttypes.h>
+#endif
 
 typedef struct
 {
@@ -11,10 +15,10 @@ typedef struct
     uint8_t hour;
     uint8_t min;
     uint8_t sec;
-    uint8_t msec;
+    uint16_t msec;
 } plc_datetime_t;
 
-#define PLC_CYCLE_TIME_COUNT 10
+#define PLC_CYCLE_TIME_COUNT 100
 
 typedef struct
 {
