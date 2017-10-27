@@ -15,7 +15,8 @@ LIBS=pthread
 LINKFLAGS=$(addprefix -l,$(LIBS))
 
 SOURCE=main.cpp plc_control.cpp plc_io.cpp plc_state.cpp plc_mod.cpp \
-	plc_platform.cpp plc_bus.cpp plc_fw.cpp
+	plc_platform.cpp plc_bus.cpp plc_fw.cpp plc_data_types.cpp \
+	plc_hw.cpp stl_commands.cpp
 
 OBJ_DIR=./out
 SRC_DIR=./src

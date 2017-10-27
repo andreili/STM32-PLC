@@ -184,9 +184,7 @@ void *thread_func(void *data)
                         iteration, PLC_STATE::get_last_cycle_time());
         }
 
-#ifdef PLATFORM_STM32
-        PLC_CONTROL::test_RAM(false);
-#endif
+        plc_fw.execute_OB1();
     }
 }
 

@@ -34,9 +34,11 @@ void rt_delay_ms(uint32_t ms)
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &info.next_period, NULL);
 }
 
-uint32_t load_file(char* fn, uint8_t buf)
+int32_t load_file(char* fn, uint8_t* buf)
 {
-    uint32_t size = 0;
+    //int32_t size = 0;
+    
+    return -1;
 }
 
 #endif

@@ -1,7 +1,9 @@
 #ifndef PLC_PLATFORM_H
 #define PLC_PLATFORM_H
 
-uint32_t load_file(char* fn, uint8_t buf);
+#include <inttypes.h>
+
+int32_t load_file(char* fn, uint8_t* buf);
 
 #ifdef PLATFORM_STM32
 
