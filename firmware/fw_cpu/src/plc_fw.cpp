@@ -3,6 +3,7 @@
 #include "plc_platform.h"
 #include "plc_hw.h"
 #include <cstring>
+#include <stdio.h>
 
 #define PLC_PROG_SIGN "S3P"
 
@@ -105,6 +106,7 @@ OB_descr_t OB_descr[PLC_SYSTEM_OB_COUNT] = {
 
 void PLCFW::init()
 {
+    m_fw = new uint8_t[PLC_FW_MAX_SIZE];
     m_fw_ok = false;
 }
 
@@ -217,9 +219,10 @@ void PLCFW::exec_block(int32_t block_idx, int local_db)
         {
             m_cur_db = local_db;
 
+            printf("PC: %i\n", pc);
             int sz = STLCommands::exec_command(&m_prog_data[pc]);
             #ifdef PLC_DEBUG
-            printf(" SW: %s\n", PLCUtils::byte_to_binary(plc_hw.get_status_word(), 8));
+            //printf(" SW: %s\n", PLCUtils::byte_to_binary(plc_hw.get_status_word(), 8));
             #endif
 
             if (sz > 0)

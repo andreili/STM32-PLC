@@ -225,7 +225,7 @@ typedef struct
 } STL_CMD_t;
 
 
-#define STL_CMD_COUNT 170
+#define STL_CMD_COUNT 174
 
 extern STL_CMD_t STL_CMDs[STL_CMD_COUNT];
 

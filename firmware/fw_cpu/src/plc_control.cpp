@@ -66,6 +66,8 @@ void PLC_CONTROL::init_hw()
 
     plc_mod_com.find_modules();
     plc_mod_ext.find_modules();
+
+    plc_fw.init();
 }
 
 #ifdef PLATFORM_STM32

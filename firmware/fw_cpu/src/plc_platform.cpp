@@ -4,6 +4,7 @@
 #else
 
 #include <ctime>
+#include <fstream>
 
 struct period_info 
 {
@@ -36,9 +37,20 @@ void rt_delay_ms(uint32_t ms)
 
 int32_t load_file(char* fn, uint8_t* buf)
 {
-    //int32_t size = 0;
-    
-    return -1;
+    std::ifstream ifs(fn);
+    if (ifs)
+    {
+        ifs.seekg (0, ifs.end);
+        int32_t size = ifs.tellg();
+        ifs.seekg (0, ifs.beg);
+
+        ifs.read((char*)buf, size);
+        ifs.close();
+
+        return size;
+    }
+    else
+        return -1;
 }
 
 #endif

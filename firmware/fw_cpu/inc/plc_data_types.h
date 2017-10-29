@@ -1,7 +1,9 @@
 #ifndef DATA_TYPES_H
 #define DATA_TYPES_H
 
+#ifndef STLC
 #include "plc_conf.h"
+#endif
 #include <inttypes.h>
 #include <time.h>
 
@@ -49,6 +51,7 @@ enum class EParameterLocation : uint8_t
 
 enum class EDataType : uint8_t
 {
+    NONE,
     BOOL,
     BYTE,
     CHAR,
@@ -99,6 +102,7 @@ union plc_data_t
         uint8_t     bit;
         uint16_t    addr;
     } BOOL;
+    bool       bool_val;
     struct
     {
         uint8_t     bit;
@@ -121,6 +125,7 @@ union plc_data_t
     uint32_t    ADDR;   // for jump instructions
 };
 
+#ifndef STLC
 typedef struct parameter_t
 {
     EParameterLocation  location;
@@ -141,6 +146,7 @@ typedef struct parameter_t
 
     EDataSize get_size();
 } parameter_t;
+#endif
 
 typedef struct
 {
@@ -206,6 +212,7 @@ union reg_union_t
     float fl;
 };
 
+#ifndef STLC
 typedef struct
 {
     int8_t get_lolo();
@@ -227,5 +234,6 @@ private:
     reg_union_t m_reg;
     //uint32_t    data;
 } PLCRegister;
+#endif
 
 #endif // DATA_TYPES_H

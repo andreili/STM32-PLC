@@ -191,6 +191,11 @@ STL_CMD_t STL_CMDs[STL_CMD_COUNT] = {
     {ESTLCommand::JNBI, "JNBI", ESTLCategory::Jumps},
 
     {ESTLCommand::OPN, "OPN", ESTLCategory::DB_Call},
+
+    {ESTLCommand::ARG_START, "ARG_START", ESTLCategory::Program_Control},
+    {ESTLCommand::ARG_END, "ARG_END", ESTLCategory::Program_Control},
+    {ESTLCommand::NETWORK_END, "NETWORK_END", ESTLCategory::Program_Control},
+    {ESTLCommand::RET, "RET", ESTLCategory::Program_Control},
 };
 
 STLCommands::STLCommands()
@@ -203,7 +208,7 @@ int32_t STLCommands::exec_command(STL_CMD_TYPE *prog_data)
     int32_t size = sizeof(STL_CMD_TYPE);
 	
 		#ifdef PLC_DEBUG
-		printf("Execute comand %s\n", STL_CMDs[(int)cmd].mnemonic);
+        printf("Execute comand %s\n", STL_CMDs[(int)cmd].mnemonic);
 		#endif
 
     size += sizeof(STL_CMD_TYPE);

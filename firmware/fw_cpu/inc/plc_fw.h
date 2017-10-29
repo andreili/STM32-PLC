@@ -26,7 +26,7 @@ public:
     
     bool is_ok() { return m_fw_ok; }
 private:
-    uint8_t             m_fw[PLC_FW_MAX_SIZE];
+    uint8_t             *m_fw;
     uint32_t            m_fw_size;
     bool                m_fw_ok;
     
