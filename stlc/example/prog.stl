@@ -1,0 +1,274 @@
+DATA_BLOCK DB 2
+TITLE =
+VERSION : 0.1
+
+
+  STRUCT 	
+   DB_VAR : INT ;	//Temporary placeholder variable
+  END_STRUCT ;	
+BEGIN
+   DB_VAR := 0; 
+END_DATA_BLOCK
+
+ORGANIZATION_BLOCK OB 1
+TITLE = "Main Program Sweep (Cycle)"
+//fffffe
+VERSION : 0.1
+
+
+VAR_TEMP
+  OB1_EV_CLASS : BYTE ;	//Bits 0-3 = 1 (Coming event), Bits 4-7 = 1 (Event class 1)
+  OB1_SCAN_1 : BYTE ;	//1 (Cold restart scan 1 of OB 1), 3 (Scan 2-n of OB 1)
+  OB1_PRIORITY : BYTE ;	//Priority of OB Execution
+  OB1_OB_NUMBR : BYTE ;	//1 (Organization block 1, OB1)
+  OB1_RESERVED_1 : BYTE ;	//Reserved for system
+  OB1_RESERVED_2 : BYTE ;	//Reserved for system
+  OB1_PREV_CYCLE : INT ;	//Cycle time of previous OB1 scan (milliseconds)
+  OB1_MIN_CYCLE : INT ;	//Minimum cycle time of OB1 (milliseconds)
+  OB1_MAX_CYCLE : INT ;	//Maximum cycle time of OB1 (milliseconds)
+  OB1_DATE_TIME : DATE_AND_TIME ;	//Date and time OB1 started
+END_VAR
+BEGIN
+
+NETWORK
+TITLE =title1
+//comm1
+      A(    ; //Pressing either start switch turns the motor on.
+      A     I      1.1; 
+      AN    I      1.3; 
+      O     ; 
+      A     I      1.3; 
+      AN    I      1.1; 
+      O     Q      4.0; 
+      )     ; 
+      AN    I      1.2; 
+      AN    I      1.4; 
+      A     I      1.5; 
+      =     M      0.0; 
+
+
+NETWORK
+TITLE =
+
+      A     I      0.0; 
+      =     L     20.0; 
+      BLD   103; 
+      A     I      0.1; 
+      =     L     20.1; 
+      BLD   103; 
+      A     I      0.2; 
+      =     L     20.2; 
+      BLD   103; 
+      A     I      0.3; 
+      =     L     20.3; 
+      BLD   103; 
+      A     I      0.4; 
+      =     L     20.4; 
+      BLD   103; 
+      A     I      0.5; 
+      =     L     20.5; 
+      BLD   103; 
+      A     I      0.6; 
+      =     L     20.6; 
+      BLD   103; 
+      CALL FB     1 , DB     1 (
+           IN0                      := L     20.0,
+           IN1                      := L     20.1,
+           IN2                      := L     20.2,
+           IN3                      := L     20.3,
+           IN4                      := L     20.4,
+           IN5                      := L     20.5,
+           IN6                      := L     20.6,
+           OUT7                     := Q      0.0,
+           OUT8                     := Q      0.1,
+           OUT9                     := Q      0.2);
+      NOP   0; 
+      CALL FC 2 (
+        IN0 := MW 2,
+        IN1 := MD 4,
+        IN2 := MD 8,
+        IN3 := MD 12,
+        OUT4 := MD 16);
+      NOP 0;
+
+END_ORGANIZATION_BLOCK
+
+DATA_BLOCK DB 1
+TITLE =
+VERSION : 0.1
+
+ FB 1
+BEGIN
+   IN0 := FALSE; 
+   IN1 := FALSE; 
+   IN2 := FALSE; 
+   IN3 := FALSE; 
+   IN4 := FALSE; 
+   IN5 := FALSE; 
+   IN6 := FALSE; 
+   OUT7 := FALSE; 
+   OUT8 := FALSE; 
+   OUT9 := FALSE; 
+END_DATA_BLOCK
+
+DATA_BLOCK DB 2
+TITLE =
+VERSION : 0.1
+
+ FB 2
+STRUCT
+    IN0 : INT;
+    IN1: REAL;
+    IN2: REAL;
+    IN3: REAL;    
+    OUT1: REAL;
+END_STRUCT;
+BEGIN
+   IN0 := 0; 
+   IN1 := 0; 
+   IN2 := 0; 
+   IN3 := 0; 
+   OUT7 := 0; 
+END_DATA_BLOCK
+
+FUNCTION FC 2 : VOID
+TITLE =
+VERSION : 0.1
+
+
+VAR_INPUT
+  IN0 : INT ;	
+  IN1 : REAL ;	
+  IN2 : REAL ;	
+  IN3 : REAL ;	
+END_VAR
+VAR_OUTPUT
+  OUT4 : REAL ;	
+END_VAR
+VAR_TEMP
+  TEMP5 : DINT ;	
+  TEMP6 : REAL ;	
+  TEMP7 : REAL ;	
+END_VAR
+BEGIN
+NETWORK
+TITLE =
+
+      A(    ; 
+      A(    ; 
+      A(    ; 
+      A(    ; 
+      A(    ; 
+      L     #IN0; 
+      ITD   ; 
+      T     #TEMP5; 
+      SET   ; 
+      SAVE  ; 
+      CLR   ; 
+      A     BR; 
+      )     ; 
+      JNB   _001; 
+      L     #TEMP5; 
+      DTR   ; 
+      T     #TEMP6; 
+      SET   ; 
+      SAVE  ; 
+      CLR   ; 
+_001: A     BR; 
+      )     ; 
+      JNB   _002; 
+      L     #TEMP6; 
+      L     #IN1; 
+      /R    ; 
+      T     #TEMP7; 
+      AN    OV; 
+      SAVE  ; 
+      CLR   ; 
+_002: A     BR; 
+      )     ; 
+      JNB   _003; 
+      L     #TEMP7; 
+      L     #IN2; 
+      *R    ; 
+      T     #TEMP6; 
+      AN    OV; 
+      SAVE  ; 
+      CLR   ; 
+_003: A     BR; 
+      )     ; 
+      JNB   _004; 
+      L     #TEMP6; 
+      T     #TEMP7; 
+      SET   ; 
+      SAVE  ; 
+      CLR   ; 
+_004: A     BR; 
+      )     ; 
+      JNB   _005; 
+      L     #TEMP7; 
+      L     #IN3; 
+      +R    ; 
+      T     #OUT4; 
+_005: NOP   0; 
+END_FUNCTION
+
+FUNCTION_BLOCK FB 1
+TITLE =
+VERSION : 0.1
+
+
+VAR_INPUT
+  IN0 : BOOL ;	
+  IN1 : BOOL ;	
+  IN2 : BOOL ;	
+  IN3 : BOOL ;	
+  IN4 : BOOL ;	
+  IN5 : BOOL ;	
+  IN6 : BOOL ;	
+END_VAR
+VAR_OUTPUT
+  OUT7 : BOOL ;	
+  OUT8 : BOOL ;	
+  OUT9 : BOOL ;	
+END_VAR
+BEGIN
+NETWORK
+TITLE =
+
+      A     #IN1; 
+      AN    #IN0; 
+      AN    #IN2; 
+      AN    #OUT8; 
+      S     #OUT7; 
+NETWORK
+TITLE =
+
+      O     #IN0; 
+      O     #OUT8; 
+      O     #IN2; 
+      R     #OUT7; 
+NETWORK
+TITLE =
+
+      A     #IN3; 
+      S     #OUT8; 
+NETWORK
+TITLE =
+
+      A     #IN4; 
+      AN    #IN3; 
+      O     #IN6; 
+      R     #OUT8; 
+NETWORK
+TITLE =
+
+      A     #IN5; 
+      S     #OUT9; 
+NETWORK
+TITLE =
+
+      ON    #IN4; 
+      O     #IN6; 
+      R     #OUT9; 
+END_FUNCTION_BLOCK
+

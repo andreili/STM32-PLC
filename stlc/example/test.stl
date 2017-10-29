@@ -1,0 +1,57 @@
+DATA_BLOCK DB 2
+TITLE =
+VERSION : 0.1
+
+
+  STRUCT 	
+   DB_VAR : INT ;	//Temporary placeholder variable
+   F1 : BOOl;
+   F2: BOOL;
+   F3: REAL;
+  END_STRUCT ;	
+BEGIN
+   DB_VAR := 1056; 
+   F1:=true;
+   F2:=false;
+   F3:=0.1;
+END_DATA_BLOCK
+
+ORGANIZATION_BLOCK OB 1
+TITLE = "Main Program Sweep (Cycle)"
+//fffffe
+VERSION : 0.1
+
+
+VAR_TEMP
+  OB1_EV_CLASS : BYTE ;	//Bits 0-3 = 1 (Coming event), Bits 4-7 = 1 (Event class 1)
+  OB1_SCAN_1 : BYTE ;	//1 (Cold restart scan 1 of OB 1), 3 (Scan 2-n of OB 1)
+  OB1_PRIORITY : BYTE ;	//Priority of OB Execution
+  OB1_OB_NUMBR : BYTE ;	//1 (Organization block 1, OB1)
+  OB1_RESERVED_1 : BYTE ;	//Reserved for system
+  OB1_RESERVED_2 : BYTE ;	//Reserved for system
+  OB1_PREV_CYCLE : INT ;	//Cycle time of previous OB1 scan (milliseconds)
+  OB1_MIN_CYCLE : INT ;	//Minimum cycle time of OB1 (milliseconds)
+  OB1_MAX_CYCLE : INT ;	//Maximum cycle time of OB1 (milliseconds)
+  OB1_DATE_TIME : DATE_AND_TIME ;	//Date and time OB1 started
+END_VAR
+BEGIN
+
+NETWORK
+TITLE =title1
+//comm1
+      A(    ; //Pressing either start switch turns the motor on.
+      A     I      1.1; 
+      AN    I      1.3; 
+      O     ; 
+      A     I      1.3; 
+      AN    I      1.1; 
+      O     Q      4.0; 
+      )     ; 
+      AN    I      1.2; 
+      AN    I      1.4; 
+      A     I      1.5; 
+      =     M      0.0; 
+
+END_ORGANIZATION_BLOCK
+
+
