@@ -4,6 +4,7 @@
 #include <string>
 #include <deque>
 #include "plc_data_types.h"
+#include "stl_commands.h"
 
 enum class EParseMainLocation
 {
@@ -53,6 +54,9 @@ typedef struct
     std::string     var_name;
     plc_data_t      var_value;
 
+    // network
+    STL_CMD_t       *cmd;
+
     EParseMainLocation  loc;
     EParseSubLocation   loc_sub;
 } stl_plaint_line_t;
@@ -86,6 +90,7 @@ private:
     bool parse_stl_plain(Stream*);
     EParseMainLocation parse_stl_plain_location(std::string &line);
     EParseResult parse_stl_plain_DB(std::string &line, stl_plaint_line_t &plain);
+    EParseResult parse_stl_plain_OB(std::string &line, stl_plaint_line_t &plain);
 };
 
 #endif // PLCC_H

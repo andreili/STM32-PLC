@@ -4,6 +4,7 @@
 
 #define STL_WHITESPACES " \t\n\r;"
 #define STL_DB_HEADER "DATA_BLOCK"
+#define STL_OB_HEADER "ORGANIZATION_BLOCK"
 
 STLC* STLC::m_instance;
 
@@ -58,6 +59,8 @@ bool STLC::parse_stl_plain(Stream* stream)
         std::string line_raw, line;
         line_raw = line = in_buf.substr(start_pos, sub_end - start_pos);
 
+        plain.line_raw = line;
+
         line = std::regex_replace(line, reg_comm, "");
         line = std::regex_replace(line, reg_sp, " ");
         const auto strBegin = line.find_first_not_of(STL_WHITESPACES);
@@ -81,8 +84,6 @@ bool STLC::parse_stl_plain(Stream* stream)
             start_pos = sub_end + 1;
             continue;
         }
-
-        plain.line_raw = line;
 
         if (location == EParseMainLocation::NONE)
         {
@@ -108,7 +109,7 @@ bool STLC::parse_stl_plain(Stream* stream)
             res = parse_stl_plain_DB(line, plain);
             break;
         case EParseMainLocation::ORGANIZATION_BLOCK:
-            //TODO
+            res = parse_stl_plain_OB(line, plain);
             break;
         case EParseMainLocation::FUNCTION:
             //TODO
@@ -166,6 +167,70 @@ EParseMainLocation STLC::parse_stl_plain_location(std::string &line)
     return EParseMainLocation::NONE;
 }
 
+std::string parse_title(std::string &str)
+{
+    size_t pos = str.find_first_not_of('=', 5);
+    pos = str.find_first_not_of(STL_WHITESPACES, pos);
+    if (pos != std::string::npos)
+    {
+        std::string title = str.substr(pos);
+        if (title[0] == '"')
+        {
+            title.erase(0, 1);
+            title.erase(title.length() - 1, 1);
+        }
+        return title;
+    }
+    else
+        return "";
+}
+
+EParseResult parse_stl_plain_block_header(std::string &line, stl_plaint_line_t &plain, const char* header, const char* block_abbr)
+{
+    plain.header_type = EParseHeaderType::NONE;
+    if (line.compare(0, strlen(header), header) == 0)
+    {
+        std::string db_str = line.substr(strlen(header) + 1, 2);
+        if (db_str.compare(block_abbr))
+        {
+            printf("Error: Invalid block header!\n");
+            return EParseResult::PERROR;
+        }
+        db_str = line.substr(strlen(header) + 4);
+        plain.block_no = std::stoi(db_str);
+        return EParseResult::NOT_APP;
+    }
+    else if (line.compare(0, 5, "TITLE") == 0)
+    {
+        plain.header_type = EParseHeaderType::TITLE;
+        plain.title = parse_title(line);
+        return EParseResult::OK;
+    }
+    else if (line.compare(0, 7, "VERSION") == 0)
+    {
+        // not applicable
+        return EParseResult::NOT_APP;
+    }
+    else
+        return EParseResult::SKIP;
+}
+
+EParseResult parse_stl_plain_var_struct(std::string &line, stl_plaint_line_t &plain, const char* end_label)
+{
+    if (line.compare(end_label) == 0)
+    {
+        plain.loc_sub = EParseSubLocation::NONE;
+        return EParseResult::NOT_APP;
+    }
+
+    plain.var_name = line.substr(0, line.find_first_of(':'));
+    plain.var_type = STLC::parse_data_type(line.substr(plain.var_name.length() + 1));
+    if (plain.var_type == EDataType::NONE)
+        return EParseResult::PERROR;
+    else
+        return EParseResult::OK;
+}
+
 /*
  * Typical Data Block:
  *  DATA_BLOCK DB 1
@@ -183,56 +248,6 @@ EParseMainLocation STLC::parse_stl_plain_location(std::string &line)
  *   var3 := 0.01;
  *  END_DATA_BLOCK
  * */
-EParseResult parse_stl_plain_DB_header(std::string &line, stl_plaint_line_t &plain)
-{
-    plain.header_type = EParseHeaderType::NONE;
-    if (line.compare(0, 10, STL_DB_HEADER) == 0)
-    {
-        std::string db_str = line.substr(strlen(STL_DB_HEADER) + 1, 2);
-        if (db_str.compare("DB"))
-        {
-            printf("Error: Invalid Data Block header!\n");
-            return EParseResult::PERROR;
-        }
-        db_str = line.substr(strlen(STL_DB_HEADER) + 4);
-        plain.block_no = std::stoi(db_str);
-        return EParseResult::NOT_APP;
-    }
-    else if (line.compare(0, 5, "TITLE") == 0)
-    {
-        plain.header_type = EParseHeaderType::TITLE;
-        size_t pos = line.find_first_not_of(5, '=');
-        pos = line.find_first_not_of(STL_WHITESPACES, pos);
-        if (pos != std::string::npos)
-            plain.title = line.substr(pos);
-        else
-            plain.title = "";
-        return EParseResult::OK;
-    }
-    else if (line.compare(0, 7, "VERSION") == 0)
-    {
-        // not applicable
-        return EParseResult::NOT_APP;
-    }
-    else
-        return EParseResult::SKIP;
-}
-
-EParseResult parse_stl_plain_DB_structure(std::string &line, stl_plaint_line_t &plain)
-{
-    if (line.compare("END_STRUCT") == 0)
-    {
-        plain.loc_sub = EParseSubLocation::NONE;
-        return EParseResult::NOT_APP;
-    }
-
-    plain.var_name = line.substr(0, line.find_first_of(':'));
-    plain.var_type = STLC::parse_data_type(line.substr(plain.var_name.length() + 1));
-    if (plain.var_type == EDataType::NONE)
-        return EParseResult::PERROR;
-    else
-        return EParseResult::OK;
-}
 
 EParseResult parse_stl_plain_DB_data_init(std::string &line, stl_plaint_line_t &plain)
 {
@@ -266,7 +281,7 @@ bool parse_stl_plain_DB_check_sub(std::string &line, stl_plaint_line_t &plain)
     }
     else
     {
-        printf("Error: Unknown Dat Block substitute!\n");
+        printf("Error: Unknown Data Block substitute!\n");
         return false;
     }
 }
@@ -279,10 +294,10 @@ EParseResult STLC::parse_stl_plain_DB(std::string &line, stl_plaint_line_t &plai
         switch (plain.loc_sub)
         {
         case EParseSubLocation::HEADER:
-            res = parse_stl_plain_DB_header(line, plain);
+            res = parse_stl_plain_block_header(line, plain, STL_DB_HEADER, "DB");
             break;
         case EParseSubLocation::STRUCTURE:
-            res = parse_stl_plain_DB_structure(line, plain);
+            res = parse_stl_plain_var_struct(line, plain, "END_STRUCT");
             break;
         case EParseSubLocation::DATA_INIT:
             res = parse_stl_plain_DB_data_init(line, plain);
@@ -303,6 +318,121 @@ EParseResult STLC::parse_stl_plain_DB(std::string &line, stl_plaint_line_t &plai
             return res;
 
         if (parse_stl_plain_DB_check_sub(line, plain))
+            break;
+    }
+    return EParseResult::NOT_APP;
+}
+
+bool parse_stl_plain_OB_check_sub(std::string &line, stl_plaint_line_t &plain)
+{
+    if (line.compare("VAR_INPUT") == 0)
+    {
+        plain.loc_sub = EParseSubLocation::VAR_INPUT;
+        return true;
+    }
+    else if (line.compare("VAR_OUTPUT") == 0)
+    {
+        plain.loc_sub = EParseSubLocation::VAR_OUTPUT;
+        return true;
+    }
+    else if (line.compare("VAR_INOUT") == 0)
+    {
+        plain.loc_sub = EParseSubLocation::VAR_INOUT;
+        return true;
+    }
+    else if (line.compare("VAR_TEMP") == 0)
+    {
+        plain.loc_sub = EParseSubLocation::VAR_TEMP;
+        return true;
+    }
+    else if (line.compare("VAR_STATIC") == 0)
+    {
+        plain.loc_sub = EParseSubLocation::VAR_STATIC;
+        return true;
+    }
+    else if (line.compare("NETWORK") == 0)
+    {
+        plain.loc_sub = EParseSubLocation::NETWORK;
+        return true;
+    }
+    else if (line.compare("BEGIN") == 0)
+        return true;
+    else
+    {
+        printf("Error: Unknown Organization Block substitute!\n");
+        return false;
+    }
+}
+
+EParseResult parse_stl_plain_network(std::string &line, stl_plaint_line_t &plain, const char* end_block_label)
+{
+    if (line.compare(end_block_label) == 0)
+        return EParseResult::BLOCK_END;
+
+    if (line.compare(0, 5, "TITLE") == 0)
+    {
+        plain.header_type = EParseHeaderType::TITLE;
+        plain.title = parse_title(line);
+        if (plain.title.length())
+            printf("Network: %s\n", plain.title.c_str());
+        return EParseResult::OK;
+    }
+
+    size_t pos = line.find_first_of(STL_WHITESPACES);
+    std::string mnemonic = line.substr(0, pos);
+
+    for (int i=0 ; i<STL_CMD_COUNT ; ++i)
+        if (mnemonic.compare(STL_CMDs[i].mnemonic) == 0)
+        {
+            plain.cmd = &STL_CMDs[i];
+            //TODO: parameters
+            return EParseResult::OK;
+        }
+
+    printf("Error: Unknown mnemonic!\n");
+    return EParseResult::PERROR;
+}
+
+EParseResult STLC::parse_stl_plain_OB(std::string &line, stl_plaint_line_t &plain)
+{
+    while (1)
+    {
+        EParseResult res = EParseResult::SKIP;
+        switch (plain.loc_sub)
+        {
+        case EParseSubLocation::HEADER:
+            res = parse_stl_plain_block_header(line, plain, STL_OB_HEADER, "OB");
+            break;
+        case EParseSubLocation::STRUCTURE:
+        case EParseSubLocation::DATA_INIT:
+            printf("Error: Invalid location on Organization Block!\n");
+            return EParseResult::PERROR;
+        case EParseSubLocation::NONE:
+            break;
+        case EParseSubLocation::VAR_INPUT:
+            res = parse_stl_plain_var_struct(line, plain, "END_VAR");
+            break;
+        case EParseSubLocation::VAR_OUTPUT:
+            res = parse_stl_plain_var_struct(line, plain, "END_VAR");
+            break;
+        case EParseSubLocation::VAR_INOUT:
+            res = parse_stl_plain_var_struct(line, plain, "END_VAR");
+            break;
+        case EParseSubLocation::VAR_TEMP:
+            res = parse_stl_plain_var_struct(line, plain, "END_VAR");
+            break;
+        case EParseSubLocation::VAR_STATIC:
+            res = parse_stl_plain_var_struct(line, plain, "END_VAR");
+            break;
+        case EParseSubLocation::NETWORK:
+            res = parse_stl_plain_network(line, plain, "END_ORGANIZATION_BLOCK");
+            break;
+        }
+
+        if (res != EParseResult::SKIP)
+            return res;
+
+        if (parse_stl_plain_OB_check_sub(line, plain))
             break;
     }
     return EParseResult::NOT_APP;

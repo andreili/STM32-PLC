@@ -1,6 +1,8 @@
 #include "stl_commands.h"
+#ifndef STLC_DEF
 #include "plc_fw.h"
 #include "plc_hw.h"
+#endif
 #include <cmath>
 #include <stdio.h>
 
@@ -204,6 +206,7 @@ STLCommands::STLCommands()
 
 int32_t STLCommands::exec_command(STL_CMD_TYPE *prog_data)
 {
+#ifndef STLC_DEF
     ESTLCommand cmd = (ESTLCommand)*((STL_CMD_TYPE*)prog_data);
     int32_t size = sizeof(STL_CMD_TYPE);
 	
@@ -1485,10 +1488,15 @@ int32_t STLCommands::exec_command(STL_CMD_TYPE *prog_data)
     }
 
     return size;
+#else
+    (void)(prog_data);
+    return 0;
+#endif
 }
 
 void STLCommands::proceed_real_op(float res)
 {
+#ifndef STLC_DEF
     if (std::isnan(res))
         plc_hw.set_reset_status_bits(PLC_STATUS_CC1_MASK | PLC_STATUS_CC0_MASK | PLC_STATUS_OV_MASK | PLC_STATUS_OS_MASK,
                                      PLC_STATUS_CC1_MASK | PLC_STATUS_CC0_MASK | PLC_STATUS_OV_MASK | PLC_STATUS_OS_MASK);
@@ -1516,10 +1524,14 @@ void STLCommands::proceed_real_op(float res)
             plc_hw.set_reset_status_bits(PLC_STATUS_CC1_MASK | PLC_STATUS_CC0_MASK | PLC_STATUS_OV_MASK | PLC_STATUS_OS_MASK,
                                          PLC_STATUS_CC1_MASK | PLC_STATUS_OV_MASK | PLC_STATUS_OS_MASK);
     }
+#else
+    (void)(res);
+#endif
 }
 
 void STLCommands::proceed_int32_op(int64_t res)
 {
+#ifndef STLC_DEF
     if (res == 0)
         plc_hw.set_reset_status_bits(PLC_STATUS_CC1_MASK | PLC_STATUS_CC0_MASK | PLC_STATUS_OV_MASK,
                                      0);
@@ -1538,10 +1550,14 @@ void STLCommands::proceed_int32_op(int64_t res)
     else if (res < INT32_MIN)
         plc_hw.set_reset_status_bits(PLC_STATUS_CC1_MASK | PLC_STATUS_CC0_MASK | PLC_STATUS_OV_MASK | PLC_STATUS_OS_MASK,
                                      PLC_STATUS_CC1_MASK | PLC_STATUS_OV_MASK | PLC_STATUS_OS_MASK);
+#else
+    (void)(res);
+#endif
 }
 
 void STLCommands::proceed_int16_op(int32_t res)
 {
+#ifndef STLC_DEF
     if (res == 0)
         plc_hw.set_reset_status_bits(PLC_STATUS_CC1_MASK | PLC_STATUS_CC0_MASK | PLC_STATUS_OV_MASK,
                                      0);
@@ -1560,4 +1576,7 @@ void STLCommands::proceed_int16_op(int32_t res)
     else if (res < INT16_MIN)
         plc_hw.set_reset_status_bits(PLC_STATUS_CC1_MASK | PLC_STATUS_CC0_MASK | PLC_STATUS_OV_MASK | PLC_STATUS_OS_MASK,
                                      PLC_STATUS_CC1_MASK | PLC_STATUS_OV_MASK | PLC_STATUS_OS_MASK);
+#else
+    (void)(res);
+#endif
 }

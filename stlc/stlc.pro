@@ -10,13 +10,16 @@ TEMPLATE = app
 
 INCLUDEPATH += ../firmware/fw_cpu/inc/
 
+DEFINES += STLC_DEF
+
 QMAKE_CXXFLAGS_RELEASE += -s
 win32:QMAKE_LFLAGS_RELEASE += -s -static -static-libgcc -static-libstdc++
 
 SOURCES += main.cpp \
     CmdlineParser.cpp \
     Stream.cpp \
-    stlc.cpp
+    stlc.cpp \
+    ../firmware/fw_cpu/src/stl_commands.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -33,4 +36,5 @@ HEADERS += \
     CmdlineParser.h \
     Stream.h \
     stlc.h \
-    ../firmware/fw_cpu/inc/plc_data_types.h
+    ../firmware/fw_cpu/inc/plc_data_types.h \
+    ../firmware/fw_cpu/inc/stl_commands.h
