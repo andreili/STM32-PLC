@@ -44,8 +44,7 @@ enum class ESTLCommand
     ENT,
     INC,
     LEAVE,
-    NOP_0,
-    NOP_1,
+    NOP,
     POP,
     PUSH,
     TAK,
@@ -225,7 +224,7 @@ typedef struct
 } STL_CMD_t;
 
 
-#define STL_CMD_COUNT 174
+#define STL_CMD_COUNT 173
 
 extern STL_CMD_t STL_CMDs[STL_CMD_COUNT];
 

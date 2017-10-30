@@ -26,8 +26,7 @@ int main(int argc, char *argv[])
 
     if (mode_compile && (in_file.length()) && (out_file.length()))
     {
-        stlc.load_plain(in_file, iec);
-        if (stlc.compile(out_file))
+        if (stlc.load_plain(in_file, iec) && stlc.compile(out_file))
             printf("Compilation finished: OK.\n");
         else
             printf("Compilation finished: FAILED!\n");

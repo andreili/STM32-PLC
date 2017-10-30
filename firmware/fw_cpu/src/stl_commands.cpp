@@ -46,8 +46,7 @@ STL_CMD_t STL_CMDs[STL_CMD_COUNT] = {
     {ESTLCommand::ENT, "ENT", ESTLCategory::Accumulator},
     {ESTLCommand::INC, "INC", ESTLCategory::Accumulator},
     {ESTLCommand::LEAVE, "LEAVE", ESTLCategory::Accumulator},
-    {ESTLCommand::NOP_0, "NOP 0", ESTLCategory::Accumulator},
-    {ESTLCommand::NOP_1, "NOP 1", ESTLCategory::Accumulator},
+    {ESTLCommand::NOP, "NOP", ESTLCategory::Accumulator},
     {ESTLCommand::POP, "POP", ESTLCategory::Accumulator},
     {ESTLCommand::PUSH, "PUSH", ESTLCategory::Accumulator},
     {ESTLCommand::TAK, "TAK", ESTLCategory::Accumulator},
@@ -628,9 +627,7 @@ int32_t STLCommands::exec_command(STL_CMD_TYPE *prog_data)
     case ESTLCommand::LEAVE:    //  Leave ACCU Stack
         plc_hw.get_ACCU1()->set(plc_hw.pop_ACCU());
         break;
-    case ESTLCommand::NOP_0:
-        break;
-    case ESTLCommand::NOP_1:
+    case ESTLCommand::NOP:
         break;
     case ESTLCommand::POP:
         plc_hw.pop_ACCU();
