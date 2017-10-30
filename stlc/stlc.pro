@@ -37,4 +37,5 @@ HEADERS += \
     Stream.h \
     stlc.h \
     ../firmware/fw_cpu/inc/plc_data_types.h \
-    ../firmware/fw_cpu/inc/stl_commands.h
+    ../firmware/fw_cpu/inc/stl_commands.h \
+    ../firmware/fw_cpu/inc/plc_hw.h

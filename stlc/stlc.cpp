@@ -1,4 +1,5 @@
 #include "stlc.h"
+#include "plc_hw.h"
 #include "Stream.h"
 #include <regex>
 #include <sstream>
@@ -6,6 +7,14 @@
 #define STL_WHITESPACES " \t\n\r;"
 #define STL_DB_HEADER "DATA_BLOCK"
 #define STL_OB_HEADER "ORGANIZATION_BLOCK"
+#define STL_OB_ABBR "OB"
+#define STL_OB_END_MARKER "END_ORGANIZATION_BLOCK"
+#define STL_FB_HEADER "FUNCTION_BLOCK"
+#define STL_FB_ABBR "FB"
+#define STL_FB_END_MARKER "END_FUNCTION_BLOCK"
+#define STL_FC_HEADER "FUNCTION"
+#define STL_FC_ABBR "FC"
+#define STL_FC_END_MARKER "END_FUNCTION"
 
 STLC* STLC::m_instance;
 EParseSubLocation stl_next_sub = EParseSubLocation::NONE;
@@ -43,7 +52,7 @@ bool STLC::load_plain(std::string file_name, bool iec)
     }
     else if (!parse_stl_plain(&stream))
         return false;
-    printf("Loaded %li lines.\n", m_plain.size());
+    printf("Loaded %i lines.\n", m_plain.size());
     return true;
 }
 
@@ -70,10 +79,14 @@ bool STLC::parse_stl_plain(Stream* stream)
     size_t end_pos = in_buf.size();
     int line_idx = 1;
     stl_plaint_line_t plain;
+    plain.inst_block = EBlockType::NONE;
+    plain.inst_no = -1;
     while (start_pos < end_pos)
     {
-        size_t sub_end = in_buf.find_first_of("\n\r", start_pos);
+        size_t sub_end = in_buf.find_first_of("\r\n", start_pos);
         std::string line_raw, line;
+        if ((in_buf.length() > sub_end) && (in_buf[sub_end + 1] == '\n'))
+            ++sub_end;
         line_raw = line = in_buf.substr(start_pos, sub_end - start_pos);
 
         plain.line_raw = line;
@@ -133,13 +146,13 @@ bool STLC::parse_stl_plain(Stream* stream)
             res = parse_stl_plain_DB(line, plain);
             break;
         case EParseMainLocation::ORGANIZATION_BLOCK:
-            res = parse_stl_plain_OB(line, plain);
+            res = parse_stl_plain_code_block(line, plain, STL_OB_HEADER, STL_OB_ABBR, STL_OB_END_MARKER);
             break;
         case EParseMainLocation::FUNCTION:
-            //TODO
+            res = parse_stl_plain_code_block(line, plain, STL_FC_HEADER, STL_FC_ABBR, STL_FC_END_MARKER);
             break;
         case EParseMainLocation::FUNCTION_BLOCK:
-            //TODO
+            res = parse_stl_plain_code_block(line, plain, STL_FB_HEADER, STL_FB_ABBR, STL_FB_END_MARKER);
             break;
         }
 
@@ -149,8 +162,11 @@ bool STLC::parse_stl_plain(Stream* stream)
             // nothing
             break;
         case EParseResult::PERROR:
-            printf("Error at line %i:\n%s\n", line_idx, line_raw.c_str());
+            printf("At line %i:\n%s\n", line_idx, line_raw.c_str());
             return false;
+        case EParseResult::WARNING:
+            printf("At line %i:\n%s\n", line_idx, line_raw.c_str());
+            break;
         case EParseResult::SKIP:
         case EParseResult::NOT_APP:
             start_pos = sub_end + 1;
@@ -164,7 +180,9 @@ bool STLC::parse_stl_plain(Stream* stream)
             continue;
         }
 
-        m_plain.push_back(plain);
+        stl_plaint_line_t *pl_new = new stl_plaint_line_t;
+        *pl_new = plain;
+        m_plain.push_back(pl_new);
 
         start_pos = sub_end + 1;
         ++line_idx;
@@ -220,7 +238,7 @@ EParseResult STLC::parse_stl_plain_DB(std::string &line, stl_plaint_line_t &plai
             res = parse_stl_plain_block_header(line, plain, STL_DB_HEADER, "DB");
             break;
         case EParseSubLocation::STRUCTURE:
-            res = parse_stl_plain_var_struct(line, plain, "END_STRUCT");
+            res = parse_stl_plain_var_struct(line, plain, "END_STRUCT", EParameterLocation::DB);
             break;
         case EParseSubLocation::DATA_INIT:
             res = parse_stl_plain_DB_data_init(line, plain);
@@ -249,7 +267,9 @@ EParseResult STLC::parse_stl_plain_DB(std::string &line, stl_plaint_line_t &plai
     return EParseResult::NOT_APP;
 }
 
-EParseResult STLC::parse_stl_plain_OB(std::string &line, stl_plaint_line_t &plain)
+EParseResult STLC::parse_stl_plain_code_block(std::string &line, stl_plaint_line_t &plain,
+                                              const char* block_header, const char* block_abbr,
+                                              const char* end_marker)
 {
     while (1)
     {
@@ -257,7 +277,7 @@ EParseResult STLC::parse_stl_plain_OB(std::string &line, stl_plaint_line_t &plai
         switch (plain.loc_sub)
         {
         case EParseSubLocation::HEADER:
-            res = parse_stl_plain_block_header(line, plain, STL_OB_HEADER, "OB");
+            res = parse_stl_plain_block_header(line, plain, block_header, block_abbr);
             plain.nw_idx = 0;
             break;
         case EParseSubLocation::STRUCTURE:
@@ -267,22 +287,22 @@ EParseResult STLC::parse_stl_plain_OB(std::string &line, stl_plaint_line_t &plai
         case EParseSubLocation::NONE:
             break;
         case EParseSubLocation::VAR_INPUT:
-            res = parse_stl_plain_var_struct(line, plain, "END_VAR");
+            res = parse_stl_plain_var_struct(line, plain, "END_VAR", EParameterLocation::BLOCK_INPUT);
             break;
         case EParseSubLocation::VAR_OUTPUT:
-            res = parse_stl_plain_var_struct(line, plain, "END_VAR");
+            res = parse_stl_plain_var_struct(line, plain, "END_VAR", EParameterLocation::BLOCK_OUTPUT);
             break;
         case EParseSubLocation::VAR_INOUT:
-            res = parse_stl_plain_var_struct(line, plain, "END_VAR");
+            res = parse_stl_plain_var_struct(line, plain, "END_VAR", EParameterLocation::BLOCK_INOUT);
             break;
         case EParseSubLocation::VAR_TEMP:
-            res = parse_stl_plain_var_struct(line, plain, "END_VAR");
+            res = parse_stl_plain_var_struct(line, plain, "END_VAR", EParameterLocation::BLOCK_TEMP);
             break;
         case EParseSubLocation::VAR_STATIC:
-            res = parse_stl_plain_var_struct(line, plain, "END_VAR");
+            res = parse_stl_plain_var_struct(line, plain, "END_VAR", EParameterLocation::BLOCK_STATIC);
             break;
         case EParseSubLocation::NETWORK:
-            res = parse_stl_plain_network(line, plain, "END_ORGANIZATION_BLOCK");
+            res = parse_stl_plain_network(line, plain, end_marker);
             break;
         case EParseSubLocation::CALL_PARAMETERS:
             res = parse_stl_plain_call_parameter(line, plain);
@@ -332,6 +352,8 @@ EDataType STLC::parse_data_type(std::string str)
         return EDataType::ARRAY;
     else if (str.compare("ADDR") == 0)
         return EDataType::ADDR;
+    else if (str.compare("VOID") == 0)
+        return EDataType::_VOID;
     else
     {
         printf("Error: Unknown data type:\n%s\n", str.c_str());
@@ -380,6 +402,7 @@ EParseResult STLC::parse_value(std::string str, EDataType type, plc_data_t &valu
     case EDataType::STRING:
     case EDataType::ARRAY:
     case EDataType::ADDR:
+    case EDataType::_VOID:
         printf("Error: Unsupported value type!\n");
         return EParseResult::PERROR;
     }
@@ -388,16 +411,16 @@ EParseResult STLC::parse_value(std::string str, EDataType type, plc_data_t &valu
 
 stl_plaint_line_t* STLC::find_var_def(std::string name, int block_no, EParseMainLocation loc)
 {
-    for (stl_plaint_line_t &pl : m_instance->m_plain)
+    for (stl_plaint_line_t *pl : m_instance->m_plain)
     {
-        if (pl.loc != loc)
+        if (pl->loc != loc)
             continue;
-        if (pl.block_no != block_no)
+        if (pl->block_no != block_no)
             continue;
-        if (pl.loc_sub != EParseSubLocation::STRUCTURE)
-            continue;
-        if (pl.var_name.compare(name) == 0)
-            return &pl;
+        /*if (pl->loc_sub != EParseSubLocation::STRUCTURE)
+            continue;*/
+        if (pl->var_name.compare(name) == 0)
+            return pl;
     }
     return nullptr;
 }
@@ -432,6 +455,15 @@ EParseResult STLC::parse_stl_plain_block_header(std::string &line, stl_plaint_li
             return EParseResult::PERROR;
         }
         db_str = line.substr(strlen(header) + 4);
+
+        if (plain.loc == EParseMainLocation::FUNCTION)
+        {
+            // parse result type
+            size_t pos = db_str.find_first_of(':');
+            plain.result_type = parse_data_type(db_str.substr(pos + 1));
+            db_str = db_str.substr(0, pos);
+        }
+
         plain.block_no = std::stoi(db_str);
         return EParseResult::NOT_APP;
     }
@@ -450,7 +482,8 @@ EParseResult STLC::parse_stl_plain_block_header(std::string &line, stl_plaint_li
         return EParseResult::SKIP;
 }
 
-EParseResult STLC::parse_stl_plain_var_struct(std::string &line, stl_plaint_line_t &plain, const char* end_label)
+EParseResult STLC::parse_stl_plain_var_struct(std::string &line, stl_plaint_line_t &plain,
+                                              const char* end_label, EParameterLocation par_loc)
 {
     if (line.compare(end_label) == 0)
     {
@@ -458,6 +491,7 @@ EParseResult STLC::parse_stl_plain_var_struct(std::string &line, stl_plaint_line
         return EParseResult::NOT_APP;
     }
 
+    plain.par_loc = par_loc;
     plain.var_name = line.substr(0, line.find_first_of(':'));
     plain.var_type = STLC::parse_data_type(line.substr(plain.var_name.length() + 1));
     if (plain.var_type == EDataType::NONE)
@@ -469,14 +503,27 @@ EParseResult STLC::parse_stl_plain_var_struct(std::string &line, stl_plaint_line
 EParseResult STLC::parse_stl_plain_DB_data_init(std::string &line, stl_plaint_line_t &plain)
 {
     if (line.compare("END_DATA_BLOCK") == 0)
+    {
+        plain.inst_block = EBlockType::NONE;
+        plain.inst_no = -1;
         return EParseResult::BLOCK_END;
+    }
 
     plain.var_name = line.substr(0, line.find_first_of(':'));
     stl_plaint_line_t *var_def = STLC::find_var_def(plain.var_name, plain.block_no, plain.loc);
     if (var_def == nullptr)
     {
-        printf("Error: Unknown variable name!\n");
-        return EParseResult::PERROR;
+        if (plain.inst_block != EBlockType::NONE)
+        {
+            printf("Warning: early assignment of value\n");
+            plain.label = line.substr(plain.var_name.length() + 2);
+            return EParseResult::WARNING;
+        }
+        else
+        {
+            printf("Error: Unknown variable name!\n");
+            return EParseResult::PERROR;
+        }
     }
     if (STLC::parse_value(line.substr(plain.var_name.length() + 2), var_def->var_type,
                           var_def->var_value) != EParseResult::OK)
@@ -588,7 +635,7 @@ EParseResult STLC::parse_stl_plain_network(std::string &line, stl_plaint_line_t 
     if (pos_label < pos)
     {
         plain.label = line.substr(0, pos_label - 1);
-        line.erase(0, pos_label);
+        line.erase(0, pos_label + 1);
         pos = line.find_first_of(STL_WHITESPACES);
     }
     std::string mnemonic = line.substr(0, pos);
@@ -649,6 +696,24 @@ EParseResult STLC::parse_stl_parameter_location(std::string str, stl_plaint_line
             return EParseResult::OK;
         }
 
+        if (str[0] != '#')
+        {
+            // check registers
+            if (parse_stl_parameter_SW(str, plain))
+                return EParseResult::OK;
+
+            // check jump label
+            if (plain.cmd->category == ESTLCategory::Jumps)
+            {
+                plain.label = str;
+                return EParseResult::OK;
+            }
+
+            printf("Error: invalid variable declaration!\n");
+            return EParseResult::PERROR;
+        }
+
+        str = str.erase(0, 1);
         stl_plaint_line_t *pl = find_var_def(str, plain.block_no, plain.loc);
         if (pl == nullptr)
         {
@@ -656,8 +721,32 @@ EParseResult STLC::parse_stl_parameter_location(std::string str, stl_plaint_line
             return EParseResult::PERROR;
         }
         // variable
+        plain.par_loc = pl->par_loc;
         plain.var_name = pl->var_name;
     }
 
     return EParseResult::OK;
+}
+
+bool STLC::parse_stl_parameter_SW(std::string str, stl_plaint_line_t &plain)
+{
+    if (str.compare("RLO") == 0)
+        plain.par_addr.ADDR = PLC_STATUS_RLO_MASK;
+    else if (str.compare("STA") == 0)
+        plain.par_addr.ADDR = PLC_STATUS_STA_MASK;
+    else if (str.compare("OR") == 0)
+        plain.par_addr.ADDR = PLC_STATUS_OR_MASK;
+    else if (str.compare("OS") == 0)
+        plain.par_addr.ADDR = PLC_STATUS_OS_MASK;
+    else if (str.compare("OV") == 0)
+        plain.par_addr.ADDR = PLC_STATUS_OV_MASK;
+    else if (str.compare("CC0") == 0)
+        plain.par_addr.ADDR = PLC_STATUS_CC0_MASK;
+    else if (str.compare("CC1") == 0)
+        plain.par_addr.ADDR = PLC_STATUS_CC1_MASK;
+    else if (str.compare("BR") == 0)
+        plain.par_addr.ADDR = PLC_STATUS_BR_MASK;
+    else
+        return false;
+    return true;
 }
