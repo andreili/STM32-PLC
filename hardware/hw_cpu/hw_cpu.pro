@@ -1,4 +1,4 @@
-update=Пт 11 авг 2017 13:20:02
+update=Ср 27 дек 2017 08:30:16
 version=1
 last_client=kicad
 [general]
@@ -107,3 +107,4 @@ LibName32=stm8
 LibName33=powerint
 LibName34=/media/Dev/KiCad/conn_an
 LibName35=switches
+LibName36=dc-dc
