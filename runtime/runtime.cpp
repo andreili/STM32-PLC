@@ -1,5 +1,6 @@
 #include "runtime.h"
 #include "firmware_sample/firmware.h"
+#include <plcstate.h>
 #include "plcbus.h"
 #include <json/config.h>
 #include <json/json.h>
@@ -11,17 +12,29 @@ Runtime::Runtime()
 
 void Runtime::run()
 {
-    //TODO: run server
+    PLCState::init();
+    PLCState::to_full_stop();
 
+    PLCState::to_fw_load();
     if (!load_hw_config())
+    {
+        PLCState::to_fault();
         return;
+    }
     if (!load_firmware())
+    {
+        PLCState::to_fault();
         return;
+    }
 
     m_bus = new PLCBus();
     if (!m_bus->init(m_modules, m_modules_count))
+    {
+        PLCState::to_fault();
         return;
+    }
 
+    PLCState::to_run();
     while (1)
     {
         //TODO: to comm thread

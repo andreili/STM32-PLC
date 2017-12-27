@@ -30,11 +30,11 @@ struct ModuleInfo
 
 enum class EBusRequest
 {
-    UNKNOWN,
-    FIND_DEVICE,
-    SET_RACK_IDX,
-    READ_INPUTS,
-    WRITE_OUTPUTS,
+    UNKNOWN         = 0x00,
+    FIND_DEVICE     = 0x01,
+    SET_RACK_IDX    = 0x02,
+    READ_INPUTS     = 0x03,
+    WRITE_OUTPUTS   = 0x04,
 };
 
 enum class EBusReply
@@ -75,8 +75,7 @@ public:
     void copy_outputs();
     void bus_proc();
 private:
-    int         m_modules;
-    int         m_comms;
+    int         m_bus_dev;
     BusMessage  m_send;
     BusMessage  m_recv;
     uint8_t     m_PIP[IO_AREA_SIZE];
@@ -86,7 +85,6 @@ private:
 
     bool init_UART();
     bool search_modules();
-    bool search_comms();
 };
 
 #endif // PLCBUS_H
