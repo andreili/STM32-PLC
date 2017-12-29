@@ -100,6 +100,10 @@ bool Runtime::load_hw_config()
         m_modules[i].output_start = module["ostart"].asUInt();
         m_modules[i].output_size = module["osize"].asUInt();
 
+        m_modules[i].state.initialized = false;
+        m_modules[i].state.overrun = false;
+        m_modules[i].state.fault = false;
+
         //TODO: module-specific parameters
     }
 

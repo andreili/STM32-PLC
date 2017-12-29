@@ -32,6 +32,13 @@ typedef struct
     bool        fault: 1;
 } plc_state_t;
 
+typedef struct
+{
+    bool    initialized: 1;
+    bool    overrun: 1;
+    bool    fault: 1;
+} module_state_t;
+
 class PLCState
 {
 public:

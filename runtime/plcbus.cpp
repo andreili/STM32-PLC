@@ -75,17 +75,26 @@ void PLCBus::bus_proc()
         read(m_bus_dev, &m_recv, sizeof(BusMessage));
 
         if (m_recv.request == EBusRequest::UNKNOWN)
+        {
+            PLCState::to_error();
+            printf("Unable to read inputs from module #%i\n", module->rack_idx);
             break;
+        }
 
         switch (m_recv.reply)
         {
         case EBusReply::UNKNOWN:
             PLCState::to_error();
+            printf("Invlid reply (read inputs) from from module #%i\n", module->rack_idx);
             return;
         case EBusReply::OK:
             std::memcpy(&m_PIP[module->input_start], &m_recv.data, module->input_size);
             printf("Read inputs from module (index:%i):\n",
                    module->rack_idx);
+
+            // check error on module
+            if (m_recv.module_info.state.fault)
+                PLCState::to_error();
             break;
         case EBusReply::FAIL:
             return;
@@ -119,14 +128,22 @@ void PLCBus::bus_proc()
         read(m_bus_dev, &m_recv, sizeof(BusMessage));
 
         if (m_recv.request == EBusRequest::UNKNOWN)
+        {
+            PLCState::to_error();
+            printf("Unable to write outputs to module #%i\n", module->rack_idx);
             break;
+        }
 
         switch (m_recv.reply)
         {
         case EBusReply::UNKNOWN:
             PLCState::to_error();
+            printf("Invlid reply (write outputs) from from module #%i\n", module->rack_idx);
             return;
         case EBusReply::OK:
+            // check error on module
+            if (m_recv.module_info.state.fault)
+                PLCState::to_error();
             break;
         case EBusReply::FAIL:
             return;

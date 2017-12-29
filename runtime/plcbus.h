@@ -2,6 +2,7 @@
 #define PLCBUS_H
 
 #include "settings.h"
+#include "plcstate.h"
 
 #define MODULE_TYPE_DI 0x00000001
 #define MODULE_TYPE_DO 0x00000002
@@ -25,8 +26,9 @@ struct ModuleInfo
     uint32_t    output_start;
     uint32_t    output_size;
 
+    module_state_t  state;
     // only on PLC
-    bool        finded;
+    bool            finded;
 };
 
 enum class EBusRequest
@@ -59,7 +61,7 @@ struct BusMessage
         uint32_t    reply_uint;
         EBusReply   reply;
     };
-    uint32_t    data_size;
+    uint32_t        data_size;
     union
     {
         uint8_t     data[BUS_MSG_DATA_SIZE];
