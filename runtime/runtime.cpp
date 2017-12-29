@@ -15,23 +15,30 @@ void Runtime::run()
     PLCState::init();
     PLCState::to_full_stop();
 
+    //TODO: start server (debug + monitoring)
+
     PLCState::to_fw_load();
-    if (!load_hw_config())
+    bool fw_loaded = false;
+    fw_loaded = load_hw_config();
+    if (fw_loaded)
+        fw_loaded = load_firmware();
+
+    if (!fw_loaded)
     {
-        PLCState::to_fault();
-        return;
-    }
-    if (!load_firmware())
-    {
-        PLCState::to_fault();
-        return;
+        printf("Unable to loading firmware, wait uloading from remote device\n");
+        while (1)
+        {
+            // wait while firmware uploaded
+            //TODO: uploading wait
+        }
     }
 
     m_bus = new PLCBus();
     if (!m_bus->init(m_modules, m_modules_count))
     {
+        printf("Failed initialize BUS\n");
         PLCState::to_fault();
-        return;
+        while (1) {}
     }
 
     PLCState::to_run();

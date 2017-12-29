@@ -6,7 +6,11 @@
 //#define FPGA_ALLOW
 
 #define BUS_MSG_DATA_SIZE 100
+#ifdef FPGA_ALLOW
+#define BUS_UART_DEVICE "/dev/ttyAL0"
+#else
 #define BUS_UART_DEVICE "/dev/ttyUSB0"
+#endif
 #define BUS_UART_BRATE B9600
 
 #define BUS_MAX_MODULES 1024
