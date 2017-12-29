@@ -9,7 +9,7 @@
 #define MODULE_TYPE_AO 0x00000008
 #define MODULE_TYPE_PN 0x00000010
 #define MODULE_TYPE_PB 0x00000020
-//#define MODULE_TYPE_ 0x00000040
+#define MODULE_TYPE_CPU 0x00000040
 //#define MODULE_TYPE_ 0x00000000
 
 struct ModuleInfo
@@ -17,6 +17,7 @@ struct ModuleInfo
     uint32_t    type;
     uint32_t    sub_type;
 
+    uint32_t    rack;
     uint32_t    rack_idx;
 
     uint32_t    input_start;

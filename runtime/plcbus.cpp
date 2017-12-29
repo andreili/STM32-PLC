@@ -1,5 +1,4 @@
 #include "plcbus.h"
-#include "gpio.h"
 #include "io.h"
 #include <fcntl.h>
 #include <termios.h>
@@ -31,6 +30,7 @@ bool PLCBus::init(ModuleInfo* modules, uint32_t count)
         return false;
     return true;
 }
+
 void PLCBus::copy_inputs()
 {
     mtx_IO.lock();
@@ -52,6 +52,11 @@ void PLCBus::bus_proc()
     // read inputs
     for (uint32_t i=0 ; i<m_count ; ++i)
     {
+        ModuleInfo* module = &m_modules_list[i];
+        if ((module->input_size == 0) &&
+            (module->rack != 0))    // another racks - only from communications!
+            continue;
+
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         RE_SET;
 
@@ -78,7 +83,9 @@ void PLCBus::bus_proc()
             PLCState::to_error();
             return;
         case EBusReply::OK:
-            std::memcpy(&m_PIP[m_modules_list[i].input_start], &m_recv.data, m_modules_list[i].input_size);
+            std::memcpy(&m_PIP[module->input_start], &m_recv.data, module->input_size);
+            printf("Read inputs from module (index:%i):\n",
+                   module->rack_idx);
             break;
         case EBusReply::FAIL:
             return;
@@ -88,14 +95,19 @@ void PLCBus::bus_proc()
     // write outputs
     for (uint32_t i=0 ; i<m_count ; ++i)
     {
+        ModuleInfo* module = &m_modules_list[i];
+        if ((module->output_size == 0) &&
+            (module->rack != 0))    // another racks - only from communications!
+            continue;
+
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         RE_SET;
 
         m_send.from = 0;
-        m_send.to = m_modules_list[i].rack_idx;
+        m_send.to = module->rack_idx;
         m_send.request = EBusRequest::WRITE_OUTPUTS;
-        m_send.data_size = m_modules_list[i].output_size;
-        std::memcpy(&m_send.data, &m_POP[m_modules_list[i].output_start], m_modules_list[i].output_size);
+        m_send.data_size = module->output_size;
+        std::memcpy(&m_send.data, &m_POP[module->output_start], module->output_size);
 
         write(m_bus_dev, &m_send, sizeof(BusMessage));
 
@@ -152,6 +164,16 @@ bool PLCBus::search_modules()
 
     for (uint32_t i=0 ; i<m_count ; ++i)
     {
+        ModuleInfo* module = &m_modules_list[i];
+        // skip self
+        if ((module->rack == 0) &&
+            (module->rack_idx == 0) &&
+            ((module->type & MODULE_TYPE_CPU) ==MODULE_TYPE_CPU))
+        {
+            module->finded = true;
+            continue;
+        }
+
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         //copy module info to send buffer
         m_send.to = m_modules_list[i].rack_idx;

@@ -84,6 +84,8 @@ bool Runtime::load_hw_config()
         Json::Value &module = modules[i];
         m_modules[i].type = module["type"].asUInt();
         m_modules[i].sub_type = module["sub_type"].asUInt();
+
+        m_modules[i].rack = module["rack"].asUInt();
         m_modules[i].rack_idx = module["rack_idx"].asUInt();
 
         m_modules[i].input_start = module["istart"].asUInt();
