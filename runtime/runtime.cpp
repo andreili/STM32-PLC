@@ -8,6 +8,10 @@
 #include <fstream>
 #include <thread>
 
+Firmware    Runtime::m_firmware;
+PLCBus      Runtime::m_bus;
+ModuleInfo  Runtime::m_modules[BUS_MAX_MODULES];
+
 Runtime::Runtime()
 {}
 
@@ -19,7 +23,6 @@ void Runtime::run()
     //TODO: start server (debug + monitoring)
 
     bool fw_loaded;
-    m_bus = new PLCBus();
     while (1)
     {
         switch (PLCState::get_state())
@@ -50,7 +53,7 @@ void Runtime::run()
 
         case EPLCState::BUS_INIT:
             printf("State: BUS initialization\n");
-            if (!m_bus->init(m_modules, m_modules_count))
+            if (!m_bus.init(m_modules, m_modules_count))
             {
                 printf("Failed initialize BUS\n");
                 PLCState::to_fault();
@@ -61,13 +64,13 @@ void Runtime::run()
 
         case EPLCState::RUN:
             //TODO: to comm thread
-            m_bus->bus_proc();
+            m_bus.bus_proc();
 
             //TODO: to cycle thread
-            m_bus->copy_inputs();
-            if (!m_firmware->run_cycle())
+            m_bus.copy_inputs();
+            if (!m_firmware.run_cycle())
                 PLCState::to_fault();
-            m_bus->copy_outputs();
+            m_bus.copy_outputs();
 
             //TODO: to stop
             break;
@@ -114,7 +117,6 @@ bool Runtime::load_hw_config()
 
     //TODO: load hardware
     Json::Value &modules = root["modules"];
-    m_modules = new ModuleInfo[BUS_MAX_MODULES];
     m_modules_count = modules.size();
     for (uint32_t i=0 ; i<m_modules_count ; ++i)
     {
@@ -144,8 +146,7 @@ bool Runtime::load_firmware()
 {
     //TODO
     // added to runtime project.
-    m_firmware = new Firmware();
-    if (!m_firmware->init())
+    if (!m_firmware.init())
         return false;
     return true;
 }

@@ -7,6 +7,8 @@ Firmware::Firmware()
 
 bool Firmware::init()
 {
+    //TODO: reset FW state
+
     FWDB::read();
 
     return true;
