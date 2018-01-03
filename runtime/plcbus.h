@@ -28,6 +28,9 @@ struct ModuleInfo
     uint32_t    output_start;
     uint32_t    output_size;
 
+    uint32_t    PB_addr;
+    uint32_t    PN_addr;
+
     module_state_t  state;
     // only on PLC
     bool            finded;

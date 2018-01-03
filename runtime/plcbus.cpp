@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include "plcstate.h"
+#include <arpa/inet.h>
 
 #ifdef FPGA_ALLOW
 #include "hps_0_arm_a9_0.h"
@@ -282,5 +283,10 @@ bool PLCBus::load_module_info(ModuleInfo &module, Json::Value &info)
     module.state.fault = false;
 
     //TODO: module-specific parameters
+    if (module.type && MODULE_TYPE_PB)
+        module.PB_addr = info["pba"].asUInt();
+    if (module.type && MODULE_TYPE_PN)
+        // string "192.168.1.1"
+        module.PN_addr = inet_addr(info["pna"].asString().c_str());
     return true;
 }
