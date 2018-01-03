@@ -7,10 +7,13 @@
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include <mutex>
 
 Firmware    Runtime::m_firmware;
 PLCBus      Runtime::m_bus;
 ModuleInfo  Runtime::m_modules[BUS_MAX_MODULES];
+
+std::mutex  mtx_run_cycle;
 
 Runtime::Runtime()
 {}
@@ -63,16 +66,45 @@ void Runtime::run()
             break;
 
         case EPLCState::RUN:
+            mtx_run_cycle.lock();
+            //TODO: to STOP (switch, command)
+            if (false)
+            {
+                PLCState::to_stop();
+                break;
+            }
+
+            //TODO: to STOP (download)
+            if (false)
+            {
+                PLCState::to_stop();
+                PLCState::to_load_fw_in_plc();
+                break;
+            }
+            mtx_run_cycle.unlock();
+
             //TODO: to comm thread
             m_bus.bus_proc();
 
             //TODO: to cycle thread
+            mtx_run_cycle.lock();
             m_bus.copy_inputs();
             if (!m_firmware.run_OB(EOB::OB_CYCLE_EXEC))
-                PLCState::to_fault();
+            {
+                //TODO: get switch value
+                if (true)
+                {
+                    printf("Software error, STOP\n");
+                    PLCState::to_fault();
+                }
+                else
+                {
+                    printf("Software error, RESTART\n");
+                    PLCState::init();
+                }
+            }
             m_bus.copy_outputs();
-
-            //TODO: to stop
+            mtx_run_cycle.unlock();
             break;
 
         case EPLCState::STOP:
