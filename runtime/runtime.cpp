@@ -2,16 +2,11 @@
 #include "firmware_sample/firmware.h"
 #include <plcstate.h>
 #include "plcbus.h"
-#include <json/config.h>
-#include <json/json.h>
-#include <iostream>
-#include <fstream>
 #include <thread>
 #include <mutex>
 
 Firmware    Runtime::m_firmware;
 PLCBus      Runtime::m_bus;
-ModuleInfo  Runtime::m_modules[BUS_MAX_MODULES];
 
 std::mutex  mtx_run_cycle;
 
@@ -38,7 +33,7 @@ void Runtime::run()
 
         case EPLCState::LOAD_FW:
             printf("State: Firmware loading\n");
-            fw_loaded = load_hw_config();
+            fw_loaded = m_bus.load_config();
             if (fw_loaded)
                 fw_loaded = load_firmware();
 
@@ -50,14 +45,14 @@ void Runtime::run()
 
         case EPLCState::WAIT_FW:
             printf("State: Waiting firmware\n");
-            printf("Unable to loading firmware, wait uloading from remote device\n");
+            printf("Unable to loading firmware, wait uploading from remote device\n");
             //TODO: uploading wait
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             break;
 
         case EPLCState::BUS_INIT:
             printf("State: BUS initialization\n");
-            if (!m_bus.init(m_modules, m_modules_count))
+            if (!m_bus.init())
             {
                 printf("Failed initialize BUS\n");
                 PLCState::to_fault();
@@ -108,61 +103,6 @@ void Runtime::run()
             break;
         }
     }
-}
-
-bool Runtime::load_hw_config()
-{
-    std::ifstream str(RT_ROOT_PATH "hw.json", std::ifstream::binary);
-    if (!str)
-    {
-        return false;
-    }
-    str.seekg (0, str.end);
-    int length = str.tellg();
-    str.seekg (0, str.beg);
-    char* buf = new char[length];
-    str.read(buf, length);
-    str.close();
-
-    Json::Value root;
-    Json::CharReaderBuilder b;
-    b.settings_["allowSingleQuotes"] = true;
-    Json::CharReader* reader(b.newCharReader());
-    JSONCPP_STRING errs;
-    if (!reader->parse(buf, buf + length, &root, &errs))
-    {
-        std::cout << errs << std::endl;
-        return false;
-    }
-
-    delete reader;
-    delete[] buf;
-
-    //TODO: load hardware
-    Json::Value &modules = root["modules"];
-    m_modules_count = modules.size();
-    for (uint32_t i=0 ; i<m_modules_count ; ++i)
-    {
-        Json::Value &module = modules[i];
-        m_modules[i].type = module["type"].asUInt();
-        m_modules[i].sub_type = module["sub_type"].asUInt();
-
-        m_modules[i].rack = module["rack"].asUInt();
-        m_modules[i].rack_idx = module["rack_idx"].asUInt();
-
-        m_modules[i].input_start = module["istart"].asUInt();
-        m_modules[i].input_size = module["isize"].asUInt();
-        m_modules[i].output_start = module["ostart"].asUInt();
-        m_modules[i].output_size = module["osize"].asUInt();
-
-        m_modules[i].state.initialized = false;
-        m_modules[i].state.overrun = false;
-        m_modules[i].state.fault = false;
-
-        //TODO: module-specific parameters
-    }
-
-    return true;
 }
 
 bool Runtime::load_firmware()

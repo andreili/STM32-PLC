@@ -6,6 +6,8 @@
 #include <thread>
 #include <mutex>
 #include <cstring>
+#include <iostream>
+#include <fstream>
 #include "plcstate.h"
 
 #ifdef FPGA_ALLOW
@@ -19,11 +21,8 @@
 
 std::mutex mtx_IO;
 
-bool PLCBus::init(ModuleInfo* modules, uint32_t count)
+bool PLCBus::init()
 {
-    m_modules_list = modules;
-    m_count = count;
-
     if (!init_UART())
         return false;
     if (!search_modules())
@@ -61,7 +60,7 @@ void PLCBus::bus_proc()
         RE_SET;
 
         m_send.from = 0;
-        m_send.to = m_modules_list[i].rack_idx;
+        m_send.to = module->rack_idx;
         m_send.request = EBusRequest::READ_INPUTS;
         m_send.data_size = 0;
 
@@ -153,6 +152,47 @@ void PLCBus::bus_proc()
     mtx_IO.unlock();
 }
 
+bool PLCBus::load_config()
+{
+    std::ifstream str(RT_ROOT_PATH "hw.json", std::ifstream::binary);
+    if (!str)
+    {
+        return false;
+    }
+    str.seekg (0, str.end);
+    int length = str.tellg();
+    str.seekg (0, str.beg);
+    char* buf = new char[length];
+    str.read(buf, length);
+    str.close();
+
+    Json::Value root;
+    Json::CharReaderBuilder b;
+    b.settings_["allowSingleQuotes"] = true;
+    Json::CharReader* reader(b.newCharReader());
+    JSONCPP_STRING errs;
+    if (!reader->parse(buf, buf + length, &root, &errs))
+    {
+        std::cout << errs << std::endl;
+        return false;
+    }
+
+    delete reader;
+    delete[] buf;
+
+    //TODO: load hardware
+    Json::Value &modules = root["modules"];
+    m_count = modules.size();
+    for (uint32_t i=0 ; i<m_count ; ++i)
+    {
+        Json::Value &module = modules[i];
+        if (!load_module_info(m_modules_list[i], module))
+            return false;
+    }
+
+    return true;
+}
+
 bool PLCBus::init_UART()
 {
     m_bus_dev = open(BUS_UART_DEVICE, O_RDWR | O_NOCTTY | O_NDELAY);
@@ -193,8 +233,8 @@ bool PLCBus::search_modules()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         //copy module info to send buffer
-        m_send.to = m_modules_list[i].rack_idx;
-        m_send.module_info = m_modules_list[i];
+        m_send.to = module->rack_idx;
+        m_send.module_info = *module;
 
         RE_SET;
         write(m_bus_dev, &m_send, sizeof(BusMessage));
@@ -215,11 +255,32 @@ bool PLCBus::search_modules()
             PLCState::to_error();
             return true;
         case EBusReply::OK:
-            m_modules_list[i].finded = true;
+            module->finded = true;
             break;
         case EBusReply::FAIL:
             return false;
         }
     }
+    return true;
+}
+
+bool PLCBus::load_module_info(ModuleInfo &module, Json::Value &info)
+{
+    module.type = info["type"].asUInt();
+    module.sub_type = info["sub_type"].asUInt();
+
+    module.rack = info["rack"].asUInt();
+    module.rack_idx = info["rack_idx"].asUInt();
+
+    module.input_start = info["istart"].asUInt();
+    module.input_size = info["isize"].asUInt();
+    module.output_start = info["ostart"].asUInt();
+    module.output_size = info["osize"].asUInt();
+
+    module.state.initialized = false;
+    module.state.overrun = false;
+    module.state.fault = false;
+
+    //TODO: module-specific parameters
     return true;
 }

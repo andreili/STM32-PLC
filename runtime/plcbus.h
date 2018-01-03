@@ -3,6 +3,8 @@
 
 #include "settings.h"
 #include "plcstate.h"
+#include <json/config.h>
+#include <json/json.h>
 
 #define MODULE_TYPE_DI 0x00000001
 #define MODULE_TYPE_DO 0x00000002
@@ -73,21 +75,25 @@ struct BusMessage
 class PLCBus
 {
 public:
-    bool init(ModuleInfo *modules, uint32_t count);
+    bool init();
     void copy_inputs();
     void copy_outputs();
     void bus_proc();
+
+    bool load_config();
 private:
     int         m_bus_dev;
     BusMessage  m_send;
     BusMessage  m_recv;
     uint8_t     m_PIP[IO_AREA_SIZE];
     uint8_t     m_POP[IO_AREA_SIZE];
-    ModuleInfo  *m_modules_list;
+    ModuleInfo  m_modules_list[BUS_MAX_MODULES];
     uint32_t    m_count;
 
     bool init_UART();
     bool search_modules();
+
+    bool load_module_info(ModuleInfo &module, Json::Value &info);
 };
 
 #endif // PLCBUS_H

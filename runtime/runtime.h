@@ -17,10 +17,6 @@ private:
     static  Firmware    m_firmware;
     static  PLCBus      m_bus;
 
-    static  ModuleInfo  m_modules[BUS_MAX_MODULES];
-    uint32_t    m_modules_count;
-
-    bool load_hw_config();
     bool load_firmware();
 };
 
