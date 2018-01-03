@@ -8,7 +8,7 @@ public:
     Firmware();
 
     bool init();
-    void run_cycle();
+    bool run_cycle();
 };
 
 #endif // FIRMWARE_H

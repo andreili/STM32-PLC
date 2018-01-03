@@ -3,6 +3,7 @@
 #include "hps_0_arm_a9_0.h"
 
 plc_state_t PLCState::m_state;
+EPLCState   PLCState::m_state_en;
 bool        PLCState::m_blink_on;
 
 void PLCState::init()
@@ -20,12 +21,14 @@ void PLCState::init()
     m_state.run_run = false;
 
     m_state.fault = false;
+    m_state_en = EPLCState::INIT;
 }
 
 void PLCState::to_stop()
 {
     m_state.stop_stop = true;
     m_state.run_run = false;
+    m_state_en = EPLCState::STOP;
 }
 
 void PLCState::to_full_stop()
@@ -42,13 +45,26 @@ void PLCState::to_full_stop()
 
 void PLCState::to_load_fw_in_plc()
 {
-    m_state.stop_load = false;
+    m_state.stop_load = true;
+    m_state_en = EPLCState::LOAD_FW;
+}
+
+void PLCState::to_wait_fw_in_plc()
+{
+    m_state.stop_load = true;
+    m_state_en = EPLCState::WAIT_FW;
+}
+
+void PLCState::to_bus_init()
+{
+    m_state_en = EPLCState::BUS_INIT;
 }
 
 void PLCState::to_fw_load()
 {
     m_state.run_run = true;
     m_state.run_load = true;
+    m_state_en = EPLCState::RUN;
 }
 
 void PLCState::to_run()
@@ -56,6 +72,7 @@ void PLCState::to_run()
     m_state.stop_stop = false;
     m_state.run_run = true;
     m_state.run_load = false;
+    m_state_en = EPLCState::RUN;
 }
 
 void PLCState::to_error()
@@ -68,6 +85,7 @@ void PLCState::to_fault()
     m_state.stop_stop = true;
     m_state.run_run = false;
     m_state.fault = true;
+    m_state_en = EPLCState::FAULT;
 }
 
 #define LED_PWR_OFFSET 0

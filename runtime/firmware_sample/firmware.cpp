@@ -12,9 +12,11 @@ bool Firmware::init()
     return true;
 }
 
-void Firmware::run_cycle()
+bool Firmware::run_cycle()
 {
     //
 
     FWDB::db1.bit0 = IO::read_bit(EIOArea::INPUT, 0, 0);
+
+    return true;
 }

@@ -6,6 +6,7 @@
 #include <json/json.h>
 #include <iostream>
 #include <fstream>
+#include <thread>
 
 Runtime::Runtime()
 {}
@@ -17,40 +18,69 @@ void Runtime::run()
 
     //TODO: start server (debug + monitoring)
 
-    PLCState::to_fw_load();
-    bool fw_loaded = false;
-    fw_loaded = load_hw_config();
-    if (fw_loaded)
-        fw_loaded = load_firmware();
-
-    if (!fw_loaded)
-    {
-        printf("Unable to loading firmware, wait uloading from remote device\n");
-        while (1)
-        {
-            // wait while firmware uploaded
-            //TODO: uploading wait
-        }
-    }
-
+    bool fw_loaded;
     m_bus = new PLCBus();
-    if (!m_bus->init(m_modules, m_modules_count))
-    {
-        printf("Failed initialize BUS\n");
-        PLCState::to_fault();
-        while (1) {}
-    }
-
-    PLCState::to_run();
     while (1)
     {
-        //TODO: to comm thread
-        m_bus->bus_proc();
+        switch (PLCState::get_state())
+        {
+        case EPLCState::INIT:
+            printf("State: Initialization\n");
+            PLCState::to_load_fw_in_plc();
+            break;
 
-        //TODO: to cycle thread
-        m_bus->copy_inputs();
-        m_firmware->run_cycle();
-        m_bus->copy_outputs();
+        case EPLCState::LOAD_FW:
+            printf("State: Firmware loading\n");
+            fw_loaded = load_hw_config();
+            if (fw_loaded)
+                fw_loaded = load_firmware();
+
+            if (fw_loaded)
+                PLCState::to_bus_init();
+            else
+                PLCState::to_wait_fw_in_plc();
+            break;
+
+        case EPLCState::WAIT_FW:
+            printf("State: Waiting firmware\n");
+            printf("Unable to loading firmware, wait uloading from remote device\n");
+            //TODO: uploading wait
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            break;
+
+        case EPLCState::BUS_INIT:
+            printf("State: BUS initialization\n");
+            if (!m_bus->init(m_modules, m_modules_count))
+            {
+                printf("Failed initialize BUS\n");
+                PLCState::to_fault();
+            }
+            else
+                PLCState::to_run();
+            break;
+
+        case EPLCState::RUN:
+            //TODO: to comm thread
+            m_bus->bus_proc();
+
+            //TODO: to cycle thread
+            m_bus->copy_inputs();
+            if (!m_firmware->run_cycle())
+                PLCState::to_fault();
+            m_bus->copy_outputs();
+
+            //TODO: to stop
+            break;
+
+        case EPLCState::STOP:
+            //TODO: to wait FW
+            //TODO: to run
+            break;
+
+        case EPLCState::FAULT:
+            //TODO: to initialize (stop switch changed to RUN)
+            break;
+        }
     }
 }
 

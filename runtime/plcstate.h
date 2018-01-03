@@ -32,6 +32,17 @@ typedef struct
     bool        fault: 1;
 } plc_state_t;
 
+enum class EPLCState
+{
+    INIT,
+    LOAD_FW,
+    WAIT_FW,
+    BUS_INIT,
+    RUN,
+    STOP,
+    FAULT,
+};
+
 typedef struct
 {
     bool    initialized: 1;
@@ -48,14 +59,20 @@ public:
     static void to_stop();
     static void to_full_stop();
     static void to_load_fw_in_plc();
+    static void to_wait_fw_in_plc();
+
+    static void to_bus_init();
 
     static void to_fw_load();
     static void to_run();
 
     static void to_error();
     static void to_fault();
+
+    static inline EPLCState get_state() { return m_state_en; }
 private:
     static  plc_state_t m_state;
+    static  EPLCState   m_state_en;
     static  bool        m_blink_on;
 };
 
