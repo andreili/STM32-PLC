@@ -68,7 +68,7 @@ void Runtime::run()
 
             //TODO: to cycle thread
             m_bus.copy_inputs();
-            if (!m_firmware.run_cycle())
+            if (!m_firmware.run_OB(EOB::OB_CYCLE_EXEC))
                 PLCState::to_fault();
             m_bus.copy_outputs();
 
