@@ -1,6 +1,5 @@
 #include "plcstate.h"
 #include "settings.h"
-#include "hps_0_arm_a9_0.h"
 
 plc_state_t PLCState::m_state;
 EPLCState   PLCState::m_state_en;
@@ -93,6 +92,10 @@ void PLCState::to_fault()
 #define LED_RUN_OFFSET      2
 #define LED_FLT_OFFSET      3
 #define LED_FLTRL_OFFSET    4
+
+#ifdef FPGA_ALLOW
+#include "hps_0_arm_a9_0.h"
+#endif
 
 void PLCState::signal_1Hz()
 {
