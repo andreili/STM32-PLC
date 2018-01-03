@@ -30,6 +30,8 @@ typedef struct
     bool        run_run: 1;
 
     bool        fault: 1;
+
+    bool        fault_relay: 1;
 } plc_state_t;
 
 enum class EPLCState
@@ -68,6 +70,9 @@ public:
 
     static void to_error();
     static void to_fault();
+
+    static inline void reset_fault_relay() { m_state.fault_relay = false; }
+    static inline void fault_relay_ON() { m_state.fault_relay = true; }
 
     static inline EPLCState get_state() { return m_state_en; }
 private:

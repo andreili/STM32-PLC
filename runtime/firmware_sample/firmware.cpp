@@ -2,6 +2,7 @@
 #include "fwdb.h"
 #include "io.h"
 #include <iostream>
+#include "plcstate.h"
 
 #define proc_none() (true)
 
@@ -41,7 +42,6 @@
 #define run_OB81()  proc_none()
 #define run_OB82()  proc_none()
 #define run_OB83()  proc_none()
-#define run_OB84()  proc_none()
 #define run_OB85()  proc_none()
 #define run_OB86()  proc_none()
 #define run_OB87()  proc_none()
@@ -218,5 +218,23 @@ bool Firmware::run_OB1()
 
     FWDB::db1.bit0 = IO::read_bit(EIOArea::INPUT, 0, 0);
 
+    return true;
+}
+
+bool Firmware::run_OB84()
+{
+    PLCState::fault_relay_ON();
+
+    //TODO: get switch value
+    if (true)
+    {
+        printf("Software error, STOP\n");
+        PLCState::to_fault();
+    }
+    else
+    {
+        printf("Software error, RESTART\n");
+        PLCState::init();
+    }
     return true;
 }

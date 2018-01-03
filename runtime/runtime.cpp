@@ -21,6 +21,7 @@ Runtime::Runtime()
 void Runtime::run()
 {
     PLCState::init();
+    PLCState::reset_fault_relay();
     PLCState::to_full_stop();
 
     //TODO: start server (debug + monitoring)
@@ -91,17 +92,7 @@ void Runtime::run()
             m_bus.copy_inputs();
             if (!m_firmware.run_OB(EOB::OB_CYCLE_EXEC))
             {
-                //TODO: get switch value
-                if (true)
-                {
-                    printf("Software error, STOP\n");
-                    PLCState::to_fault();
-                }
-                else
-                {
-                    printf("Software error, RESTART\n");
-                    PLCState::init();
-                }
+                m_firmware.run_OB(EOB::OB_CPU_FAULT);
             }
             m_bus.copy_outputs();
             mtx_run_cycle.unlock();

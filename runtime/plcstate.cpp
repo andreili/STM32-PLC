@@ -88,10 +88,11 @@ void PLCState::to_fault()
     m_state_en = EPLCState::FAULT;
 }
 
-#define LED_PWR_OFFSET 0
-#define LED_STP_OFFSET 1
-#define LED_RUN_OFFSET 2
-#define LED_FLT_OFFSET 3
+#define LED_PWR_OFFSET      0
+#define LED_STP_OFFSET      1
+#define LED_RUN_OFFSET      2
+#define LED_FLT_OFFSET      3
+#define LED_FLTRL_OFFSET    4
 
 void PLCState::signal_1Hz()
 {
@@ -120,6 +121,10 @@ void PLCState::signal_1Hz()
 
     if (m_state.fault)
         led_byte |= (1 << LED_FLT_OFFSET);
+
+    //TODO: digital output!
+    if (m_state.fault_relay)
+        led_byte |= (1 << LED_FLTRL_OFFSET);
 
     *((char*)LEDS_BASE) = led_byte;
 #endif

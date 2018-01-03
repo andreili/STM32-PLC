@@ -60,6 +60,7 @@ public:
     bool run_OB(EOB ob);
 private:
     bool run_OB1();
+    bool run_OB84();
 };
 
 #endif // FIRMWARE_H
