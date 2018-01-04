@@ -216,7 +216,7 @@ bool Firmware::run_OB1()
 {
     //
 
-    FWDB::db1.bit0 = IO::read_bit(EIOArea::INPUT, 0, 0);
+    FWDB::db1.bit0 = plc_inputs.read_bit(0, 0);
 
     return true;
 }

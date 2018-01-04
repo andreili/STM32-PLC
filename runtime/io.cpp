@@ -1,64 +1,50 @@
 #include "io.h"
 #include <cstring>
 
-uint8_t  IO::m_inputs[IO_AREA_SIZE];
-uint8_t  IO::m_outputs[IO_AREA_SIZE];
+IO plc_inputs;
+IO plc_outputs;
 
 void IO::update_inputs(uint8_t* PIP)
 {
-    std::memcpy(m_inputs, PIP, IO_AREA_SIZE);
+    std::memcpy(m_io_data, PIP, IO_AREA_SIZE);
 }
 
 void IO::update_outputs(uint8_t* POP)
 {
-    std::memcpy(POP, m_outputs, IO_AREA_SIZE);
+    std::memcpy(POP, m_io_data, IO_AREA_SIZE);
 }
 
-#define SELECT_AREA() \
-    uint8_t *data; \
-    if (area == EIOArea::INPUT) \
-        data = m_inputs; \
-    else \
-        data = m_outputs;
-
-bool IO::read_bit(EIOArea area, int offset, int bit_idx)
+bool IO::read_bit(int offset, int bit_idx)
 {
-    SELECT_AREA();
-    return (data[offset] & (1 << bit_idx));
+    return (m_io_data[offset] & (1 << bit_idx));
 }
 
-uint8_t IO::read_ubyte(EIOArea area, int offset)
+uint8_t IO::read_ubyte(int offset)
 {
-    SELECT_AREA();
-    return data[offset];
+    return m_io_data[offset];
 }
 
-int8_t IO::read_byte(EIOArea area, int offset)
+int8_t IO::read_byte(int offset)
 {
-    SELECT_AREA();
-    return data[offset];
+    return m_io_data[offset];
 }
 
-uint16_t IO::read_word(EIOArea area, int offset)
+uint16_t IO::read_word(int offset)
 {
-    SELECT_AREA();
-    return *((uint16_t*)&data[offset]);
+    return *((uint16_t*)&m_io_data[offset]);
 }
 
-int16_t IO::read_int(EIOArea area, int offset)
+int16_t IO::read_int(int offset)
 {
-    SELECT_AREA();
-    return *((int16_t*)&data[offset]);
+    return *((int16_t*)&m_io_data[offset]);
 }
 
-uint32_t IO::read_dword(EIOArea area, int offset)
+uint32_t IO::read_dword(int offset)
 {
-    SELECT_AREA();
-    return *((uint32_t*)&data[offset]);
+    return *((uint32_t*)&m_io_data[offset]);
 }
 
-float IO::read_real(EIOArea area, int offset)
+float IO::read_real(int offset)
 {
-    SELECT_AREA();
-    return *((float*)&data[offset]);
+    return *((float*)&m_io_data[offset]);
 }

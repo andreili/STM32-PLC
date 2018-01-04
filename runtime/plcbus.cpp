@@ -34,14 +34,14 @@ bool PLCBus::init()
 void PLCBus::copy_inputs()
 {
     mtx_IO.lock();
-    IO::update_inputs(m_PIP);
+    plc_inputs.update_inputs(m_PIP);
     mtx_IO.unlock();
 }
 
 void PLCBus::copy_outputs()
 {
     mtx_IO.lock();
-    IO::update_outputs(m_POP);
+    plc_outputs.update_outputs(m_POP);
     mtx_IO.unlock();
 }
 

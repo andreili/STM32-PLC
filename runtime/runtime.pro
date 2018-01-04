@@ -30,4 +30,5 @@ HEADERS += \
     include/hps_0_bridges.h \
     include/hps_0.h \
     include/hps.h \
-    plcstate.h
+    plcstate.h \
+    datainterface.h
