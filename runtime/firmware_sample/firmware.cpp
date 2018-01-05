@@ -214,9 +214,10 @@ bool Firmware::run_OB(EOB ob)
 
 bool Firmware::run_OB1()
 {
-    //
+    bool to_start = (plc_inputs.read_bit(0, 1) && (plc_inputs.read_bit(0, 0) || FWDB::db1.bit0));
 
-    FWDB::db1.bit0 = plc_inputs.read_bit(0, 0);
+    FWDB::db1.bit0 = to_start;
+    plc_outputs.write_bit(0, 0, to_start);
 
     return true;
 }
