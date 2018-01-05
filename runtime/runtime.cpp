@@ -4,6 +4,7 @@
 #include "plcbus.h"
 #include <thread>
 #include <mutex>
+#include <chrono>
 
 Firmware    Runtime::m_firmware;
 PLCBus      Runtime::m_bus;
@@ -18,6 +19,11 @@ void Runtime::run()
     PLCState::init();
     PLCState::reset_fault_relay();
     PLCState::to_full_stop();
+
+    int cycle_counter = 0;
+    auto cycle_start = std::chrono::high_resolution_clock::now();
+    auto cycle_finish = cycle_start;
+    int64_t cycle_time;
 
     //TODO: start server (debug + monitoring)
 
@@ -55,7 +61,8 @@ void Runtime::run()
             if (!m_bus.init())
             {
                 printf("Failed initialize BUS\n");
-                PLCState::to_fault();
+                //PLCState::to_fault();
+                PLCState::to_run(); //TODO: debug
             }
             else
                 PLCState::to_run();
@@ -63,6 +70,10 @@ void Runtime::run()
 
         case EPLCState::RUN:
             mtx_run_cycle.lock();
+
+            //TODO: to comm thread
+            m_bus.bus_proc();
+
             //TODO: to STOP (switch, command)
             if (false)
             {
@@ -77,10 +88,8 @@ void Runtime::run()
                 PLCState::to_load_fw_in_plc();
                 break;
             }
-            mtx_run_cycle.unlock();
 
-            //TODO: to comm thread
-            m_bus.bus_proc();
+            cycle_start = std::chrono::high_resolution_clock::now();
 
             //TODO: to cycle thread
             mtx_run_cycle.lock();
@@ -91,6 +100,14 @@ void Runtime::run()
             }
             m_bus.copy_outputs();
             mtx_run_cycle.unlock();
+
+            cycle_finish = std::chrono::high_resolution_clock::now();
+            cycle_time = std::chrono::duration_cast<std::chrono::nanoseconds>(cycle_finish - cycle_start).count();
+            if (++cycle_counter > 1000*10)
+            {
+                printf("\rCycle time: %li ns.", cycle_time);
+                cycle_counter = 0;
+            }
             break;
 
         case EPLCState::STOP:
