@@ -53,7 +53,7 @@ void PLCBus::bus_proc()
     for (uint32_t i=0 ; i<m_count ; ++i)
     {
         ModuleInfo* module = &m_modules_list[i];
-        if ((module->input_size == 0) &&
+        if ((module->input_size == 0) ||
             (module->rack != 0))    // another racks - only from communications!
             continue;
 
@@ -105,7 +105,7 @@ void PLCBus::bus_proc()
     for (uint32_t i=0 ; i<m_count ; ++i)
     {
         ModuleInfo* module = &m_modules_list[i];
-        if ((module->output_size == 0) &&
+        if ((module->output_size == 0) ||
             (module->rack != 0))    // another racks - only from communications!
             continue;
 
