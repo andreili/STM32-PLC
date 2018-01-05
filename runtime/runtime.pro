@@ -5,7 +5,7 @@ CONFIG -= qt
 
 INCLUDEPATH += /usr/include/jsoncpp ./include/
 
-LIBS += -ljsoncpp
+LIBS += -ljsoncpp -lpthread
 
 target.path = /_cross/tmp
 INSTALLS += target

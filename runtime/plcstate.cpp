@@ -87,11 +87,11 @@ void PLCState::to_fault()
     m_state_en = EPLCState::FAULT;
 }
 
-#define LED_PWR_OFFSET      0
-#define LED_STP_OFFSET      1
-#define LED_RUN_OFFSET      2
-#define LED_FLT_OFFSET      3
-#define LED_FLTRL_OFFSET    4
+#define LED_PWR_OFFSET      3
+#define LED_STP_OFFSET      4
+#define LED_RUN_OFFSET      5
+#define LED_FLT_OFFSET      6
+#define LED_FLTRL_OFFSET    7
 
 #ifdef FPGA_ALLOW
 #include "hps_0_arm_a9_0.h"

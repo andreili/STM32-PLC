@@ -5,6 +5,10 @@
 
 //#define FPGA_ALLOW
 
+//cycle time settings (in ms)
+#define CYCLE_TIME_COMM 100
+#define CYCLE_TIME_MMAIN 100
+
 #define BUS_MSG_DATA_SIZE 100
 #ifdef FPGA_ALLOW
 #define BUS_UART_DEVICE "/dev/ttyAL0"

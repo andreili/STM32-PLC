@@ -18,6 +18,9 @@ private:
     static  PLCBus      m_bus;
 
     bool load_firmware();
+
+    void comm_thread();
+    void main_thread();
 };
 
 #endif // RUNTIME_H
