@@ -17,6 +17,7 @@
 #define BUS_MAX_MODULES_ON_RACK 32
 #define BUS_WAIT_TIME_MS 50
 
+#define MEM_AREA_SIZE   4096
 #define IO_AREA_SIZE 4096
 
 #define RT_ROOT_PATH "./"

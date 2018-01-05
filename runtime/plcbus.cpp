@@ -1,5 +1,4 @@
 #include "plcbus.h"
-#include "io.h"
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -10,6 +9,7 @@
 #include <fstream>
 #include "plcstate.h"
 #include <arpa/inet.h>
+#include <plcdata.h>
 
 #ifdef FPGA_ALLOW
 #include "hps_0_arm_a9_0.h"

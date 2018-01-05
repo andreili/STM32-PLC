@@ -14,15 +14,14 @@ SOURCES += main.cpp \
     runtime.cpp \
     firmware_sample/firmware.cpp \
     firmware_sample/fwdb.cpp \
-    io.cpp \
     plcbus.cpp \
-    plcstate.cpp
+    plcstate.cpp \
+    plcdata.cpp
 
 HEADERS += \
     runtime.h \
     firmware_sample/firmware.h \
     firmware_sample/fwdb.h \
-    io.h \
     plcbus.h \
     settings.h \
     include/hps_0_arm_a9_0.h \
@@ -31,4 +30,5 @@ HEADERS += \
     include/hps_0.h \
     include/hps.h \
     plcstate.h \
-    datainterface.h
+    datainterface.h \
+    plcdata.h
